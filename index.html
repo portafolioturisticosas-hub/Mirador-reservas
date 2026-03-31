@@ -598,22 +598,57 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
 
 <!-- MODAL PRODUCTOS (admin) -->
 <div class="modal-bg" id="modal-productos">
-  <div class="modal" style="width:700px;max-width:95vw">
-    <div class="modal-title">Gestión de Productos</div>
-    <div class="grid2" style="gap:10px;margin-bottom:16px">
-      <div>
-        <label class="fl">Nombre del producto</label>
+  <div class="modal" style="width:780px;max-width:97vw">
+    <div class="modal-title">Gestión de Productos e Inventario</div>
+    <div class="grid2" style="gap:16px;margin-bottom:16px">
+      <div style="background:var(--dark3);border-radius:10px;padding:16px">
+        <div style="font-size:11px;color:var(--orange);font-weight:600;letter-spacing:0.5px;margin-bottom:12px;text-transform:uppercase">Agregar nuevo producto</div>
+        <label class="fl" style="margin-top:0">Nombre del producto</label>
         <input class="f" id="np-nombre" placeholder="Ej: Agua mineral">
         <label class="fl">Categoría</label>
-        <input class="f" id="np-cat" placeholder="Ej: Bebidas, Comidas, Licores...">
+        <select class="f" id="np-cat">
+          <option value="">— Seleccionar —</option>
+          <option value="MEKATO">Mekato</option>
+          <option value="LICOR">Licor</option>
+          <option value="BEBIDAS">Bebidas</option>
+          <option value="CERVEZAS">Cervezas</option>
+          <option value="HELADOS">Helados</option>
+        </select>
         <label class="fl">Precio ($)</label>
         <input class="f" id="np-precio" type="number" min="0" placeholder="0">
-        <button class="btn btn-primary" style="margin-top:10px;width:100%" onclick="agregarProducto()">+ Agregar producto</button>
+        <label class="fl">Stock inicial (unidades)</label>
+        <input class="f" id="np-stock" type="number" min="0" value="0" placeholder="0">
+        <button class="btn btn-primary" style="margin-top:14px;width:100%" onclick="agregarProducto()">+ Agregar producto</button>
       </div>
-      <div style="max-height:340px;overflow-y:auto" id="lista-productos-admin"></div>
+      <div>
+        <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
+          <span class="prod-cat-tab active" id="inv-tab-todos" onclick="filtroInventario('')">Todos</span>
+          <span class="prod-cat-tab" id="inv-tab-MEKATO" onclick="filtroInventario('MEKATO')">Mekato</span>
+          <span class="prod-cat-tab" id="inv-tab-LICOR" onclick="filtroInventario('LICOR')">Licor</span>
+          <span class="prod-cat-tab" id="inv-tab-BEBIDAS" onclick="filtroInventario('BEBIDAS')">Bebidas</span>
+          <span class="prod-cat-tab" id="inv-tab-CERVEZAS" onclick="filtroInventario('CERVEZAS')">Cervezas</span>
+          <span class="prod-cat-tab" id="inv-tab-HELADOS" onclick="filtroInventario('HELADOS')">Helados</span>
+        </div>
+        <div style="max-height:320px;overflow-y:auto" id="lista-productos-admin"></div>
+      </div>
     </div>
     <div style="text-align:right">
       <button class="btn btn-sm" onclick="closeModal('modal-productos')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL REPONER STOCK -->
+<div class="modal-bg" id="modal-reponer">
+  <div class="modal" style="width:340px">
+    <div class="modal-title">Reponer Stock</div>
+    <div id="reponer-nombre" style="font-size:14px;color:var(--text);margin-bottom:4px"></div>
+    <div id="reponer-actual" style="font-size:12px;color:var(--text3);margin-bottom:16px"></div>
+    <label class="fl" style="margin-top:0">Unidades a agregar</label>
+    <input class="f" id="reponer-cantidad" type="number" min="1" value="1" placeholder="0">
+    <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">
+      <button class="btn btn-sm" onclick="closeModal('modal-reponer')">Cancelar</button>
+      <button class="btn btn-primary btn-sm" onclick="confirmarReposicion()">Reponer</button>
     </div>
   </div>
 </div>
@@ -1347,11 +1382,17 @@ function renderProductosGrid(){
 
   const grid = document.getElementById("prod-grid");
   if(!prods.length){grid.innerHTML="<div style='color:var(--text3);font-size:12px;padding:20px'>Sin productos</div>";return;}
-  grid.innerHTML = prods.map(p=>`
-    <div class="prod-btn" onclick="agregarAlConsumo(${p.id})">
+  grid.innerHTML = prods.map(p=>{
+    const s = p.stock||0;
+    const sc = stockColor(s);
+    const sinStock = s<=0;
+    return `
+    <div class="prod-btn" onclick="agregarAlConsumo(${p.id})" style="${sinStock?'opacity:0.6':''}">
       <div class="prod-nombre">${p.nombre}</div>
       <div class="prod-precio">${fmt(p.precio)}</div>
-    </div>`).join("");
+      <div style="font-size:10px;margin-top:4px;color:${sc};font-weight:600">${sinStock?'⚠ Sin stock':'Stock: '+s}</div>
+    </div>`;
+  }).join("");
 }
 
 function setCat(cat){
@@ -1374,14 +1415,30 @@ async function agregarAlConsumo(prodId){
   const result = await sbInsert("consumos", row);
   if(result){
     _consumoActual.push(result);
+    // Descontar stock
+    const nuevoStock = Math.max(0, (prod.stock||0) - 1);
+    await sbUpdate("productos", prod.id, {stock: nuevoStock});
+    prod.stock = nuevoStock;
     renderConsumoLista();
+    renderProductosGrid(); // actualiza color de stock en el grid
   }
 }
 
 async function eliminarConsumoItem(id){
+  const item = _consumoActual.find(x=>x.id===id);
   await sbDelete("consumos", id);
   _consumoActual = _consumoActual.filter(x=>x.id!==id);
+  // Devolver stock
+  if(item){
+    const prod = _productos.find(p=>p.id===item.producto_id);
+    if(prod){
+      const nuevoStock = (prod.stock||0) + (item.cantidad||1);
+      await sbUpdate("productos", prod.id, {stock: nuevoStock});
+      prod.stock = nuevoStock;
+    }
+  }
   renderConsumoLista();
+  renderProductosGrid();
 }
 
 function renderConsumoLista(){
@@ -1450,30 +1507,88 @@ async function abrirGestionProductos(){
   document.getElementById("modal-productos").classList.add("show");
 }
 
+let _invFiltro = '';
+
+function filtroInventario(cat){
+  _invFiltro = cat;
+  document.querySelectorAll('[id^="inv-tab-"]').forEach(el=>el.classList.remove('active'));
+  const tab = document.getElementById('inv-tab-'+(cat||'todos'));
+  if(tab) tab.classList.add('active');
+  renderListaProductosAdmin();
+}
+
+function stockColor(s){
+  if(s<=0) return '#E07070';
+  if(s<=5) return '#E09050';
+  return '#8ABB8A';
+}
+function stockLabel(s){
+  if(s<=0) return '⚠ Sin stock';
+  if(s<=5) return '⚡ Poco: '+s;
+  return ''+s;
+}
+
 function renderListaProductosAdmin(){
   const el = document.getElementById("lista-productos-admin");
-  if(!_productos.length){el.innerHTML="<div style='color:var(--text3);font-size:12px'>Sin productos aún</div>";return;}
-  el.innerHTML = _productos.map(p=>`
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
-      <div>
-        <div style="font-size:12px;color:var(--text)">${p.nombre}</div>
-        <div style="font-size:11px;color:var(--text3)">${p.categoria||"General"} · ${fmt(p.precio)}</div>
+  let prods = _productos;
+  if(_invFiltro) prods = prods.filter(p=>(p.categoria||'')===_invFiltro);
+  if(!prods.length){el.innerHTML="<div style='color:var(--text3);font-size:12px;padding:10px'>Sin productos en esta categoría</div>";return;}
+  el.innerHTML = prods.map(p=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 6px;border-bottom:1px solid rgba(255,255,255,0.05)">
+      <div style="flex:1">
+        <div style="font-size:12px;color:var(--text);font-weight:500">${p.nombre}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">${p.categoria||'General'} · ${fmt(p.precio)}</div>
       </div>
-      <button class="btn btn-sm btn-danger" style="padding:2px 8px" onclick="eliminarProducto(${p.id})">×</button>
+      <div style="display:flex;align-items:center;gap:6px">
+        <span style="font-size:11px;font-weight:700;color:${stockColor(p.stock||0)};min-width:60px;text-align:right">${stockLabel(p.stock||0)}</span>
+        ${isAdmin()?`<button class="btn btn-sm" style="padding:3px 9px;font-size:11px;color:var(--orange);border-color:rgba(224,120,32,0.3)" onclick="abrirReponer(${p.id})">+ Stock</button>`:''}
+        <button class="btn btn-sm btn-danger" style="padding:2px 8px" onclick="eliminarProducto(${p.id})">×</button>
+      </div>
     </div>`).join("");
 }
 
 async function agregarProducto(){
   const nombre = document.getElementById("np-nombre").value.trim();
-  const cat = document.getElementById("np-cat").value.trim()||"General";
+  const cat = document.getElementById("np-cat").value||"General";
   const precio = parseFloat(document.getElementById("np-precio").value)||0;
+  const stock = parseInt(document.getElementById("np-stock").value)||0;
   if(!nombre||precio<=0){alert("Nombre y precio son obligatorios.");return;}
-  const result = await sbInsert("productos",{nombre:nombre.toUpperCase(),categoria:cat.toUpperCase(),precio,activo:true});
+  const result = await sbInsert("productos",{nombre:nombre.toUpperCase(),categoria:cat.toUpperCase(),precio,stock,activo:true});
   if(result){
     _productos.push(result);
     document.getElementById("np-nombre").value="";
     document.getElementById("np-precio").value="";
+    document.getElementById("np-stock").value="0";
+    document.getElementById("np-cat").selectedIndex=0;
     renderListaProductosAdmin();
+    renderProductosGrid();
+  }
+}
+
+let _reponerProdId = null;
+
+function abrirReponer(prodId){
+  const p = _productos.find(x=>x.id===prodId);
+  if(!p) return;
+  _reponerProdId = prodId;
+  document.getElementById("reponer-nombre").textContent = p.nombre;
+  document.getElementById("reponer-actual").textContent = "Stock actual: " + (p.stock||0) + " unidades";
+  document.getElementById("reponer-cantidad").value = 1;
+  document.getElementById("modal-reponer").classList.add("show");
+}
+
+async function confirmarReposicion(){
+  const cant = parseInt(document.getElementById("reponer-cantidad").value)||0;
+  if(cant<=0){alert("Ingresa una cantidad mayor a 0.");return;}
+  const p = _productos.find(x=>x.id===_reponerProdId);
+  if(!p) return;
+  const nuevoStock = (p.stock||0) + cant;
+  const ok = await sbUpdate("productos", _reponerProdId, {stock: nuevoStock});
+  if(ok){
+    p.stock = nuevoStock;
+    closeModal("modal-reponer");
+    renderListaProductosAdmin();
+    renderProductosGrid();
   }
 }
 
