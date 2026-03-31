@@ -820,6 +820,7 @@ function abrirEditar(id){
   editIdx=id;
   const r=_reservasCache.find(x=>x.id===id);
   if(!r)return;
+  const idx=_reservasCache.findIndex(x=>x.id===id);
   document.getElementById("modal-edit-title").textContent="Reserva #"+(idx+1)+" — "+r.nombre;
   const editable=canEdit();
   const dis=editable?"":"disabled";
