@@ -121,6 +121,9 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
 .disp-ocup:hover{background:rgba(224,120,32,0.5)}
 .disp-hoy{background:rgba(201,168,76,0.2);color:var(--gold)}
 
+.badge-pendiente{background:rgba(201,168,76,0.15);color:#C9A84C;padding:3px 8px;border-radius:20px;font-size:10px;font-weight:600}
+.badge-llego{background:rgba(90,138,90,0.2);color:#8ABB8A;padding:3px 8px;border-radius:20px;font-size:10px;font-weight:600}
+.badge-salio{background:rgba(224,112,112,0.15);color:#E07070;padding:3px 8px;border-radius:20px;font-size:10px;font-weight:600}
 .prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-top:10px}
 .prod-btn{background:var(--dark3);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:14px 10px;text-align:center;cursor:pointer;transition:all .15s;user-select:none}
 .prod-btn:hover,.prod-btn:active{background:rgba(224,120,32,0.2);border-color:var(--orange)}
@@ -341,7 +344,7 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
               <tr>
                 <th>#</th><th>Nombre</th><th>Entrada</th><th>Salida</th>
                 <th>Plan</th><th>Hab</th><th>Personas</th>
-                <th>Total</th><th>Desc%</th><th>Abono</th><th>Restante</th><th></th>
+                <th>Total</th><th>Desc%</th><th>Abono</th><th>Restante</th><th>Estado</th><th></th>
               </tr>
             </thead>
             <tbody id="tbody-reservas"></tbody>
@@ -389,7 +392,7 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
               <tr>
                 <th>#</th><th>Nombre</th><th>Celular</th><th>Fecha</th>
                 <th>Plan</th><th>Personas</th>
-                <th>Total</th><th>Desc%</th><th>Abono</th><th>Restante</th><th></th>
+                <th>Total</th><th>Desc%</th><th>Abono</th><th>Restante</th><th>Estado</th><th></th>
               </tr>
             </thead>
             <tbody id="tbody-diasol"></tbody>
@@ -939,7 +942,12 @@ function renderTablaReservas(){
       <td style="color:var(--text3)">${r.desc_pct||0}%</td>
       <td>${fmt(r.abono||0)}</td>
       <td><span class="badge ${(r.deber||0)>0?"badge-pend":"badge-ok"}">${fmt(r.deber||0)}</span></td>
-      <td style="display:flex;gap:4px"><button class="btn btn-sm" onclick="abrirEditar(${r.id})">Ver</button><button class="btn btn-sm btn-primary" onclick="abrirConsumos(${r.id})">Consumos</button></td>
+      <td>${estadoBadge(r.estado)}</td>
+      <td style="display:flex;gap:4px;flex-wrap:wrap">
+        <button class="btn btn-sm" onclick="abrirEditar(${r.id})">Ver</button>
+        <button class="btn btn-sm btn-primary" onclick="abrirConsumos(${r.id})">Consumos</button>
+        <button class="btn btn-sm" style="background:rgba(255,255,255,0.05)" onclick="cambiarEstado(${r.id})">${estadoLabel(r.estado)}</button>
+      </td>
     </tr>`).join("");
 }
 
@@ -1065,7 +1073,12 @@ function renderTablaDiaSol(){
       <td style="color:var(--text3)">${r.descPct||r.desc_pct||0}%</td>
       <td>${fmt(r.abono||0)}</td>
       <td><span class="badge ${(r.deber||0)>0?"badge-pend":"badge-ok"}">${fmt(r.deber||0)}</span></td>
-      <td style="display:flex;gap:4px"><button class="btn btn-sm" onclick="abrirEditar(${r.id})">Ver</button><button class="btn btn-sm btn-primary" onclick="abrirConsumos(${r.id})">Consumos</button></td>
+      <td>${estadoBadge(r.estado)}</td>
+      <td style="display:flex;gap:4px;flex-wrap:wrap">
+        <button class="btn btn-sm" onclick="abrirEditar(${r.id})">Ver</button>
+        <button class="btn btn-sm btn-primary" onclick="abrirConsumos(${r.id})">Consumos</button>
+        <button class="btn btn-sm" style="background:rgba(255,255,255,0.05)" onclick="cambiarEstado(${r.id})">${estadoLabel(r.estado)}</button>
+      </td>
     </tr>`).join("");
 }
 
@@ -1249,6 +1262,35 @@ function verRecibo(){
   document.getElementById("modal-recibo").classList.add("show");
 }
 
+
+// ---- ESTADO CHECK-IN ----
+function estadoBadge(e){
+  if(e==="llego") return '<span class="badge-llego">✅ Llegó</span>';
+  if(e==="salio") return '<span class="badge-salio">🔴 Salió</span>';
+  return '<span class="badge-pendiente">🟡 Pendiente</span>';
+}
+
+function estadoSiguiente(e){
+  if(!e||e==="pendiente") return "llego";
+  if(e==="llego") return "salio";
+  return "pendiente";
+}
+
+function estadoLabel(e){
+  if(!e||e==="pendiente") return "Check-in";
+  if(e==="llego") return "Check-out";
+  return "Resetear";
+}
+
+async function cambiarEstado(id){
+  const r = _reservasCache.find(x=>x.id===id);
+  if(!r) return;
+  const nuevo = estadoSiguiente(r.estado);
+  await sbUpdate("reservas", id, {estado: nuevo});
+  r.estado = nuevo;
+  renderTablaReservas();
+  renderTablaDiaSol();
+}
 
 // ============ PRODUCTOS & CONSUMOS ============
 let _productos = [];
