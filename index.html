@@ -774,7 +774,10 @@ async function guardarReserva(){
     limpiarForm();
     showAlert("alert-nueva","Reserva guardada correctamente para "+nombre,"ok");
   } else {
-    showAlert("alert-nueva","Error al guardar. Intenta de nuevo.","err");
+    // Show detailed error from Supabase
+    const {data,error}=await supa.from("reservas").insert(row).select();
+    const msg=error?error.message+" | code:"+error.code:"Sin resultado";
+    showAlert("alert-nueva","Error: "+msg,"err");
   }
 }
 
