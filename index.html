@@ -817,20 +817,21 @@ async function exportarExcel(){
 }
 
 function abrirEditar(id){
+  try{
   editIdx=id;
   const r=_reservasCache.find(x=>x.id===id);
-  if(!r)return;
+  if(!r){alert("No se encontró la reserva.");return;}
   const idx=_reservasCache.findIndex(x=>x.id===id);
-  document.getElementById("modal-edit-title").textContent="Reserva #"+(idx+1)+" — "+r.nombre;
+  document.getElementById("modal-edit-title").textContent="Reserva #"+(idx+1)+" — "+(r.nombre||"Sin nombre");
   const editable=canEdit();
   const dis=editable?"":"disabled";
   document.getElementById("modal-edit-body").innerHTML=`
     <div class="grid2">
       <div>
-        <label class="fl">Nombre</label><input class="f" id="e-nombre" value="${r.nombre}" ${dis}>
-        <label class="fl">Celular</label><input class="f" id="e-celular" value="${r.celular||""}" ${dis}>
-        <label class="fl">Identificación</label><input class="f" id="e-id" value="${r.identificacion||""}" ${dis}>
-        <label class="fl">Correo</label><input class="f" id="e-correo" value="${r.correo||""}" ${dis}>
+        <label class="fl">Nombre</label><input class="f" id="e-nombre" value="${r.nombre||''}" ${dis}>
+        <label class="fl">Celular</label><input class="f" id="e-celular" value="${r.celular||''}" ${dis}>
+        <label class="fl">Identificación</label><input class="f" id="e-id" value="${r.identificacion||''}" ${dis}>
+        <label class="fl">Correo</label><input class="f" id="e-correo" value="${r.correo||''}" ${dis}>
         <label class="fl">Observaciones</label><textarea class="f" id="e-obs" rows="2" ${dis}>${r.obs||""}</textarea>
       </div>
       <div>
@@ -843,9 +844,9 @@ function abrirEditar(id){
           <option value="MULTIPLE" ${r.plan==="MULTIPLE"?"selected":""}>Múltiple</option>
           <option value="JACUZZI" ${r.plan==="JACUZZI"?"selected":""}>Jacuzzi</option>
         </select>
-        <label class="fl">Entrada</label><input class="f" id="e-entrada" type="date" value="${r.entrada||""}" ${dis}>
-        <label class="fl">Salida</label><input class="f" id="e-salida" type="date" value="${r.salida||""}" ${dis}>
-        <label class="fl">Habitación</label><input class="f" id="e-hab" value="${r.hab||""}" ${dis}>
+        <label class="fl">Entrada</label><input class="f" id="e-entrada" type="date" value="${r.entrada||''}" ${dis}>
+        <label class="fl">Salida</label><input class="f" id="e-salida" type="date" value="${r.salida||''}" ${dis}>
+        <label class="fl">Habitación</label><input class="f" id="e-hab" value="${r.hab||''}" ${dis}>
         <label class="fl">Personas</label><input class="f" id="e-personas" type="number" value="${r.personas}" ${dis}>
         <label class="fl">Valor/persona</label><input class="f" id="e-vlr" type="number" value="${r.vlr}" ${dis}>
         <label class="fl">Abono</label><input class="f" id="e-abono" type="number" value="${r.abono||0}" ${dis}>
@@ -887,6 +888,7 @@ function abrirEditar(id){
       <div class="metric-sub">Descuento: ${r.descPct||0}% (${fmt(r.descValor||0)}) · Abono: ${fmt(r.abono||0)} · Restante: ${fmt(r.deber||0)} · Por: ${r.creadoPor||"—"}</div>
     </div>`;
   document.getElementById("modal-edit").classList.add("show");
+  }catch(e){alert("Error al abrir reserva: "+e.message);console.error(e);}
 }
 
 async function guardarEdicion(){
@@ -991,15 +993,14 @@ async function renderDisp(){
     html+=`<div class="disp-cell" style="${bg};font-size:10px;color:var(--text3)">${dias[dow]}</div>`;
     HABS.forEach(h=>{
       const ocup=reservas.find(r=>{
-        if(r.hab!==h)return false;
+        if(String(r.hab)!==String(h))return false;
         if(esDiaSol(r.plan))return false;
         if(!r.entrada)return false;
         const fin=r.salida||r.entrada;
         return ds>=r.entrada&&ds<fin;
       });
       if(ocup){
-        const idx=reservas.indexOf(ocup);
-        html+=`<div class="disp-cell disp-ocup" onclick="verDetalleDisp(${idx})" title="Clic para ver detalles">${ocup.nombre.split(" ")[0]}</div>`;
+        html+=`<div class="disp-cell disp-ocup" onclick="verDetalleDisp(${ocup.id})" title="Clic para ver detalles">${ocup.nombre.split(" ")[0]}</div>`;
       } else if(esHoy){
         html+=`<div class="disp-cell disp-hoy">hoy</div>`;
       } else {
@@ -1011,8 +1012,8 @@ async function renderDisp(){
   document.getElementById("disp-container").innerHTML=html;
 }
 
-function verDetalleDisp(idx){
-  const r=_reservasCache.find(x=>x.id===idx); if(!r)return;
+function verDetalleDisp(id){
+  const r=_reservasCache.find(x=>x.id===id); if(!r)return;
   document.getElementById("modal-disp-body").innerHTML=`
     <div class="res-detail"><span style="color:var(--text3)">Cliente</span><span style="font-weight:500">${r.nombre}</span></div>
     ${r.celular?`<div class="res-detail"><span style="color:var(--text3)">Celular</span><span>${r.celular}</span></div>`:""}
