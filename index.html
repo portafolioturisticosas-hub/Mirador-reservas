@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Hostería Mirador del Sol — Reservas 2026</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPA_URL = 'https://qylmhrvmaddxqhafrzzo.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5bG1ocnZtYWRkeHFoYWZyenpvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5MjU1NzksImV4cCI6MjA5MDUwMTU3OX0.jobYDAL_jVoo2Ruq3RiMyT9RLoV8bEVp9YS_TzQFWP4';
+const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
+</script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -152,7 +158,7 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
 <div id="login-screen">
   <div class="login-box">
     <div class="login-logo">
-      <img src="https://raw.githubusercontent.com/portafolioturisticosas-hub/Mirador-reservas/main/logo.png" alt="Mirador del Sol">
+      <img src="https://raw.githubusercontent.com/portafolioturisticosas-hub/Mirador-reservas/main/https://raw.githubusercontent.com/portafolioturisticosas-hub/Mirador-reservas/main/logo.png" alt="Mirador del Sol">
       <p>Sistema de reservas 2026</p>
     </div>
     <div class="form-group">
@@ -171,7 +177,7 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
 <div id="app">
   <div class="sidebar">
     <div class="sidebar-logo">
-      <img src="https://raw.githubusercontent.com/portafolioturisticosas-hub/Mirador-reservas/main/logo.png" alt="Mirador del Sol">
+      <img src="https://raw.githubusercontent.com/portafolioturisticosas-hub/Mirador-reservas/main/https://raw.githubusercontent.com/portafolioturisticosas-hub/Mirador-reservas/main/logo.png" alt="Mirador del Sol">
       <p>Reservas 2026</p>
     </div>
     <nav class="sidebar-nav">
@@ -179,6 +185,7 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
       <div class="nav-item" onclick="showPage('reservas')" id="nav-reservas"><span class="icon">☰</span> Reservas</div>
       <div class="nav-item" onclick="showPage('disponibilidad')" id="nav-disponibilidad"><span class="icon">◫</span> Disponibilidad</div>
       <div class="nav-item" onclick="showPage('resumen')" id="nav-resumen"><span class="icon">◈</span> Resumen</div>
+      <div class="nav-item" onclick="showPage('bar')" id="nav-bar"><span class="icon">◐</span> Bar & Rest.</div>
       <div class="nav-item" onclick="showPage('usuarios')" id="nav-usuarios" style="display:none"><span class="icon">◉</span> Usuarios</div>
     </nav>
     <div class="sidebar-footer">
@@ -241,17 +248,35 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
               <option>13</option><option>14</option><option>15</option><option>16</option><option>17</option>
             </select>
             <div id="hab-status" style="margin-top:6px;font-size:12px;display:none"></div>
+            <label class="fl">N° personas *</label>
+            <input class="f" id="f-personas" type="number" min="1" placeholder="0" onchange="calcTotal()">
+            <div class="grid2" style="gap:10px;margin-top:0">
+              <div><label class="fl">Niños 0-4 años</label><input class="f" id="f-ninos1" type="number" min="0" value="0" placeholder="0"></div>
+              <div><label class="fl">Niños 5-9 años</label><input class="f" id="f-ninos2" type="number" min="0" value="0" placeholder="0"></div>
+            </div>
             <div class="grid2" style="gap:10px">
-              <div><label class="fl">N° personas *</label><input class="f" id="f-personas" type="number" min="1" placeholder="0" onchange="calcTotal()"></div>
-              <div><label class="fl">Valor/persona *</label><input class="f" id="f-vlr" type="number" min="0" placeholder="0" onchange="calcTotal()"></div>
+              <div><label class="fl">Mascotas</label><input class="f" id="f-mascotas" type="number" min="0" value="0" placeholder="0"></div>
+              <div><label class="fl">Decoración</label>
+                <select class="f" id="f-decoracion">
+                  <option value="Sin decoración">Sin decoración</option>
+                  <option value="Romántica">Romántica</option>
+                  <option value="Cumpleaños">Cumpleaños</option>
+                </select>
+              </div>
             </div>
           </div>
           <div class="card">
             <div class="card-title">Pago</div>
             <div class="grid2" style="gap:10px">
-              <div><label class="fl">Abono ($)</label><input class="f" id="f-abono" type="number" min="0" value="0" onchange="calcTotal()"></div>
-              <div><label class="fl">Valor a deber ($)</label><input class="f" id="f-deber" type="number" min="0" value="0" disabled style="opacity:0.7"></div>
+              <div><label class="fl">Valor total ($) *</label><input class="f" id="f-total" type="number" min="0" placeholder="0" onchange="calcTotal()"></div>
+              <div><label class="fl">Descuento (%)</label><input class="f" id="f-descuento" type="number" min="0" max="100" value="0" placeholder="0" onchange="calcTotal()"></div>
             </div>
+            <div class="grid2" style="gap:10px">
+              <div><label class="fl">Total con descuento</label><input class="f" id="f-total-desc" type="number" disabled style="opacity:0.7"></div>
+              <div><label class="fl">Abono ($)</label><input class="f" id="f-abono" type="number" min="0" value="0" onchange="calcTotal()"></div>
+            </div>
+            <label class="fl">Restante a pagar ($)</label>
+            <input class="f" id="f-deber" type="number" disabled style="opacity:0.7;color:var(--orange)">
             <label class="fl">Fecha del abono</label>
             <input class="f" id="f-fabono" type="date">
             <label class="fl">Vendedor</label>
@@ -291,8 +316,8 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
           <button class="btn btn-excel btn-sm" onclick="exportarExcel()">↓ Exportar Excel</button>
         </div>
         <div class="search-bar">
-          <input class="f" id="busq" type="text" placeholder="Buscar por nombre, celular o habitación..." oninput="filtrarReservas()">
-          <select class="f" id="fil-plan" onchange="filtrarReservas()" style="width:180px">
+          <input class="f" id="busq" type="text" placeholder="Buscar por nombre, celular o habitación..." oninput="renderTablaReservas()">
+          <select class="f" id="fil-plan" onchange="renderTablaReservas()" style="width:180px">
             <option value="">Todos los planes</option>
             <option value="DIA DE SOL A">Día de sol A</option>
             <option value="DIA DE SOL B">Día de sol B</option>
@@ -308,7 +333,7 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
               <tr>
                 <th>#</th><th>Nombre</th><th>Entrada</th><th>Salida</th>
                 <th>Plan</th><th>Hab</th><th>Personas</th>
-                <th>Total</th><th>Abono</th><th>A deber</th><th></th>
+                <th>Total</th><th>Desc%</th><th>Abono</th><th>Restante</th><th></th>
               </tr>
             </thead>
             <tbody id="tbody-reservas"></tbody>
@@ -359,6 +384,48 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
       <div class="grid2">
         <div class="card"><div class="card-title">Por tipo de plan</div><div id="r-planes"></div></div>
         <div class="card"><div class="card-title">Habitaciones más solicitadas</div><div id="r-habs"></div></div>
+      </div>
+    </div>
+
+    <!-- BAR & RESTAURANTE -->
+    <div class="page" id="page-bar">
+      <div class="page-title">Bar & Restaurante</div>
+      <div class="page-sub">Registro de ventas diarias y consumos de reservas</div>
+      <div id="alert-bar" class="alert"></div>
+      <div class="grid2" style="margin-bottom:16px">
+        <div class="card">
+          <div class="card-title">Registrar venta del día</div>
+          <label class="fl">Fecha</label>
+          <input class="f" id="bar-fecha" type="date">
+          <div class="grid2" style="gap:10px">
+            <div><label class="fl">Ventas bar ($)</label><input class="f" id="bar-vbar" type="number" min="0" value="0" placeholder="0"></div>
+            <div><label class="fl">Ventas restaurante ($)</label><input class="f" id="bar-vrest" type="number" min="0" value="0" placeholder="0"></div>
+          </div>
+          <label class="fl">Observaciones</label>
+          <textarea class="f" id="bar-obs" rows="2" placeholder="Nota opcional"></textarea>
+          <div style="margin-top:14px"><button class="btn btn-primary" onclick="guardarVentaMenuda()">Guardar venta</button></div>
+        </div>
+        <div class="grid2" style="gap:12px;align-content:start">
+          <div class="metric"><div class="metric-label">Total bar (mes)</div><div class="metric-val" id="bar-total-bar">$0</div></div>
+          <div class="metric"><div class="metric-label">Total restaurante (mes)</div><div class="metric-val" id="bar-total-rest">$0</div></div>
+          <div class="metric"><div class="metric-label">Bar en reservas</div><div class="metric-val" id="bar-res-bar">$0</div></div>
+          <div class="metric"><div class="metric-label">Rest. en reservas</div><div class="metric-val" id="bar-res-rest">$0</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="flex-between mb">
+          <div class="card-title" style="margin:0">Ventas menudas</div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input type="month" class="f" id="bar-mes" onchange="renderBar()" style="width:160px">
+            <button class="btn btn-excel btn-sm" onclick="exportarBarExcel()">↓ Excel</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Fecha</th><th>Bar</th><th>Restaurante</th><th>Total</th><th>Observaciones</th><th></th></tr></thead>
+            <tbody id="tbody-bar"></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
@@ -429,27 +496,42 @@ const HABS=["2","3","4","5","6","12","7","8","9","10","11","13","14","15","16","
 const HAB_TIPO={"2":"Múl","3":"Múl","4":"Múl","5":"Múl","6":"Múl","12":"Múl","7":"Est","8":"Est","9":"Est","10":"Est","11":"Est","13":"Jac","14":"Jac","15":"Jac","16":"Jac","17":"Jac"};
 const MESES=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 const ROLES={admin:"Administrador",recepcionista:"Recepcionista",vendedor:"Vendedor",consulta:"Solo consulta"};
-const PERMS={admin:["nueva","reservas","disponibilidad","resumen","usuarios"],recepcionista:["nueva","reservas","disponibilidad","resumen"],vendedor:["nueva","reservas"],consulta:["reservas","disponibilidad","resumen"]};
+const PERMS={admin:["nueva","reservas","disponibilidad","resumen","bar","usuarios"],recepcionista:["nueva","reservas","disponibilidad","resumen","bar"],vendedor:["nueva","reservas","bar"],consulta:["reservas","disponibilidad","resumen","bar"]};
 const esDiaSol=p=>p&&p.startsWith("DIA DE SOL");
 
 let currentUser=null,editIdx=null;
 
-function getData(k,def){try{return JSON.parse(localStorage.getItem(k)||"null")||def}catch(e){return def}}
-function setData(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
-
-function initUsers(){
-  let u=getData("mds_users",null);
-  if(!u){u=[{nombre:"Administrador",user:"admin",pass:"admin2026",rol:"admin"},{nombre:"Recepcionista",user:"recepcion",pass:"mirador2026",rol:"recepcionista"},{nombre:"Vendedor 1",user:"vendedor",pass:"ventas2026",rol:"vendedor"}];setData("mds_users",u)}
-  return u;
+// ---- SUPABASE HELPERS ----
+async function sbGet(table, filters){
+  let q = supa.from(table).select('*');
+  if(filters) Object.entries(filters).forEach(([k,v])=>q=q.eq(k,v));
+  const {data,error}=await q;
+  if(error){console.error(error);return [];}
+  return data||[];
+}
+async function sbInsert(table, row){
+  const {data,error}=await supa.from(table).insert(row).select();
+  if(error){console.error(error);return null;}
+  return data?data[0]:null;
+}
+async function sbUpdate(table, id, row){
+  const {data,error}=await supa.from(table).update(row).eq('id',id).select();
+  if(error){console.error(error);return null;}
+  return data?data[0]:null;
+}
+async function sbDelete(table, id){
+  const {error}=await supa.from(table).delete().eq('id',id);
+  return !error;
 }
 
-function doLogin(){
+async function doLogin(){
   const u=document.getElementById("login-user").value.trim();
   const p=document.getElementById("login-pass").value;
-  const found=initUsers().find(x=>x.user===u&&x.pass===p);
-  if(!found){document.getElementById("login-error").style.display="block";return}
-  currentUser=found;
   document.getElementById("login-error").style.display="none";
+  const users=await sbGet("usuarios",{usuario:u});
+  const found=users.find(x=>x.contrasena===p);
+  if(!found){document.getElementById("login-error").style.display="block";return}
+  currentUser={nombre:found.nombre,user:found.usuario,pass:found.contrasena,rol:found.rol,dbId:found.id};
   document.getElementById("login-screen").style.display="none";
   document.getElementById("app").style.display="block";
   document.getElementById("user-avatar").textContent=found.nombre.slice(0,2).toUpperCase();
@@ -486,6 +568,7 @@ function showPage(p){
   if(p==="disponibilidad"){const m=document.getElementById("mes-disp");if(!m.value)m.value=today().slice(0,7);renderDisp()}
   if(p==="resumen")renderResumen();
   if(p==="usuarios")renderUsuarios();
+  if(p==="bar"){const m=document.getElementById("bar-mes");if(!m.value)m.value=today().slice(0,7);const bf=document.getElementById('bar-fecha');if(!bf.value)bf.value=today();renderBar();}
 }
 
 function fmt(n){return new Intl.NumberFormat("es-CO",{style:"currency",currency:"COP",maximumFractionDigits:0}).format(n)}
@@ -510,7 +593,7 @@ function actualizarHabs(){
   const statusEl=document.getElementById("hab-status");
   if(esDiaSol(plan)||!entrada){statusEl.style.display="none";return;}
   const fin=salida||entrada;
-  const reservas=getData("mds_reservas",[]);
+  const reservas=_reservasCache;
   const TODAS=["2","3","4","5","6","12","7","8","9","10","11","13","14","15","16","17"];
   const ocupadas=TODAS.filter(h=>reservas.some(r=>{
     if(r.hab!==h||esDiaSol(r.plan)||!r.entrada)return false;
@@ -549,7 +632,7 @@ function checkHabDisp(){
   const salida=document.getElementById("f-salida").value;
   const statusEl=document.getElementById("hab-status");
   if(!hab||hab==="NO"||!entrada){return;}
-  const reservas=getData("mds_reservas",[]);
+  const reservas=_reservasCache;
   const fin=salida||entrada;
   const ocup=reservas.find(r=>r.hab===hab&&!esDiaSol(r.plan)&&r.entrada&&entrada<(r.salida||r.entrada)&&fin>r.entrada);
   if(ocup){
@@ -563,7 +646,8 @@ function calcTotal(){
   const entrada=document.getElementById("f-entrada").value;
   const salida=document.getElementById("f-salida").value;
   const personas=parseInt(document.getElementById("f-personas").value)||0;
-  const vlr=parseFloat(document.getElementById("f-vlr").value)||0;
+  const totalBruto=parseFloat(document.getElementById("f-total").value)||0;
+  const descPct=parseFloat(document.getElementById("f-descuento").value)||0;
   const abono=parseFloat(document.getElementById("f-abono").value)||0;
   const plan=document.getElementById("f-plan").value;
   let dias=1;
@@ -571,12 +655,17 @@ function calcTotal(){
     const d=Math.round((new Date(salida)-new Date(entrada))/86400000);
     if(d>0)dias=d;
   }
-  const total=vlr*personas*dias;
-  const deber=Math.max(0,total-abono);
+  const descValor=Math.round(totalBruto*(descPct/100));
+  const totalDesc=totalBruto-descValor;
+  const deber=Math.max(0,totalDesc-abono);
+  if(document.getElementById("f-total-desc"))document.getElementById("f-total-desc").value=totalDesc;
   document.getElementById("f-deber").value=deber;
   const el=document.getElementById("preview-txt");
-  if(total>0){
-    el.innerHTML=`<strong style="color:var(--orange)">${dias} día(s)</strong> · ${personas} personas · Total: <strong style="color:var(--orange)">${fmt(total)}</strong> · Abono: ${fmt(abono)} · A deber: <strong>${fmt(deber)}</strong>`;
+  if(totalBruto>0){
+    let txt=`<strong style="color:var(--orange)">${dias} día(s)</strong> · ${personas} personas · Total: <strong style="color:var(--orange)">${fmt(totalBruto)}</strong>`;
+    if(descPct>0)txt+=` · Descuento ${descPct}%: -${fmt(descValor)} · Neto: <strong>${fmt(totalDesc)}</strong>`;
+    txt+=` · Abono: ${fmt(abono)} · Restante: <strong style="color:var(--orange)">${fmt(deber)}</strong>`;
+    el.innerHTML=txt;
   } else {
     el.textContent="Completa el formulario para ver el total";
   }
@@ -602,14 +691,15 @@ function habOcupada(hab,entrada,salida,plan,excludeId){
   });
 }
 
-function guardarReserva(){
+async function guardarReserva(){
   if(!canCreate()){showAlert("alert-nueva","No tienes permiso para crear reservas.","err");return}
   const nombre=document.getElementById("f-nombre").value.trim().toUpperCase();
   const plan=document.getElementById("f-plan").value;
   const entrada=document.getElementById("f-entrada").value;
   const salida=document.getElementById("f-salida").value;
   const personas=parseInt(document.getElementById("f-personas").value)||0;
-  const vlr=parseFloat(document.getElementById("f-vlr").value)||0;
+  const totalBruto=parseFloat(document.getElementById("f-total").value)||0;
+  const descPct=parseFloat(document.getElementById("f-descuento").value)||0;
   const hab=document.getElementById("f-hab").value;
   if(!nombre){showAlert("alert-nueva","El nombre del cliente es obligatorio.","err");return}
   if(!plan){showAlert("alert-nueva","Selecciona el tipo de plan.","err");return}
@@ -617,14 +707,15 @@ function guardarReserva(){
   if(!esDiaSol(plan)&&!salida){showAlert("alert-nueva","La fecha de salida es obligatoria para hospedaje.","err");return}
   if(!esDiaSol(plan)&&salida&&salida<=entrada){showAlert("alert-nueva","La fecha de salida debe ser posterior a la de entrada.","err");return}
   if(personas<=0){showAlert("alert-nueva","El número de personas debe ser mayor a 0.","err");return}
-  if(vlr<=0){showAlert("alert-nueva","El valor por persona debe ser mayor a 0.","err");return}
+  if(totalBruto<=0){showAlert("alert-nueva","El valor total es obligatorio.","err");return}
   if(!esDiaSol(plan)&&hab==="NO"){showAlert("alert-nueva","Selecciona una habitación para el plan de hospedaje.","err");return}
   if(habOcupada(hab,entrada,salida,plan,null)){
     showAlert("alert-nueva",`La habitación ${hab} ya está ocupada en esas fechas. Verifica disponibilidad.`,"err");return
   }
   let dias=1;
   if(!esDiaSol(plan)&&entrada&&salida)dias=Math.round((new Date(salida)-new Date(entrada))/86400000);
-  const total=vlr*personas*dias;
+  const descValor=Math.round(totalBruto*(descPct/100));
+  const total=totalBruto-descValor;
   const abono=parseFloat(document.getElementById("f-abono").value)||0;
   const deber=Math.max(0,total-abono);
   const reservas=getData("mds_reservas",[]);
@@ -635,23 +726,53 @@ function guardarReserva(){
     correo:document.getElementById("f-correo").value.trim(),
     tipoCliente:document.getElementById("f-tipocliente").value,
     obs:document.getElementById("f-obs").value.trim(),
-    plan,entrada,salida,dias,hab,personas,vlr,total,abono,deber,
+    plan,entrada,salida,dias,hab,personas,
+    totalBruto,descPct,descValor,total,abono,deber,
+    ninos1:parseInt(document.getElementById("f-ninos1").value)||0,
+    ninos2:parseInt(document.getElementById("f-ninos2").value)||0,
+    mascotas:parseInt(document.getElementById("f-mascotas").value)||0,
+    decoracion:document.getElementById("f-decoracion").value,
     fabono:document.getElementById("f-fabono").value,
     vendedor:document.getElementById("f-vendedor").value,
     consig:document.getElementById("f-consig").value,
     creadoPor:currentUser.user,fecha:today()
   });
-  setData("mds_reservas",reservas);
-  limpiarForm();
-  showAlert("alert-nueva","Reserva guardada correctamente para "+nombre,"ok");
+  const row = {
+    nombre, celular:document.getElementById("f-celular").value.trim(),
+    identificacion:document.getElementById("f-id").value.trim(),
+    correo:document.getElementById("f-correo").value.trim(),
+    tipo_cliente:document.getElementById("f-tipocliente").value,
+    obs:document.getElementById("f-obs").value.trim(),
+    plan, entrada, salida, dias, hab, personas,
+    ninos1:parseInt(document.getElementById("f-ninos1").value)||0,
+    ninos2:parseInt(document.getElementById("f-ninos2").value)||0,
+    mascotas:parseInt(document.getElementById("f-mascotas").value)||0,
+    decoracion:document.getElementById("f-decoracion").value,
+    total_bruto:totalBruto, desc_pct:descPct, desc_valor:descValor,
+    total, abono, deber,
+    ventas_bar:0, ventas_restaurante:0,
+    fabono:document.getElementById("f-fabono").value||null,
+    vendedor:document.getElementById("f-vendedor").value,
+    consig:document.getElementById("f-consig").value,
+    creado_por:currentUser.user, fecha:today()
+  };
+  const result = await sbInsert("reservas", row);
+  if(result){
+    limpiarForm();
+    showAlert("alert-nueva","Reserva guardada correctamente para "+nombre,"ok");
+  } else {
+    showAlert("alert-nueva","Error al guardar. Intenta de nuevo.","err");
+  }
 }
 
 function limpiarForm(){
   ["f-nombre","f-celular","f-id","f-correo","f-obs","f-entrada","f-salida","f-fabono"].forEach(id=>document.getElementById(id).value="");
-  ["f-plan","f-tipocliente","f-hab","f-vendedor","f-consig"].forEach(id=>document.getElementById(id).selectedIndex=0);
-  ["f-abono"].forEach(id=>document.getElementById(id).value=0);
+  ["f-plan","f-tipocliente","f-hab","f-vendedor","f-consig","f-decoracion"].forEach(id=>document.getElementById(id).selectedIndex=0);
+  ["f-abono","f-ninos1","f-ninos2","f-mascotas"].forEach(id=>document.getElementById(id).value=0);
   document.getElementById("f-personas").value="";
-  document.getElementById("f-vlr").value="";
+  document.getElementById("f-total").value="";
+  document.getElementById("f-descuento").value=0;
+  document.getElementById("f-total-desc").value="";
   document.getElementById("f-deber").value=0;
   document.getElementById("preview-txt").textContent="Completa el formulario para ver el total";
 }
@@ -664,34 +785,41 @@ function planBadge(p){
   return`<span class="badge ${cls}">${label}</span>`;
 }
 
-function renderReservas(){filtrarReservas()}
+async function renderReservas(){await filtrarReservas()}
 
-function filtrarReservas(){
+let _reservasCache = [];
+
+async function filtrarReservas(){
+  const tb=document.getElementById("tbody-reservas");
+  tb.innerHTML="<tr><td colspan='11' style='text-align:center;color:var(--text3);padding:2rem'>Cargando...</td></tr>";
+  _reservasCache = await sbGet("reservas");
+  _reservasCache.sort((a,b)=>b.id-a.id);
+  renderTablaReservas();
+}
+
+function renderTablaReservas(){
   const q=(document.getElementById("busq").value||"").toLowerCase();
   const fp=document.getElementById("fil-plan").value;
-  const reservas=getData("mds_reservas",[]);
-  const filtered=reservas.filter(r=>{
+  const filtered=_reservasCache.filter(r=>{
     const match=!q||(r.nombre||"").toLowerCase().includes(q)||(r.celular||"").includes(q)||(r.hab||"").includes(q);
     return match&&(!fp||r.plan===fp);
-  }).sort((a,b)=>b.id-a.id);
+  });
   document.getElementById("count-res").textContent=filtered.length+" reservas";
   const tb=document.getElementById("tbody-reservas");
-  if(!filtered.length){tb.innerHTML="<tr><td colspan=\"11\" style=\"text-align:center;color:var(--text3);padding:2rem\">Sin reservas</td></tr>";return}
-  tb.innerHTML=filtered.map(r=>{
-    const idx=reservas.indexOf(r);
-    return`<tr>
-      <td style="color:var(--text3)">${idx+1}</td>
+  if(!filtered.length){tb.innerHTML="<tr><td colspan='11' style='text-align:center;color:var(--text3);padding:2rem'>Sin reservas</td></tr>";return}
+  tb.innerHTML=filtered.map((r,i)=>`<tr>
+      <td style="color:var(--text3)">${i+1}</td>
       <td style="font-weight:500;color:var(--text)">${r.nombre}</td>
       <td>${fmtD(r.entrada)}</td><td>${fmtD(r.salida)}</td>
       <td>${planBadge(r.plan)}</td>
-      <td>${r.hab==="NO"?"—":r.hab}</td>
+      <td>${r.hab==="NO"||!r.hab?"—":r.hab}</td>
       <td>${r.personas}</td>
-      <td style="color:var(--text)">${fmt(r.total)}</td>
+      <td style="color:var(--text)">${fmt(r.total||0)}</td>
+      <td style="color:var(--text3)">${r.desc_pct||0}%</td>
       <td>${fmt(r.abono||0)}</td>
       <td><span class="badge ${(r.deber||0)>0?"badge-pend":"badge-ok"}">${fmt(r.deber||0)}</span></td>
-      <td><button class="btn btn-sm" onclick="abrirEditar(${idx})">Ver</button></td>
-    </tr>`;
-  }).join("");
+      <td><button class="btn btn-sm" onclick="abrirEditar(${r.id})">Ver</button></td>
+    </tr>`).join("");
 }
 
 function exportarExcel(){
@@ -707,9 +835,10 @@ function exportarExcel(){
   a.click();
 }
 
-function abrirEditar(idx){
-  editIdx=idx;
-  const r=getData("mds_reservas",[])[idx];
+function abrirEditar(id){
+  editIdx=id;
+  const r=_reservasCache.find(x=>x.id===id);
+  if(!r)return;
   document.getElementById("modal-edit-title").textContent="Reserva #"+(idx+1)+" — "+r.nombre;
   const editable=canEdit();
   const dis=editable?"":"disabled";
@@ -754,17 +883,31 @@ function abrirEditar(idx){
           <option ${r.consig==="GILBERTO"?"selected":""}>GILBERTO</option>
           <option ${r.consig==="KEVIN"?"selected":""}>KEVIN</option>
         </select>
+        <label class="fl">Decoración</label>
+        <select class="f" id="e-decoracion" ${dis}>
+          <option ${(r.decoracion||"")==="Sin decoración"?"selected":""}>Sin decoración</option>
+          <option ${(r.decoracion||"")==="Romántica"?"selected":""}>Romántica</option>
+          <option ${(r.decoracion||"")==="Cumpleaños"?"selected":""}>Cumpleaños</option>
+        </select>
       </div>
+    </div>
+    <div class="grid2" style="gap:10px;margin-top:14px">
+      <div><label class="fl">Valor bruto</label><input class="f" id="e-totalBruto" type="number" value="${r.totalBruto||r.total||0}" ${dis}></div>
+      <div><label class="fl">Descuento (%)</label><input class="f" id="e-descPct" type="number" value="${r.descPct||0}" ${dis}></div>
+      <div><label class="fl">Niños 0-4</label><input class="f" id="e-ninos1" type="number" value="${r.ninos1||0}" ${dis}></div>
+      <div><label class="fl">Niños 5-9</label><input class="f" id="e-ninos2" type="number" value="${r.ninos2||0}" ${dis}></div>
+      <div><label class="fl">Mascotas</label><input class="f" id="e-mascotas" type="number" value="${r.mascotas||0}" ${dis}></div>
+      <div><label class="fl">Abono</label><input class="f" id="e-abono" type="number" value="${r.abono||0}" ${dis}></div>
     </div>
     <div class="metric" style="margin-top:14px">
       <div class="metric-label">Resumen financiero</div>
-      <div class="metric-val" style="color:var(--orange)">${fmt(r.total)}</div>
-      <div class="metric-sub">Abono: ${fmt(r.abono||0)} · A deber: ${fmt(r.deber||0)} · Por: ${r.creadoPor||"—"}</div>
+      <div class="metric-val" style="color:var(--orange)">${fmt(r.total||0)}</div>
+      <div class="metric-sub">Descuento: ${r.descPct||0}% (${fmt(r.descValor||0)}) · Abono: ${fmt(r.abono||0)} · Restante: ${fmt(r.deber||0)} · Por: ${r.creadoPor||"—"}</div>
     </div>`;
   document.getElementById("modal-edit").classList.add("show");
 }
 
-function guardarEdicion(){
+async function guardarEdicion(){
   if(!canEdit())return;
   const reservas=getData("mds_reservas",[]);
   const r=reservas[editIdx];
@@ -782,14 +925,25 @@ function guardarEdicion(){
   r.abono=parseFloat(document.getElementById("e-abono").value)||0;
   r.vendedor=document.getElementById("e-vendedor").value;
   r.consig=document.getElementById("e-consig").value;
+  r.ventas_bar=parseFloat(document.getElementById("e-vbar").value)||0;
+  r.ventas_restaurante=parseFloat(document.getElementById("e-vrest").value)||0;
+  r.decoracion=document.getElementById("e-decoracion").value;
+  r.ninos1=parseInt(document.getElementById("e-ninos1").value)||0;
+  r.ninos2=parseInt(document.getElementById("e-ninos2").value)||0;
+  r.mascotas=parseInt(document.getElementById("e-mascotas").value)||0;
+  r.totalBruto=parseFloat(document.getElementById("e-totalBruto").value)||0;
+  r.descPct=parseFloat(document.getElementById("e-descPct").value)||0;
+  r.abono=parseFloat(document.getElementById("e-abono").value)||0;
   const dias=r.entrada&&r.salida&&!esDiaSol(r.plan)?Math.round((new Date(r.salida)-new Date(r.entrada))/86400000):1;
-  r.dias=dias;r.total=r.vlr*r.personas*dias;
+  r.dias=dias;
+  r.descValor=Math.round(r.totalBruto*(r.descPct/100));
+  r.total=r.totalBruto-r.descValor;
   r.deber=Math.max(0,r.total-r.abono);
   setData("mds_reservas",reservas);
   closeModal("modal-edit");renderReservas();
 }
 
-function eliminarReserva(){
+async function eliminarReserva(){
   if(!isAdmin()){alert("Solo el administrador puede eliminar reservas.");return}
   if(!confirm("¿Eliminar esta reserva?"))return;
   const reservas=getData("mds_reservas",[]);
@@ -799,7 +953,7 @@ function eliminarReserva(){
 }
 
 function verRecibo(){
-  const r=getData("mds_reservas",[])[editIdx];
+  const r=_reservasCache.find(x=>x.id===editIdx); if(!r)return;
   closeModal("modal-edit");
   document.getElementById("recibo-body").innerHTML=`
     <div class="recibo-title">Hostería Mirador del Sol</div>
@@ -816,12 +970,17 @@ function verRecibo(){
       ${r.salida?`<div class="recibo-row"><span style="color:var(--text3)">Fecha salida</span><span>${fmtD(r.salida)}</span></div>`:""}
       <div class="recibo-row"><span style="color:var(--text3)">Días</span><span>${r.dias||1}</span></div>
       <div class="recibo-row"><span style="color:var(--text3)">Personas</span><span>${r.personas}</span></div>
-      <div class="recibo-row"><span style="color:var(--text3)">Valor/persona</span><span>${fmt(r.vlr)}</span></div>
+      ${(r.ninos1||0)>0?`<div class="recibo-row"><span style="color:var(--text3)">Niños 0-4 años</span><span>${r.ninos1}</span></div>`:""}
+      ${(r.ninos2||0)>0?`<div class="recibo-row"><span style="color:var(--text3)">Niños 5-9 años</span><span>${r.ninos2}</span></div>`:""}
+      ${(r.mascotas||0)>0?`<div class="recibo-row"><span style="color:var(--text3)">Mascotas</span><span>${r.mascotas}</span></div>`:""}
+      ${r.decoracion&&r.decoracion!=="Sin decoración"?`<div class="recibo-row"><span style="color:var(--text3)">Decoración</span><span>${r.decoracion}</span></div>`:""}
     </div>
     <div style="border-top:1px solid rgba(255,255,255,0.08);padding-top:8px">
-      <div class="recibo-row"><span style="color:var(--text3)">Total</span><span>${fmt(r.total)}</span></div>
+      <div class="recibo-row"><span style="color:var(--text3)">Valor total</span><span>${fmt(r.totalBruto||r.total||0)}</span></div>
+      ${(r.descPct||0)>0?`<div class="recibo-row"><span style="color:var(--text3)">Descuento ${r.descPct}%</span><span>- ${fmt(r.descValor||0)}</span></div>`:""}
+      ${(r.descPct||0)>0?`<div class="recibo-row"><span style="color:var(--text3)">Total con descuento</span><span>${fmt(r.total||0)}</span></div>`:""}
       <div class="recibo-row"><span style="color:var(--text3)">Abono recibido</span><span>${fmt(r.abono||0)}</span></div>
-      <div class="recibo-total"><span>VALOR A DEBER</span><span>${fmt(r.deber||0)}</span></div>
+      <div class="recibo-total"><span>RESTANTE A PAGAR</span><span>${fmt(r.deber||0)}</span></div>
     </div>
     ${r.obs?`<div style="margin-top:12px;padding:8px;background:var(--dark3);border-radius:var(--radius);font-size:11px;color:var(--text3)">Nota: ${r.obs}</div>`:""}
     <div style="margin-top:12px;font-size:10px;color:var(--text3);text-align:right">Vendedor: ${r.vendedor||"—"} · Consig: ${r.consig||"—"} · ${fmtD(today())}</div>`;
@@ -830,13 +989,14 @@ function verRecibo(){
 
 function closeModal(id){document.getElementById(id).classList.remove("show")}
 
-function renderDisp(){
+async function renderDisp(){
+  if(!_reservasCache.length) _reservasCache = await sbGet("reservas");
   const val=document.getElementById("mes-disp").value;
   if(!val)return;
   const[yr,mn]=val.split("-").map(Number);
   const diasMes=new Date(yr,mn,0).getDate();
   const hoyStr=today();
-  const reservas=getData("mds_reservas",[]);
+  const reservas=_reservasCache;
   let html=`<div style="display:grid;grid-template-columns:65px 35px repeat(${HABS.length},1fr);gap:2px;min-width:800px">`;
   html+="<div class=\"disp-head\">Fecha</div><div class=\"disp-head\">Día</div>";
   HABS.forEach(h=>html+=`<div class="disp-head">${h}<br><span style="font-size:8px;color:var(--text3)">${HAB_TIPO[h]}</span></div>`);
@@ -871,7 +1031,7 @@ function renderDisp(){
 }
 
 function verDetalleDisp(idx){
-  const r=getData("mds_reservas",[])[idx];
+  const r=_reservasCache.find(x=>x.id===idx); if(!r)return;
   document.getElementById("modal-disp-body").innerHTML=`
     <div class="res-detail"><span style="color:var(--text3)">Cliente</span><span style="font-weight:500">${r.nombre}</span></div>
     ${r.celular?`<div class="res-detail"><span style="color:var(--text3)">Celular</span><span>${r.celular}</span></div>`:""}
@@ -887,8 +1047,8 @@ function verDetalleDisp(idx){
   document.getElementById("modal-disp").classList.add("show");
 }
 
-function renderResumen(){
-  const reservas=getData("mds_reservas",[]);
+async function renderResumen(){
+  const reservas=_reservasCache.length?_reservasCache:await sbGet("reservas");
   const filMes=document.getElementById("fil-mes")?document.getElementById("fil-mes").value:"";
   const filtradas=filMes?reservas.filter(r=>r.entrada&&MESES[parseInt(r.entrada.split("-")[1])-1]===filMes):reservas;
   document.getElementById("r-total").textContent=filtradas.length;
@@ -964,45 +1124,121 @@ function renderResumen(){
       <span style="width:24px;text-align:right;color:var(--text);font-weight:500">${n}</span>
     </div>`).join("")||'<div style="color:var(--text3);font-size:12px">Sin reservas con habitación</div>';
 }
-function renderUsuarios(){
+async function renderUsuarios(){
   if(!isAdmin())return;
-  const users=getData("mds_users",[]);
+  const users=await sbGet("usuarios");
   const rolBadge={admin:"badge-admin",recepcionista:"badge-recep",vendedor:"badge-vend",consulta:"badge-view"};
-  document.getElementById("lista-usuarios").innerHTML=users.map((u,i)=>`
+  document.getElementById("lista-usuarios").innerHTML=users.map((u)=>`
     <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
       <div style="width:32px;height:32px;border-radius:50%;background:rgba(224,120,32,0.15);color:var(--orange);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600">${u.nombre.slice(0,2).toUpperCase()}</div>
-      <div style="flex:1"><div style="font-size:13px;color:var(--text)">${u.nombre}</div><div style="font-size:11px;color:var(--text3)">${u.user}</div></div>
+      <div style="flex:1"><div style="font-size:13px;color:var(--text)">${u.nombre}</div><div style="font-size:11px;color:var(--text3)">${u.usuario}</div></div>
       <span class="badge ${rolBadge[u.rol]||""}">${ROLES[u.rol]||u.rol}</span>
-      ${u.user!=="admin"?`<button class="btn btn-sm btn-danger" onclick="eliminarUsuario(${i})">×</button>`:""}
+      ${u.usuario!=="admin"?`<button class="btn btn-sm btn-danger" onclick="eliminarUsuario(${u.id})">×</button>`:""}
     </div>`).join("");
 }
 
-function crearUsuario(){
+async function crearUsuario(){
   const nombre=document.getElementById("u-nombre").value.trim();
   const user=document.getElementById("u-user").value.trim().toLowerCase();
   const pass=document.getElementById("u-pass").value;
   const rol=document.getElementById("u-rol").value;
   if(!nombre||!user||!pass){showAlert("alert-usuarios","Todos los campos son obligatorios.","err");return}
-  const users=getData("mds_users",[]);
-  if(users.find(u=>u.user===user)){showAlert("alert-usuarios","Ese nombre de usuario ya existe.","err");return}
-  users.push({nombre,user,pass,rol});
-  setData("mds_users",users);
-  document.getElementById("u-nombre").value="";
-  document.getElementById("u-user").value="";
-  document.getElementById("u-pass").value="";
-  showAlert("alert-usuarios","Usuario creado correctamente.","ok");
-  renderUsuarios();
+  const result=await sbInsert("usuarios",{nombre,usuario:user,contrasena:pass,rol});
+  if(result){
+    document.getElementById("u-nombre").value="";
+    document.getElementById("u-user").value="";
+    document.getElementById("u-pass").value="";
+    showAlert("alert-usuarios","Usuario creado correctamente.","ok");
+    renderUsuarios();
+  } else {
+    showAlert("alert-usuarios","Error: ese usuario ya existe o hubo un problema.","err");
+  }
 }
 
-function eliminarUsuario(i){
+async function eliminarUsuario(id){
   if(!confirm("¿Eliminar este usuario?"))return;
-  const users=getData("mds_users",[]);
-  users.splice(i,1);
-  setData("mds_users",users);
+  await sbDelete("usuarios",id);
   renderUsuarios();
 }
 
-initUsers();
+
+// ---- BAR & RESTAURANTE ----
+async function guardarVentaMenuda(){
+  const fecha=document.getElementById("bar-fecha").value||today();
+  const vbar=parseFloat(document.getElementById("bar-vbar").value)||0;
+  const vrest=parseFloat(document.getElementById("bar-vrest").value)||0;
+  const obs=document.getElementById("bar-obs").value.trim();
+  if(vbar<=0&&vrest<=0){showAlert("alert-bar","Ingresa al menos un valor mayor a 0.","err");return}
+  const result=await sbInsert("ventas_menudas",{fecha,ventas_bar:vbar,ventas_restaurante:vrest,obs,registrado_por:currentUser.user});
+  if(result){
+    document.getElementById("bar-vbar").value=0;
+    document.getElementById("bar-vrest").value=0;
+    document.getElementById("bar-obs").value="";
+    showAlert("alert-bar","Venta registrada correctamente.","ok");
+    renderBar();
+  } else {
+    showAlert("alert-bar","Error al guardar. Intenta de nuevo.","err");
+  }
+}
+
+async function renderBar(){
+  const mes=document.getElementById("bar-mes").value;
+  if(!mes)return;
+  const [yr,mn]=mes.split("-");
+  const desde=`${yr}-${mn}-01`;
+  const hasta=`${yr}-${mn}-31`;
+
+  // Ventas menudas del mes
+  const {data:menudas}=await supa.from("ventas_menudas").select("*").gte("fecha",desde).lte("fecha",hasta).order("fecha",{ascending:false});
+  const filas=menudas||[];
+  const totalBar=filas.reduce((s,r)=>s+(r.ventas_bar||0),0);
+  const totalRest=filas.reduce((s,r)=>s+(r.ventas_restaurante||0),0);
+
+  // Ventas de reservas del mes
+  const reservas=await sbGet("reservas");
+  const resMes=reservas.filter(r=>r.entrada&&r.entrada.startsWith(`${yr}-${mn}`));
+  const resBar=resMes.reduce((s,r)=>s+(r.ventas_bar||0),0);
+  const resRest=resMes.reduce((s,r)=>s+(r.ventas_restaurante||0),0);
+
+  document.getElementById("bar-total-bar").textContent=fmt(totalBar);
+  document.getElementById("bar-total-rest").textContent=fmt(totalRest);
+  document.getElementById("bar-res-bar").textContent=fmt(resBar);
+  document.getElementById("bar-res-rest").textContent=fmt(resRest);
+
+  const tb=document.getElementById("tbody-bar");
+  if(!filas.length){tb.innerHTML="<tr><td colspan='6' style='text-align:center;color:var(--text3);padding:2rem'>Sin ventas registradas</td></tr>";return}
+  tb.innerHTML=filas.map(r=>`<tr>
+    <td>${fmtD(r.fecha)}</td>
+    <td style="color:var(--text)">${fmt(r.ventas_bar||0)}</td>
+    <td style="color:var(--text)">${fmt(r.ventas_restaurante||0)}</td>
+    <td style="color:var(--orange);font-weight:500">${fmt((r.ventas_bar||0)+(r.ventas_restaurante||0))}</td>
+    <td style="color:var(--text3)">${r.obs||"—"}</td>
+    <td><button class="btn btn-sm btn-danger" onclick="eliminarVenta(${r.id})">×</button></td>
+  </tr>`).join("");
+}
+
+async function eliminarVenta(id){
+  if(!confirm("¿Eliminar este registro?"))return;
+  await sbDelete("ventas_menudas",id);
+  renderBar();
+}
+
+async function exportarBarExcel(){
+  const mes=document.getElementById("bar-mes").value;
+  if(!mes){alert("Selecciona un mes.");return}
+  const [yr,mn]=mes.split("-");
+  const {data:filas}=await supa.from("ventas_menudas").select("*").gte("fecha",`${yr}-${mn}-01`).lte("fecha",`${yr}-${mn}-31`).order("fecha");
+  if(!filas||!filas.length){alert("No hay datos para exportar.");return}
+  const headers=["Fecha","Bar ($)","Restaurante ($)","Total ($)","Observaciones","Registrado por"];
+  const rows=(filas||[]).map(r=>[fmtD(r.fecha),r.ventas_bar||0,r.ventas_restaurante||0,(r.ventas_bar||0)+(r.ventas_restaurante||0),r.obs||"",r.registrado_por||""]);
+  const SEP="\n";
+  const csv=headers.join(",")+SEP+rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(",")).join(SEP);
+  const blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="bar_restaurante_"+mes+".csv";
+  a.click();
+}
 </script>
 </body>
 </html>
