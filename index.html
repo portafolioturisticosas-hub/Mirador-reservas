@@ -183,6 +183,7 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
     <nav class="sidebar-nav">
       <div class="nav-item active" onclick="showPage('nueva')" id="nav-nueva"><span class="icon">✦</span> Nueva reserva</div>
       <div class="nav-item" onclick="showPage('reservas')" id="nav-reservas"><span class="icon">☰</span> Reservas</div>
+      <div class="nav-item" onclick="showPage('diasol')" id="nav-diasol"><span class="icon">☀</span> Día de Sol</div>
       <div class="nav-item" onclick="showPage('disponibilidad')" id="nav-disponibilidad"><span class="icon">◫</span> Disponibilidad</div>
       <div class="nav-item" onclick="showPage('resumen')" id="nav-resumen"><span class="icon">◈</span> Resumen</div>
       <div class="nav-item" onclick="showPage('bar')" id="nav-bar"><span class="icon">◐</span> Bar & Rest.</div>
@@ -319,9 +320,6 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
           <input class="f" id="busq" type="text" placeholder="Buscar por nombre, celular o habitación..." oninput="renderTablaReservas()">
           <select class="f" id="fil-plan" onchange="renderTablaReservas()" style="width:180px">
             <option value="">Todos los planes</option>
-            <option value="DIA DE SOL A">Día de sol A</option>
-            <option value="DIA DE SOL B">Día de sol B</option>
-            <option value="DIA DE SOL C">Día de sol C</option>
             <option value="ESTANDAR">Estándar</option>
             <option value="MULTIPLE">Múltiple</option>
             <option value="JACUZZI">Jacuzzi</option>
@@ -337,6 +335,39 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
               </tr>
             </thead>
             <tbody id="tbody-reservas"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- DIA DE SOL -->
+    <div class="page" id="page-diasol">
+      <div class="page-title">Día de Sol</div>
+      <div class="page-sub">Reservas de día de sol — sin hospedaje</div>
+      <div class="card">
+        <div class="flex-between mb">
+          <span style="font-size:12px;color:var(--text3)" id="count-diasol">0 reservas</span>
+          <button class="btn btn-excel btn-sm" onclick="exportarExcelDiaSol()">↓ Exportar Excel</button>
+        </div>
+        <div class="search-bar">
+          <input class="f" id="busq-diasol" type="text" placeholder="Buscar por nombre o celular..." oninput="renderTablaDiaSol()">
+          <select class="f" id="fil-diasol-plan" onchange="renderTablaDiaSol()" style="width:180px">
+            <option value="">Todos los planes</option>
+            <option value="DIA DE SOL A">Día de sol A</option>
+            <option value="DIA DE SOL B">Día de sol B</option>
+            <option value="DIA DE SOL C">Día de sol C</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th><th>Nombre</th><th>Celular</th><th>Fecha</th>
+                <th>Plan</th><th>Personas</th>
+                <th>Total</th><th>Desc%</th><th>Abono</th><th>Restante</th><th></th>
+              </tr>
+            </thead>
+            <tbody id="tbody-diasol"></tbody>
           </table>
         </div>
       </div>
@@ -496,7 +527,7 @@ const HABS=["2","3","4","5","6","12","7","8","9","10","11","13","14","15","16","
 const HAB_TIPO={"2":"Múl","3":"Múl","4":"Múl","5":"Múl","6":"Múl","12":"Múl","7":"Est","8":"Est","9":"Est","10":"Est","11":"Est","13":"Jac","14":"Jac","15":"Jac","16":"Jac","17":"Jac"};
 const MESES=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 const ROLES={admin:"Administrador",recepcionista:"Recepcionista",vendedor:"Vendedor",consulta:"Solo consulta"};
-const PERMS={admin:["nueva","reservas","disponibilidad","resumen","bar","usuarios"],recepcionista:["nueva","reservas","disponibilidad","resumen","bar"],vendedor:["nueva","reservas","bar"],consulta:["reservas","disponibilidad","resumen","bar"]};
+const PERMS={admin:["nueva","reservas","diasol","disponibilidad","resumen","bar","usuarios"],recepcionista:["nueva","reservas","diasol","disponibilidad","resumen","bar"],vendedor:["nueva","reservas","diasol","bar"],consulta:["reservas","diasol","disponibilidad","resumen","bar"]};
 const esDiaSol=p=>p&&p.startsWith("DIA DE SOL");
 
 let currentUser=null,editIdx=null;
@@ -565,6 +596,7 @@ function showPage(p){
   const nav=document.getElementById("nav-"+p);
   if(nav)nav.classList.add("active");
   if(p==="reservas")renderReservas();
+  if(p==="diasol")renderDiaSol();
   if(p==="disponibilidad"){const m=document.getElementById("mes-disp");if(!m.value)m.value=today().slice(0,7);renderDisp()}
   if(p==="resumen")renderResumen();
   if(p==="usuarios")renderUsuarios();
@@ -719,23 +751,23 @@ async function guardarReserva(){
   const deber=Math.max(0,total-abono);
 
   const row = {
-    nombre, celular:document.getElementById("f-celular").value.trim(),
-    identificacion:document.getElementById("f-id").value.trim(),
-    correo:document.getElementById("f-correo").value.trim(),
-    tipo_cliente:document.getElementById("f-tipocliente").value,
-    obs:document.getElementById("f-obs").value.trim(),
-    plan, entrada, salida, dias, hab, personas,
+    nombre, celular:document.getElementById("f-celular").value.trim()||null,
+    identificacion:document.getElementById("f-id").value.trim()||null,
+    correo:document.getElementById("f-correo").value.trim()||null,
+    tipoCliente:document.getElementById("f-tipocliente").value||null,
+    obs:document.getElementById("f-obs").value.trim()||null,
+    plan, entrada, salida:salida||null, dias, hab:hab||null, personas,
     ninos1:parseInt(document.getElementById("f-ninos1").value)||0,
     ninos2:parseInt(document.getElementById("f-ninos2").value)||0,
     mascotas:parseInt(document.getElementById("f-mascotas").value)||0,
     decoracion:document.getElementById("f-decoracion").value,
-    total_bruto:totalBruto, desc_pct:descPct, desc_valor:descValor,
+    totalBruto, descPct, descValor,
     total, abono, deber,
     ventas_bar:0, ventas_restaurante:0,
     fabono:document.getElementById("f-fabono").value||null,
     vendedor:document.getElementById("f-vendedor").value,
     consig:document.getElementById("f-consig").value,
-    creado_por:currentUser.user, fecha:today()
+    creadoPor:currentUser.user, fecha:today()
   };
   const result = await sbInsert("reservas", row);
   if(result){
@@ -776,12 +808,14 @@ async function filtrarReservas(){
   _reservasCache = await sbGet("reservas");
   _reservasCache.sort((a,b)=>b.id-a.id);
   renderTablaReservas();
+  renderTablaDiaSol();
 }
 
 function renderTablaReservas(){
   const q=(document.getElementById("busq").value||"").toLowerCase();
   const fp=document.getElementById("fil-plan").value;
   const filtered=_reservasCache.filter(r=>{
+    if(esDiaSol(r.plan))return false;
     const match=!q||(r.nombre||"").toLowerCase().includes(q)||(r.celular||"").includes(q)||(r.hab||"").includes(q);
     return match&&(!fp||r.plan===fp);
   });
@@ -801,6 +835,61 @@ function renderTablaReservas(){
       <td><span class="badge ${(r.deber||0)>0?"badge-pend":"badge-ok"}">${fmt(r.deber||0)}</span></td>
       <td><button class="btn btn-sm" onclick="abrirEditar(${r.id})">Ver</button></td>
     </tr>`).join("");
+}
+
+// ---- DIA DE SOL ----
+let _diaSolCache = [];
+
+async function renderDiaSol(){
+  await filtrarDiaSol();
+}
+
+async function filtrarDiaSol(){
+  const tb=document.getElementById("tbody-diasol");
+  if(!tb)return;
+  tb.innerHTML="<tr><td colspan='11' style='text-align:center;color:var(--text3);padding:2rem'>Cargando...</td></tr>";
+  if(!_reservasCache.length) _reservasCache = await sbGet("reservas");
+  _diaSolCache = _reservasCache.filter(r=>esDiaSol(r.plan));
+  renderTablaDiaSol();
+}
+
+function renderTablaDiaSol(){
+  const tb=document.getElementById("tbody-diasol");
+  if(!tb)return;
+  const q=(document.getElementById("busq-diasol").value||"").toLowerCase();
+  const fp=document.getElementById("fil-diasol-plan").value;
+  const filtered=_diaSolCache.filter(r=>{
+    const match=!q||(r.nombre||"").toLowerCase().includes(q)||(r.celular||"").includes(q);
+    return match&&(!fp||r.plan===fp);
+  });
+  document.getElementById("count-diasol").textContent=filtered.length+" reservas";
+  if(!filtered.length){tb.innerHTML="<tr><td colspan='11' style='text-align:center;color:var(--text3);padding:2rem'>Sin reservas de día de sol</td></tr>";return}
+  tb.innerHTML=filtered.map((r,i)=>`<tr>
+      <td style="color:var(--text3)">${i+1}</td>
+      <td style="font-weight:500;color:var(--text)">${r.nombre}</td>
+      <td>${r.celular||"—"}</td>
+      <td>${fmtD(r.entrada)}</td>
+      <td>${planBadge(r.plan)}</td>
+      <td>${r.personas}</td>
+      <td style="color:var(--text)">${fmt(r.total||0)}</td>
+      <td style="color:var(--text3)">${r.descPct||r.desc_pct||0}%</td>
+      <td>${fmt(r.abono||0)}</td>
+      <td><span class="badge ${(r.deber||0)>0?"badge-pend":"badge-ok"}">${fmt(r.deber||0)}</span></td>
+      <td><button class="btn btn-sm" onclick="abrirEditar(${r.id})">Ver</button></td>
+    </tr>`).join("");
+}
+
+async function exportarExcelDiaSol(){
+  const reservas=_diaSolCache.length?_diaSolCache:_reservasCache.filter(r=>esDiaSol(r.plan));
+  if(!reservas.length){alert("No hay reservas de día de sol para exportar.");return}
+  const headers=["#","Nombre","Celular","Identificación","Plan","Fecha","Personas","Total","Abono","A Deber","Vendedor","Observaciones"];
+  const rows=reservas.map((r,i)=>[i+1,r.nombre,r.celular||"",r.identificacion||"",r.plan,fmtD(r.entrada),r.personas,r.total,r.abono||0,r.deber||0,r.vendedor||"",r.obs||""]);
+  const SEP="\n";let csv=headers.join(",")+SEP+rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(",")).join(SEP);
+  const blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="diasol_mirador_"+today()+".csv";
+  a.click();
 }
 
 async function exportarExcel(){
