@@ -230,16 +230,17 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
               <option value="JACUZZI">Jacuzzi</option>
             </select>
             <label class="fl">Fecha de entrada *</label>
-            <input class="f" id="f-entrada" type="date" onchange="calcTotal()">
+            <input class="f" id="f-entrada" type="date" onchange="calcTotal();actualizarHabs()">
             <label class="fl" id="lbl-salida">Fecha de salida</label>
-            <input class="f" id="f-salida" type="date" onchange="calcTotal()">
+            <input class="f" id="f-salida" type="date" onchange="calcTotal();actualizarHabs()">
             <label class="fl" id="lbl-hab">Habitación N°</label>
-            <select class="f" id="f-hab">
+            <select class="f" id="f-hab" onchange="checkHabDisp()">
               <option value="NO">No aplica</option>
               <option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>12</option>
               <option>7</option><option>8</option><option>9</option><option>10</option><option>11</option>
               <option>13</option><option>14</option><option>15</option><option>16</option><option>17</option>
             </select>
+            <div id="hab-status" style="margin-top:6px;font-size:12px;display:none"></div>
             <div class="grid2" style="gap:10px">
               <div><label class="fl">N° personas *</label><input class="f" id="f-personas" type="number" min="1" placeholder="0" onchange="calcTotal()"></div>
               <div><label class="fl">Valor/persona *</label><input class="f" id="f-vlr" type="number" min="0" placeholder="0" onchange="calcTotal()"></div>
@@ -344,7 +345,15 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
         <div class="metric"><div class="metric-label">Por cobrar</div><div class="metric-val" id="r-resta">$0</div></div>
       </div>
       <div class="card mb">
-        <div class="card-title">Resumen por mes</div>
+        <div class="flex-between" style="margin-bottom:14px">
+          <div class="card-title" style="margin:0">Resumen por mes</div>
+          <select class="f" id="fil-mes" onchange="renderResumen()" style="width:160px">
+            <option value="">Todos los meses</option>
+            <option>Enero</option><option>Febrero</option><option>Marzo</option><option>Abril</option>
+            <option>Mayo</option><option>Junio</option><option>Julio</option><option>Agosto</option>
+            <option>Septiembre</option><option>Octubre</option><option>Noviembre</option><option>Diciembre</option>
+          </select>
+        </div>
         <div id="r-meses-detalle"></div>
       </div>
       <div class="grid2">
@@ -488,9 +497,66 @@ function updatePlan(){
   const ds=esDiaSol(p);
   document.getElementById("f-salida").disabled=ds;
   document.getElementById("f-hab").disabled=ds;
-  document.getElementById("lbl-salida").style.color=ds?"var(--text3)":"var(--text3)";
-  if(ds){document.getElementById("f-salida").value="";document.getElementById("f-hab").selectedIndex=0}
+  if(ds){document.getElementById("f-salida").value="";document.getElementById("f-hab").selectedIndex=0;document.getElementById("hab-status").style.display="none";}
   calcTotal();
+  actualizarHabs();
+}
+
+function actualizarHabs(){
+  const plan=document.getElementById("f-plan").value;
+  const entrada=document.getElementById("f-entrada").value;
+  const salida=document.getElementById("f-salida").value;
+  const habSel=document.getElementById("f-hab");
+  const statusEl=document.getElementById("hab-status");
+  if(esDiaSol(plan)||!entrada){statusEl.style.display="none";return;}
+  const fin=salida||entrada;
+  const reservas=getData("mds_reservas",[]);
+  const TODAS=["2","3","4","5","6","12","7","8","9","10","11","13","14","15","16","17"];
+  const ocupadas=TODAS.filter(h=>reservas.some(r=>{
+    if(r.hab!==h||esDiaSol(r.plan)||!r.entrada)return false;
+    const rFin=r.salida||r.entrada;
+    return entrada<rFin&&fin>r.entrada;
+  }));
+  const libres=TODAS.filter(h=>!ocupadas.includes(h));
+  const valActual=habSel.value;
+  habSel.innerHTML="<option value='NO'>No aplica</option>";
+  libres.forEach(h=>{
+    const o=document.createElement("option");
+    o.value=h;o.textContent="Hab "+h+(h==="2"||h==="3"||h==="4"||h==="5"||h==="6"||h==="12"?" (Múltiple)":h==="7"||h==="8"||h==="9"||h==="10"||h==="11"?" (Estándar)":" (Jacuzzi)");
+    habSel.appendChild(o);
+  });
+  ocupadas.forEach(h=>{
+    const o=document.createElement("option");
+    o.value=h;o.textContent="Hab "+h+" — OCUPADA";o.disabled=true;
+    o.style.color="#E07070";
+    habSel.appendChild(o);
+  });
+  if(valActual&&valActual!=="NO"&&libres.includes(valActual))habSel.value=valActual;
+  if(libres.length>0){
+    statusEl.style.display="block";
+    statusEl.style.color="#8ABB8A";
+    statusEl.textContent=libres.length+" habitación(es) disponible(s) para esas fechas";
+  } else {
+    statusEl.style.display="block";
+    statusEl.style.color="#E07070";
+    statusEl.textContent="No hay habitaciones disponibles para esas fechas";
+  }
+}
+
+function checkHabDisp(){
+  const hab=document.getElementById("f-hab").value;
+  const entrada=document.getElementById("f-entrada").value;
+  const salida=document.getElementById("f-salida").value;
+  const statusEl=document.getElementById("hab-status");
+  if(!hab||hab==="NO"||!entrada){return;}
+  const reservas=getData("mds_reservas",[]);
+  const fin=salida||entrada;
+  const ocup=reservas.find(r=>r.hab===hab&&!esDiaSol(r.plan)&&r.entrada&&entrada<(r.salida||r.entrada)&&fin>r.entrada);
+  if(ocup){
+    statusEl.style.display="block";
+    statusEl.style.color="#E07070";
+    statusEl.textContent="Hab "+hab+" ocupada por "+ocup.nombre+" hasta "+fmtD(ocup.salida||ocup.entrada);
+  }
 }
 
 function calcTotal(){
@@ -823,14 +889,15 @@ function verDetalleDisp(idx){
 
 function renderResumen(){
   const reservas=getData("mds_reservas",[]);
-  document.getElementById("r-total").textContent=reservas.length;
-  document.getElementById("r-ventas").textContent=fmt(reservas.reduce((s,r)=>s+(r.total||0),0));
-  document.getElementById("r-abonos").textContent=fmt(reservas.reduce((s,r)=>s+(r.abono||0),0));
-  document.getElementById("r-resta").textContent=fmt(reservas.reduce((s,r)=>s+(r.deber||0),0));
+  const filMes=document.getElementById("fil-mes")?document.getElementById("fil-mes").value:"";
+  const filtradas=filMes?reservas.filter(r=>r.entrada&&MESES[parseInt(r.entrada.split("-")[1])-1]===filMes):reservas;
+  document.getElementById("r-total").textContent=filtradas.length;
+  document.getElementById("r-ventas").textContent=fmt(filtradas.reduce((s,r)=>s+(r.total||0),0));
+  document.getElementById("r-abonos").textContent=fmt(filtradas.reduce((s,r)=>s+(r.abono||0),0));
+  document.getElementById("r-resta").textContent=fmt(filtradas.reduce((s,r)=>s+(r.total||0)-(r.abono||0),0));
 
-  // Resumen por mes detallado
   const porMes={};
-  reservas.forEach(r=>{
+  filtradas.forEach(r=>{
     if(!r.entrada)return;
     const m=parseInt(r.entrada.split("-")[1])-1;
     const k=MESES[m];
@@ -874,20 +941,20 @@ function renderResumen(){
         </div>
         <div style="background:var(--dark3);padding:8px;border-radius:var(--radius)">
           <div style="color:var(--text3);margin-bottom:2px">Día sol C</div>
-          <div style="color:#E09050">${d.solC} reservas · ${d.persSol} pers. sol total</div>
+          <div style="color:#E09050">${d.solC} reservas · ${d.persSol} pers. total</div>
         </div>
       </div>
-    </div>`).join("")||'<div style="color:var(--text3);font-size:13px">Sin datos</div>';
+    </div>`).join("")||'<div style="color:var(--text3);font-size:13px">Sin datos para este período</div>';
 
   const planes={};
-  reservas.forEach(r=>{const p=r.plan||"?";if(!planes[p])planes[p]={n:0,total:0};planes[p].n++;planes[p].total+=r.total||0});
+  filtradas.forEach(r=>{const p=r.plan||"?";if(!planes[p])planes[p]={n:0,total:0};planes[p].n++;planes[p].total+=r.total||0});
   document.getElementById("r-planes").innerHTML=Object.entries(planes).sort((a,b)=>b[1].n-a[1].n).map(([p,v])=>`
     <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:12px">
       <span>${planBadge(p)}</span><span style="color:var(--text3)">${v.n}</span><span style="color:var(--text)">${fmt(v.total)}</span>
     </div>`).join("")||'<div style="color:var(--text3);font-size:12px">Sin datos</div>';
 
   const habs={};
-  reservas.forEach(r=>{if(r.hab&&r.hab!=="NO"){if(!habs[r.hab])habs[r.hab]=0;habs[r.hab]++}});
+  filtradas.forEach(r=>{if(r.hab&&r.hab!=="NO"){if(!habs[r.hab])habs[r.hab]=0;habs[r.hab]++}});
   const sorted=Object.entries(habs).sort((a,b)=>b[1]-a[1]).slice(0,8);
   const max=sorted[0]?sorted[0][1]:1;
   document.getElementById("r-habs").innerHTML=sorted.map(([h,n])=>`
@@ -897,7 +964,6 @@ function renderResumen(){
       <span style="width:24px;text-align:right;color:var(--text);font-weight:500">${n}</span>
     </div>`).join("")||'<div style="color:var(--text3);font-size:12px">Sin reservas con habitación</div>';
 }
-
 function renderUsuarios(){
   if(!isAdmin())return;
   const users=getData("mds_users",[]);
