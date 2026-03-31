@@ -121,6 +121,15 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
 .disp-ocup:hover{background:rgba(224,120,32,0.5)}
 .disp-hoy{background:rgba(201,168,76,0.2);color:var(--gold)}
 
+.prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-top:10px}
+.prod-btn{background:var(--dark3);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:14px 10px;text-align:center;cursor:pointer;transition:all .15s;user-select:none}
+.prod-btn:hover,.prod-btn:active{background:rgba(224,120,32,0.2);border-color:var(--orange)}
+.prod-btn .prod-nombre{font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;line-height:1.2}
+.prod-btn .prod-precio{font-size:12px;color:var(--orange);font-weight:700}
+.prod-cat-tab{display:inline-block;padding:5px 14px;border-radius:20px;font-size:11px;cursor:pointer;background:var(--dark3);color:var(--text3);margin:3px;transition:all .15s}
+.prod-cat-tab.active{background:var(--orange);color:#fff}
+.consumo-item{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-bottom:1px solid rgba(255,255,255,0.05);font-size:12px}
+.consumo-item:last-child{border-bottom:none}
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;align-items:center;justify-content:center}
 .modal-bg.show{display:flex}
 .modal{background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:var(--radius-lg);padding:28px;width:600px;max-width:95vw;max-height:90vh;overflow-y:auto}
@@ -452,7 +461,7 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
 
     <!-- BAR & RESTAURANTE -->
     <div class="page" id="page-bar">
-      <div class="page-title">Bar & Restaurante</div>
+      <div class="flex-between"><div class="page-title">Bar & Restaurante</div><button class="btn btn-sm btn-primary" onclick="abrirGestionProductos()" style="margin-top:4px">⚙ Gestionar productos</button></div>
       <div class="page-sub">Registro de ventas diarias y consumos de reservas</div>
       <div id="alert-bar" class="alert"></div>
       <div class="grid2" style="margin-bottom:16px">
@@ -550,6 +559,58 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
     <div id="modal-disp-body"></div>
     <div class="flex-end" style="margin-top:20px">
       <button class="btn btn-sm" onclick="closeModal('modal-disp')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CONSUMOS -->
+<div class="modal-bg" id="modal-consumos">
+  <div class="modal" style="width:900px;max-width:98vw;max-height:95vh;display:flex;flex-direction:column">
+    <div class="modal-title" id="consumos-title">Consumos</div>
+    <div style="display:flex;gap:16px;flex:1;overflow:hidden;min-height:0">
+      <!-- Panel izquierdo: productos -->
+      <div style="flex:1.4;display:flex;flex-direction:column;overflow:hidden">
+        <input class="f" id="busq-prod" type="text" placeholder="Buscar producto..." oninput="filtrarProductos()" style="margin-bottom:8px">
+        <div id="cats-tabs" style="margin-bottom:8px;flex-shrink:0"></div>
+        <div id="prod-grid" class="prod-grid" style="overflow-y:auto;flex:1"></div>
+      </div>
+      <!-- Panel derecho: consumo actual -->
+      <div style="flex:1;display:flex;flex-direction:column;min-width:260px">
+        <div style="font-size:12px;color:var(--text3);margin-bottom:8px;font-weight:600">CONSUMO ACTUAL</div>
+        <div id="consumo-lista" style="flex:1;overflow-y:auto;background:var(--dark3);border-radius:8px;padding:4px"></div>
+        <div style="margin-top:10px;padding:10px;background:var(--dark3);border-radius:8px">
+          <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+            <span style="color:var(--text3)">Total consumo</span>
+            <span style="color:var(--orange);font-weight:700" id="consumo-total">$ 0</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn btn-primary" style="flex:1" onclick="imprimirConsumo()">🖨 Imprimir</button>
+          <button class="btn btn-sm" onclick="closeModal('modal-consumos')">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PRODUCTOS (admin) -->
+<div class="modal-bg" id="modal-productos">
+  <div class="modal" style="width:700px;max-width:95vw">
+    <div class="modal-title">Gestión de Productos</div>
+    <div class="grid2" style="gap:10px;margin-bottom:16px">
+      <div>
+        <label class="fl">Nombre del producto</label>
+        <input class="f" id="np-nombre" placeholder="Ej: Agua mineral">
+        <label class="fl">Categoría</label>
+        <input class="f" id="np-cat" placeholder="Ej: Bebidas, Comidas, Licores...">
+        <label class="fl">Precio ($)</label>
+        <input class="f" id="np-precio" type="number" min="0" placeholder="0">
+        <button class="btn btn-primary" style="margin-top:10px;width:100%" onclick="agregarProducto()">+ Agregar producto</button>
+      </div>
+      <div style="max-height:340px;overflow-y:auto" id="lista-productos-admin"></div>
+    </div>
+    <div style="text-align:right">
+      <button class="btn btn-sm" onclick="closeModal('modal-productos')">Cerrar</button>
     </div>
   </div>
 </div>
@@ -878,7 +939,7 @@ function renderTablaReservas(){
       <td style="color:var(--text3)">${r.desc_pct||0}%</td>
       <td>${fmt(r.abono||0)}</td>
       <td><span class="badge ${(r.deber||0)>0?"badge-pend":"badge-ok"}">${fmt(r.deber||0)}</span></td>
-      <td><button class="btn btn-sm" onclick="abrirEditar(${r.id})">Ver</button></td>
+      <td style="display:flex;gap:4px"><button class="btn btn-sm" onclick="abrirEditar(${r.id})">Ver</button><button class="btn btn-sm btn-primary" onclick="abrirConsumos(${r.id})">Consumos</button></td>
     </tr>`).join("");
 }
 
@@ -1004,7 +1065,7 @@ function renderTablaDiaSol(){
       <td style="color:var(--text3)">${r.descPct||r.desc_pct||0}%</td>
       <td>${fmt(r.abono||0)}</td>
       <td><span class="badge ${(r.deber||0)>0?"badge-pend":"badge-ok"}">${fmt(r.deber||0)}</span></td>
-      <td><button class="btn btn-sm" onclick="abrirEditar(${r.id})">Ver</button></td>
+      <td style="display:flex;gap:4px"><button class="btn btn-sm" onclick="abrirEditar(${r.id})">Ver</button><button class="btn btn-sm btn-primary" onclick="abrirConsumos(${r.id})">Consumos</button></td>
     </tr>`).join("");
 }
 
@@ -1186,6 +1247,192 @@ function verRecibo(){
     ${r.obs?`<div style="margin-top:12px;padding:8px;background:var(--dark3);border-radius:var(--radius);font-size:11px;color:var(--text3)">Nota: ${r.obs}</div>`:""}
     <div style="margin-top:12px;font-size:10px;color:var(--text3);text-align:right">Vendedor: ${r.vendedor||"—"} · Consig: ${r.consig||"—"} · ${fmtD(today())}</div>`;
   document.getElementById("modal-recibo").classList.add("show");
+}
+
+
+// ============ PRODUCTOS & CONSUMOS ============
+let _productos = [];
+let _consumoActual = [];
+let _consumoReservaId = null;
+let _catActiva = '';
+
+async function cargarProductos(){
+  _productos = await sbGet("productos");
+  _productos = _productos.filter(p=>p.activo!==false);
+}
+
+function getCategorias(){
+  const cats = [...new Set(_productos.map(p=>p.categoria||"General"))].sort();
+  return cats;
+}
+
+async function abrirConsumos(reservaId){
+  _consumoReservaId = reservaId;
+  _consumoActual = await sbGet("consumos", {reserva_id: reservaId});
+  await cargarProductos();
+  const r = _reservasCache.find(x=>x.id===reservaId);
+  document.getElementById("consumos-title").textContent = "Consumos — " + (r?r.nombre:"Reserva");
+  _catActiva = '';
+  renderProductosGrid();
+  renderConsumoLista();
+  document.getElementById("modal-consumos").classList.add("show");
+}
+
+function filtrarProductos(){
+  renderProductosGrid();
+}
+
+function renderProductosGrid(){
+  const busq = (document.getElementById("busq-prod").value||"").toLowerCase();
+  const cats = getCategorias();
+  
+  // Render category tabs
+  const tabsEl = document.getElementById("cats-tabs");
+  tabsEl.innerHTML = `<span class="prod-cat-tab ${!_catActiva?"active":""}" onclick="setCat('')">Todos</span>` +
+    cats.map(c=>`<span class="prod-cat-tab ${_catActiva===c?"active":""}" onclick="setCat('${c}')">${c}</span>`).join("");
+
+  // Filter products
+  let prods = _productos;
+  if(_catActiva) prods = prods.filter(p=>(p.categoria||"General")===_catActiva);
+  if(busq) prods = prods.filter(p=>p.nombre.toLowerCase().includes(busq));
+
+  const grid = document.getElementById("prod-grid");
+  if(!prods.length){grid.innerHTML="<div style='color:var(--text3);font-size:12px;padding:20px'>Sin productos</div>";return;}
+  grid.innerHTML = prods.map(p=>`
+    <div class="prod-btn" onclick="agregarAlConsumo(${p.id})">
+      <div class="prod-nombre">${p.nombre}</div>
+      <div class="prod-precio">${fmt(p.precio)}</div>
+    </div>`).join("");
+}
+
+function setCat(cat){
+  _catActiva = cat;
+  renderProductosGrid();
+}
+
+async function agregarAlConsumo(prodId){
+  const prod = _productos.find(p=>p.id===prodId);
+  if(!prod) return;
+  const row = {
+    reserva_id: _consumoReservaId,
+    producto_id: prod.id,
+    producto_nombre: prod.nombre,
+    producto_precio: prod.precio,
+    cantidad: 1,
+    subtotal: prod.precio,
+    registrado_por: currentUser.user
+  };
+  const result = await sbInsert("consumos", row);
+  if(result){
+    _consumoActual.push(result);
+    renderConsumoLista();
+  }
+}
+
+async function eliminarConsumoItem(id){
+  await sbDelete("consumos", id);
+  _consumoActual = _consumoActual.filter(x=>x.id!==id);
+  renderConsumoLista();
+}
+
+function renderConsumoLista(){
+  const lista = document.getElementById("consumo-lista");
+  if(!_consumoActual.length){
+    lista.innerHTML="<div style='color:var(--text3);font-size:12px;padding:20px;text-align:center'>Sin consumos aún</div>";
+    document.getElementById("consumo-total").textContent="$ 0";
+    return;
+  }
+  const total = _consumoActual.reduce((a,c)=>a+(c.subtotal||0),0);
+  lista.innerHTML = _consumoActual.map(c=>`
+    <div class="consumo-item">
+      <div>
+        <div style="color:var(--text);font-weight:500">${c.producto_nombre}</div>
+        <div style="color:var(--text3);font-size:11px">${fmt(c.producto_precio)} × ${c.cantidad}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="color:var(--orange);font-weight:600">${fmt(c.subtotal)}</span>
+        <button class="btn btn-sm btn-danger" style="padding:2px 7px;font-size:11px" onclick="eliminarConsumoItem(${c.id})">×</button>
+      </div>
+    </div>`).join("");
+  document.getElementById("consumo-total").textContent = fmt(total);
+}
+
+function imprimirConsumo(){
+  const r = _reservasCache.find(x=>x.id===_consumoReservaId);
+  const total = _consumoActual.reduce((a,c)=>a+(c.subtotal||0),0);
+  const items = _consumoActual.map(c=>`
+    <tr>
+      <td>${c.producto_nombre}</td>
+      <td style="text-align:center">${c.cantidad}</td>
+      <td style="text-align:right">$${c.producto_precio.toLocaleString("es-CO")}</td>
+      <td style="text-align:right">$${c.subtotal.toLocaleString("es-CO")}</td>
+    </tr>`).join("");
+  const html = `<html><head><title>Consumo</title><style>
+    body{font-family:Arial,sans-serif;padding:30px;max-width:400px;margin:0 auto}
+    h2{text-align:center;margin-bottom:4px}
+    p{text-align:center;color:#666;margin:2px 0}
+    table{width:100%;border-collapse:collapse;margin-top:16px}
+    th{border-bottom:2px solid #333;padding:6px;text-align:left;font-size:12px}
+    td{padding:5px;border-bottom:1px solid #eee;font-size:12px}
+    .total{font-weight:bold;font-size:14px;text-align:right;margin-top:12px;border-top:2px solid #333;padding-top:8px}
+    @media print{button{display:none}}
+  </style></head><body>
+    <h2>Mirador del Sol</h2>
+    <p>Cuenta de consumos</p>
+    <p><strong>${r?r.nombre:""}</strong></p>
+    <p style="font-size:12px">${new Date().toLocaleDateString("es-CO")}</p>
+    <table>
+      <thead><tr><th>Producto</th><th>Cant</th><th>Precio</th><th>Subtotal</th></tr></thead>
+      <tbody>${items}</tbody>
+    </table>
+    <div class="total">TOTAL: $${total.toLocaleString("es-CO")}</div>
+    <p style="text-align:center;margin-top:20px;font-size:11px;color:#999">¡Gracias por su visita!</p>
+    <script>window.onload=()=>window.print()<\/script>
+  </body></html>`;
+  const w = window.open("","_blank");
+  w.document.write(html);
+  w.document.close();
+}
+
+// ---- GESTIÓN DE PRODUCTOS (admin) ----
+async function abrirGestionProductos(){
+  await cargarProductos();
+  renderListaProductosAdmin();
+  document.getElementById("modal-productos").classList.add("show");
+}
+
+function renderListaProductosAdmin(){
+  const el = document.getElementById("lista-productos-admin");
+  if(!_productos.length){el.innerHTML="<div style='color:var(--text3);font-size:12px'>Sin productos aún</div>";return;}
+  el.innerHTML = _productos.map(p=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+      <div>
+        <div style="font-size:12px;color:var(--text)">${p.nombre}</div>
+        <div style="font-size:11px;color:var(--text3)">${p.categoria||"General"} · ${fmt(p.precio)}</div>
+      </div>
+      <button class="btn btn-sm btn-danger" style="padding:2px 8px" onclick="eliminarProducto(${p.id})">×</button>
+    </div>`).join("");
+}
+
+async function agregarProducto(){
+  const nombre = document.getElementById("np-nombre").value.trim();
+  const cat = document.getElementById("np-cat").value.trim()||"General";
+  const precio = parseFloat(document.getElementById("np-precio").value)||0;
+  if(!nombre||precio<=0){alert("Nombre y precio son obligatorios.");return;}
+  const result = await sbInsert("productos",{nombre:nombre.toUpperCase(),categoria:cat.toUpperCase(),precio,activo:true});
+  if(result){
+    _productos.push(result);
+    document.getElementById("np-nombre").value="";
+    document.getElementById("np-precio").value="";
+    renderListaProductosAdmin();
+  }
+}
+
+async function eliminarProducto(id){
+  if(!confirm("¿Eliminar este producto?"))return;
+  await sbDelete("productos",id);
+  _productos = _productos.filter(p=>p.id!==id);
+  renderListaProductosAdmin();
 }
 
 function closeModal(id){document.getElementById(id).classList.remove("show")}
