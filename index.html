@@ -392,7 +392,7 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
               <tr>
                 <th>#</th><th>Nombre</th><th>Celular</th><th>Fecha</th>
                 <th>Plan</th><th>Personas</th>
-                <th>Total</th><th>Desc%</th><th>Abono</th><th>Restante</th><th></th>
+                <th>Total</th><th>Desc%</th><th>Abono</th><th>Restante</th><th>Estado</th><th></th>
               </tr>
             </thead>
             <tbody id="tbody-diasol"></tbody>
@@ -1044,8 +1044,14 @@ async function renderCalDiaSol2(){
       const ocups=reservas.filter(r=>r.plan===p&&r.entrada===ds);
       if(ocups.length){
         const totalPers=ocups.reduce((a,r)=>a+(r.personas||0),0);
-        const nombres=ocups.map(r=>r.nombre.split(" ")[0]).join(", ");
-        html+=`<td class="disp-cell disp-ocup" title="${nombres} · ${totalPers} personas" style="cursor:default;font-size:8px">${ocups.length} res · ${totalPers}p</td>`;
+        // Si hay una sola reserva, clic directo; si hay varias, mostrar lista
+        if(ocups.length===1){
+          const nombre=ocups[0].nombre.split(" ")[0];
+          html+=`<td class="disp-cell disp-ocup" onclick="verDetalleDiaSol(${ocups[0].id})" title="Clic para ver detalle" style="font-size:8px">${nombre} · ${totalPers}p</td>`;
+        } else {
+          const nombres=ocups.map(r=>r.nombre.split(" ")[0]).join(", ");
+          html+=`<td class="disp-cell disp-ocup" onclick="verListaDiaSol([${ocups.map(r=>r.id).join(',')}])" title="${nombres}" style="font-size:8px">${ocups.length} res · ${totalPers}p</td>`;
+        }
       } else if(esHoy){
         html+=`<td class="disp-cell" style="background:rgba(201,168,76,0.08)">—</td>`;
       } else {
@@ -1058,6 +1064,59 @@ async function renderCalDiaSol2(){
   document.getElementById("cal-diasol2-container").innerHTML=html;
 }
 
+function verDetalleDiaSol(id){
+  const r=_reservasCache.find(x=>x.id===id); if(!r)return;
+  document.getElementById("modal-disp-body").innerHTML=`
+    <div class="res-detail"><span style="color:var(--text3)">Cliente</span><span style="font-weight:500">${r.nombre}</span></div>
+    ${r.celular?`<div class="res-detail"><span style="color:var(--text3)">Celular</span><span>${r.celular}</span></div>`:""}
+    <div class="res-detail"><span style="color:var(--text3)">Plan</span><span>${planBadge(r.plan)}</span></div>
+    <div class="res-detail"><span style="color:var(--text3)">Fecha</span><span>${fmtD(r.entrada)}</span></div>
+    <div class="res-detail"><span style="color:var(--text3)">Personas</span><span>${r.personas}</span></div>
+    <div class="res-detail"><span style="color:var(--text3)">Total</span><span style="color:var(--orange);font-weight:500">${fmt(r.total)}</span></div>
+    <div class="res-detail"><span style="color:var(--text3)">A deber</span><span style="color:${(r.deber||0)>0?"#E09050":"#8ABB8A"};font-weight:500">${fmt(r.deber||0)}</span></div>
+    <div class="res-detail"><span style="color:var(--text3)">Vendedor</span><span>${r.vendedor||"—"}</span></div>
+    ${r.obs?`<div style="margin-top:10px;padding:8px;background:var(--dark3);border-radius:var(--radius);font-size:11px;color:var(--text3)">Nota: ${r.obs}</div>`:""}
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.07)">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:8px">ESTADO DE LA RESERVA</div>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <span id="disp-estado-badge">${estadoBadge(r.estado)}</span>
+        <button class="btn btn-sm" onclick="cambiarEstadoDiaSol(${r.id})" id="disp-estado-btn">${estadoLabel(r.estado)}</button>
+      </div>
+    </div>
+    <div style="margin-top:12px;display:flex;gap:8px">
+      <button class="btn btn-primary" style="flex:1;font-size:13px;padding:9px" onclick="closeModal('modal-disp');abrirConsumos(${r.id})">🛒 Consumos</button>
+      <button class="btn" style="flex:1;font-size:13px;padding:9px" onclick="closeModal('modal-disp');abrirEditar(${r.id})">✏ Editar</button>
+    </div>`;
+  document.getElementById("modal-disp").classList.add("show");
+}
+
+function verListaDiaSol(ids){
+  const reservas = ids.map(id=>_reservasCache.find(x=>x.id===id)).filter(Boolean);
+  document.getElementById("modal-disp-body").innerHTML=`
+    <div style="font-size:12px;color:var(--text3);margin-bottom:10px">${reservas.length} reservas este día</div>
+    ${reservas.map(r=>`
+      <div style="padding:10px;background:var(--dark3);border-radius:8px;margin-bottom:8px;cursor:pointer" onclick="closeModal('modal-disp');verDetalleDiaSol(${r.id})">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-weight:500;color:var(--text)">${r.nombre}</div>
+            <div style="font-size:11px;color:var(--text3)">${planBadge(r.plan)} · ${r.personas} personas · ${fmt(r.total)}</div>
+          </div>
+          <span style="color:var(--orange);font-size:11px">Ver →</span>
+        </div>
+      </div>`).join("")}`;
+  document.getElementById("modal-disp").classList.add("show");
+}
+
+async function cambiarEstadoDiaSol(id){
+  const r=_reservasCache.find(x=>x.id===id); if(!r)return;
+  const nuevo=estadoSiguiente(r.estado);
+  await sbUpdate("reservas",id,{estado:nuevo});
+  r.estado=nuevo;
+  document.getElementById("disp-estado-badge").innerHTML=estadoBadge(nuevo);
+  document.getElementById("disp-estado-btn").textContent=estadoLabel(nuevo);
+  renderTablaDiaSol();
+}
+
 async function renderDiaSol(){
   await filtrarDiaSol();
 }
@@ -1065,7 +1124,7 @@ async function renderDiaSol(){
 async function filtrarDiaSol(){
   const tb=document.getElementById("tbody-diasol");
   if(!tb)return;
-  tb.innerHTML="<tr><td colspan='11' style='text-align:center;color:var(--text3);padding:2rem'>Cargando...</td></tr>";
+  tb.innerHTML="<tr><td colspan='12' style='text-align:center;color:var(--text3);padding:2rem'>Cargando...</td></tr>";
   if(!_reservasCache.length) _reservasCache = await sbGet("reservas");
   _diaSolCache = _reservasCache.filter(r=>esDiaSol(r.plan));
   renderTablaDiaSol();
@@ -1081,7 +1140,7 @@ function renderTablaDiaSol(){
     return match&&(!fp||r.plan===fp);
   });
   document.getElementById("count-diasol").textContent=filtered.length+" reservas";
-  if(!filtered.length){tb.innerHTML="<tr><td colspan='11' style='text-align:center;color:var(--text3);padding:2rem'>Sin reservas de día de sol</td></tr>";return}
+  if(!filtered.length){tb.innerHTML="<tr><td colspan='12' style='text-align:center;color:var(--text3);padding:2rem'>Sin reservas de día de sol</td></tr>";return}
   tb.innerHTML=filtered.map((r,i)=>`<tr>
       <td style="color:var(--text3)">${i+1}</td>
       <td style="font-weight:500;color:var(--text)">${r.nombre}</td>
@@ -1090,9 +1149,10 @@ function renderTablaDiaSol(){
       <td>${planBadge(r.plan)}</td>
       <td>${r.personas}</td>
       <td style="color:var(--text)">${fmt(r.total||0)}</td>
-      <td style="color:var(--text3)">${r.descPct||r.desc_pct||0}%</td>
+      <td style="color:var(--text3)">${r.desc_pct||0}%</td>
       <td>${fmt(r.abono||0)}</td>
       <td><span class="badge ${(r.deber||0)>0?"badge-pend":"badge-ok"}">${fmt(r.deber||0)}</span></td>
+      <td>${estadoBadge(r.estado)}</td>
       <td style="display:flex;gap:4px;flex-wrap:wrap">
         <button class="btn btn-sm" onclick="abrirEditar(${r.id})">Ver</button>
         <button class="btn btn-sm btn-primary" onclick="abrirConsumos(${r.id})">Consumos</button>
@@ -1191,11 +1251,28 @@ function abrirEditar(id){
       <div><label class="fl">Niños 5-9</label><input class="f" id="e-ninos2" type="number" value="${r.ninos2||0}" ${dis}></div>
       <div><label class="fl">Mascotas</label><input class="f" id="e-mascotas" type="number" value="${r.mascotas||0}" ${dis}></div>
       <div><label class="fl">Abono</label><input class="f" id="e-abono" type="number" value="${r.abono||0}" ${dis}></div>
+      <div><label class="fl">Medio de pago abono</label>
+        <select class="f" id="e-medio-abono" ${dis}>
+          <option value="">— Seleccionar —</option>
+          <option ${(r.medio_abono||"")==="Efectivo"?"selected":""}>Efectivo</option>
+          <option ${(r.medio_abono||"")==="Transferencia"?"selected":""}>Transferencia</option>
+          <option ${(r.medio_abono||"")==="Datáfono"?"selected":""}>Datáfono</option>
+        </select>
+      </div>
+      <div><label class="fl">Pago restante ($)</label><input class="f" id="e-pago-restante" type="number" value="${r.pago_restante||0}" ${dis}></div>
+      <div><label class="fl">Medio de pago restante</label>
+        <select class="f" id="e-medio-restante" ${dis}>
+          <option value="">— Seleccionar —</option>
+          <option ${(r.medio_restante||"")==="Efectivo"?"selected":""}>Efectivo</option>
+          <option ${(r.medio_restante||"")==="Transferencia"?"selected":""}>Transferencia</option>
+          <option ${(r.medio_restante||"")==="Datáfono"?"selected":""}>Datáfono</option>
+        </select>
+      </div>
     </div>
     <div class="metric" style="margin-top:14px">
       <div class="metric-label">Resumen financiero</div>
       <div class="metric-val" style="color:var(--orange)">${fmt(r.total||0)}</div>
-      <div class="metric-sub">Descuento: ${r.descPct||0}% (${fmt(r.descValor||0)}) · Abono: ${fmt(r.abono||0)} · Restante: ${fmt(r.deber||0)} · Por: ${r.creadoPor||"—"}</div>
+      <div class="metric-sub">Descuento: ${r.descPct||0}% (${fmt(r.descValor||0)}) · Abono: ${fmt(r.abono||0)} ${r.medio_abono?'('+r.medio_abono+')':''} · Restante: ${fmt(r.deber||0)} ${r.medio_restante?'· Pagado con '+r.medio_restante:''} · Por: ${r.creadoPor||"—"}</div>
     </div>`;
   document.getElementById("modal-edit").classList.add("show");
   }catch(e){alert("Error al abrir reserva: "+e.message);console.error(e);}
@@ -1228,18 +1305,22 @@ async function guardarEdicion(){
   r.totalBruto=parseFloat(document.getElementById("e-totalBruto").value)||0;
   r.descPct=parseFloat(document.getElementById("e-descPct").value)||0;
   r.abono=parseFloat(document.getElementById("e-abono").value)||0;
+  r.medio_abono=document.getElementById("e-medio-abono").value||null;
+  r.pago_restante=parseFloat(document.getElementById("e-pago-restante").value)||0;
+  r.medio_restante=document.getElementById("e-medio-restante").value||null;
   const dias=r.entrada&&r.salida&&!esDiaSol(r.plan)?Math.round((new Date(r.salida)-new Date(r.entrada))/86400000):1;
   r.dias=dias;
   r.descValor=Math.round(r.totalBruto*(r.descPct/100));
   r.total=r.totalBruto-r.descValor;
-  r.deber=Math.max(0,r.total-r.abono);
+  r.deber=Math.max(0,r.total-r.abono-(r.pago_restante||0));
   const upd={
     nombre:r.nombre,celular:r.celular,identificacion:r.identificacion,correo:r.correo,obs:r.obs,
     plan:r.plan,entrada:r.entrada,salida:r.salida||null,hab:r.hab,personas:r.personas,
     abono:r.abono,vendedor:r.vendedor,consig:r.consig,decoracion:r.decoracion,
     ninos1:r.ninos1,ninos2:r.ninos2,mascotas:r.mascotas,
     total_bruto:r.totalBruto,desc_pct:r.descPct,desc_valor:r.descValor,
-    total:r.total,deber:r.deber,dias:r.dias
+    total:r.total,deber:r.deber,dias:r.dias,
+    medio_abono:r.medio_abono,pago_restante:r.pago_restante,medio_restante:r.medio_restante
   };
   const ok=await sbUpdate("reservas",editIdx,upd);
   if(!ok){alert("Error al guardar. Intenta de nuevo.");return;}
@@ -1525,6 +1606,7 @@ function imprimirConsumo(){
 // ---- GESTIÓN DE PRODUCTOS (admin) ----
 async function abrirGestionProductos(){
   await cargarProductos();
+  cargarCategorias();
   renderCategoriasUI();
   renderInvTabs();
   renderListaProductosAdmin();
@@ -1534,50 +1616,63 @@ async function abrirGestionProductos(){
 let _invFiltro = '';
 let _categorias = [];
 
-async function cargarCategorias(){
-  // Extraer categorías únicas de los productos existentes + las base
-  const base = ['MEKATO','LICOR','BEBIDAS','CERVEZAS','HELADOS'];
-  const deProd = _productos.map(p=>p.categoria||'').filter(Boolean);
-  _categorias = [...new Set([...base, ...deProd])].sort();
+const CATS_KEY = 'mds_categorias';
+const CATS_BASE = ['MEKATO','LICOR','BEBIDAS','CERVEZAS','HELADOS'];
+
+function cargarCategorias(){
+  try {
+    const saved = localStorage.getItem(CATS_KEY);
+    const extra = saved ? JSON.parse(saved) : [];
+    const deProd = _productos.map(p=>p.categoria||'').filter(Boolean);
+    _categorias = [...new Set([...CATS_BASE, ...extra, ...deProd])].sort();
+  } catch(e){ _categorias = [...CATS_BASE]; }
+}
+
+function guardarCategorias(){
+  const extras = _categorias.filter(c=>!CATS_BASE.includes(c));
+  localStorage.setItem(CATS_KEY, JSON.stringify(extras));
 }
 
 function renderCategoriasUI(){
   cargarCategorias();
-  // Selector de nuevo producto
   const sel = document.getElementById("np-cat");
-  sel.innerHTML = '<option value="">— Seleccionar —</option>' +
+  if(sel) sel.innerHTML = '<option value="">— Seleccionar —</option>' +
     _categorias.map(c=>`<option value="${c}">${c.charAt(0)+c.slice(1).toLowerCase()}</option>`).join("");
-  // Lista de categorías con opción de eliminar
   const lista = document.getElementById("lista-categorias");
-  lista.innerHTML = _categorias.map(c=>`
+  if(lista) lista.innerHTML = _categorias.map(c=>`
     <div style="display:flex;align-items:center;gap:4px;background:var(--dark2);border-radius:20px;padding:3px 10px">
       <span style="font-size:11px;color:var(--text2)">${c.charAt(0)+c.slice(1).toLowerCase()}</span>
-      <button onclick="eliminarCategoria('${c}')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:12px;padding:0 2px;line-height:1" title="Eliminar">×</button>
+      ${!CATS_BASE.includes(c)?`<button onclick="eliminarCategoria('${c}')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:13px;padding:0 2px;line-height:1">×</button>`:''}
     </div>`).join("");
 }
 
 function renderInvTabs(){
   const cont = document.getElementById("inv-tabs-container");
+  if(!cont) return;
   cont.innerHTML = `<span class="prod-cat-tab ${!_invFiltro?'active':''}" onclick="filtroInventario('')">Todos</span>` +
     _categorias.map(c=>`<span class="prod-cat-tab ${_invFiltro===c?'active':''}" onclick="filtroInventario('${c}')">${c.charAt(0)+c.slice(1).toLowerCase()}</span>`).join("");
 }
 
 function agregarCategoria(){
   const input = document.getElementById("nueva-cat-input");
-  const val = input.value.trim().toUpperCase();
+  const val = (input.value||"").trim().toUpperCase();
   if(!val){alert("Escribe el nombre de la categoría.");return;}
+  cargarCategorias();
   if(_categorias.includes(val)){alert("Esa categoría ya existe.");return;}
   _categorias.push(val);
   _categorias.sort();
-  input.value = "";
+  guardarCategorias();
+  input.value="";
   renderCategoriasUI();
   renderInvTabs();
 }
 
 function eliminarCategoria(cat){
-  const enUso = _productos.some(p=>p.categoria===cat);
+  const enUso = _productos.some(p=>(p.categoria||'').toUpperCase()===cat.toUpperCase());
   if(enUso){alert(`No puedes eliminar "${cat}" porque tiene productos asignados.`);return;}
+  if(!confirm(`¿Eliminar la categoría "${cat}"?`))return;
   _categorias = _categorias.filter(c=>c!==cat);
+  guardarCategorias();
   if(_invFiltro===cat) _invFiltro='';
   renderCategoriasUI();
   renderInvTabs();
