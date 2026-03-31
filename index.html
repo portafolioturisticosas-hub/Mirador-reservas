@@ -754,20 +754,20 @@ async function guardarReserva(){
     nombre, celular:document.getElementById("f-celular").value.trim()||null,
     identificacion:document.getElementById("f-id").value.trim()||null,
     correo:document.getElementById("f-correo").value.trim()||null,
-    tipoCliente:document.getElementById("f-tipocliente").value||null,
+    tipo_cliente:document.getElementById("f-tipocliente").value||null,
     obs:document.getElementById("f-obs").value.trim()||null,
     plan, entrada, salida:salida||null, dias, hab:hab||null, personas,
     ninos1:parseInt(document.getElementById("f-ninos1").value)||0,
     ninos2:parseInt(document.getElementById("f-ninos2").value)||0,
     mascotas:parseInt(document.getElementById("f-mascotas").value)||0,
     decoracion:document.getElementById("f-decoracion").value,
-    totalBruto, descPct, descValor,
+    total_bruto:totalBruto, desc_pct:descPct, desc_valor:descValor,
     total, abono, deber,
     ventas_bar:0, ventas_restaurante:0,
     fabono:document.getElementById("f-fabono").value||null,
     vendedor:document.getElementById("f-vendedor").value,
     consig:document.getElementById("f-consig").value,
-    creadoPor:currentUser.user, fecha:today()
+    creado_por:currentUser.user, fecha:today()
   };
   const result = await sbInsert("reservas", row);
   if(result){
