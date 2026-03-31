@@ -598,57 +598,44 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
 
 <!-- MODAL PRODUCTOS (admin) -->
 <div class="modal-bg" id="modal-productos">
-  <div class="modal" style="width:780px;max-width:97vw">
+  <div class="modal" style="width:820px;max-width:97vw">
     <div class="modal-title">Gestión de Productos e Inventario</div>
     <div class="grid2" style="gap:16px;margin-bottom:16px">
-      <div style="background:var(--dark3);border-radius:10px;padding:16px">
-        <div style="font-size:11px;color:var(--orange);font-weight:600;letter-spacing:0.5px;margin-bottom:12px;text-transform:uppercase">Agregar nuevo producto</div>
-        <label class="fl" style="margin-top:0">Nombre del producto</label>
-        <input class="f" id="np-nombre" placeholder="Ej: Agua mineral">
-        <label class="fl">Categoría</label>
-        <select class="f" id="np-cat">
-          <option value="">— Seleccionar —</option>
-          <option value="MEKATO">Mekato</option>
-          <option value="LICOR">Licor</option>
-          <option value="BEBIDAS">Bebidas</option>
-          <option value="CERVEZAS">Cervezas</option>
-          <option value="HELADOS">Helados</option>
-        </select>
-        <label class="fl">Precio ($)</label>
-        <input class="f" id="np-precio" type="number" min="0" placeholder="0">
-        <label class="fl">Stock inicial (unidades)</label>
-        <input class="f" id="np-stock" type="number" min="0" value="0" placeholder="0">
-        <button class="btn btn-primary" style="margin-top:14px;width:100%" onclick="agregarProducto()">+ Agregar producto</button>
-      </div>
-      <div>
-        <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
-          <span class="prod-cat-tab active" id="inv-tab-todos" onclick="filtroInventario('')">Todos</span>
-          <span class="prod-cat-tab" id="inv-tab-MEKATO" onclick="filtroInventario('MEKATO')">Mekato</span>
-          <span class="prod-cat-tab" id="inv-tab-LICOR" onclick="filtroInventario('LICOR')">Licor</span>
-          <span class="prod-cat-tab" id="inv-tab-BEBIDAS" onclick="filtroInventario('BEBIDAS')">Bebidas</span>
-          <span class="prod-cat-tab" id="inv-tab-CERVEZAS" onclick="filtroInventario('CERVEZAS')">Cervezas</span>
-          <span class="prod-cat-tab" id="inv-tab-HELADOS" onclick="filtroInventario('HELADOS')">Helados</span>
+      <!-- Columna izquierda -->
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <!-- Agregar producto -->
+        <div style="background:var(--dark3);border-radius:10px;padding:16px">
+          <div style="font-size:11px;color:var(--orange);font-weight:600;letter-spacing:0.5px;margin-bottom:12px;text-transform:uppercase">Agregar nuevo producto</div>
+          <label class="fl" style="margin-top:0">Nombre del producto</label>
+          <input class="f" id="np-nombre" placeholder="Ej: Agua mineral">
+          <label class="fl">Categoría</label>
+          <select class="f" id="np-cat">
+            <option value="">— Seleccionar —</option>
+          </select>
+          <label class="fl">Precio ($)</label>
+          <input class="f" id="np-precio" type="number" min="0" placeholder="0">
+          <label class="fl">Stock inicial (unidades)</label>
+          <input class="f" id="np-stock" type="number" min="0" value="0" placeholder="0">
+          <button class="btn btn-primary" style="margin-top:14px;width:100%" onclick="agregarProducto()">+ Agregar producto</button>
         </div>
-        <div style="max-height:320px;overflow-y:auto" id="lista-productos-admin"></div>
+        <!-- Gestionar categorías -->
+        <div style="background:var(--dark3);border-radius:10px;padding:16px">
+          <div style="font-size:11px;color:var(--orange);font-weight:600;letter-spacing:0.5px;margin-bottom:10px;text-transform:uppercase">Categorías</div>
+          <div style="display:flex;gap:8px;margin-bottom:10px">
+            <input class="f" id="nueva-cat-input" placeholder="Nueva categoría..." style="flex:1">
+            <button class="btn btn-primary btn-sm" onclick="agregarCategoria()">+ Agregar</button>
+          </div>
+          <div id="lista-categorias" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+        </div>
+      </div>
+      <!-- Columna derecha: lista productos -->
+      <div>
+        <div id="inv-tabs-container" style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap"></div>
+        <div style="max-height:380px;overflow-y:auto" id="lista-productos-admin"></div>
       </div>
     </div>
     <div style="text-align:right">
       <button class="btn btn-sm" onclick="closeModal('modal-productos')">Cerrar</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL REPONER STOCK -->
-<div class="modal-bg" id="modal-reponer">
-  <div class="modal" style="width:340px">
-    <div class="modal-title">Reponer Stock</div>
-    <div id="reponer-nombre" style="font-size:14px;color:var(--text);margin-bottom:4px"></div>
-    <div id="reponer-actual" style="font-size:12px;color:var(--text3);margin-bottom:16px"></div>
-    <label class="fl" style="margin-top:0">Unidades a agregar</label>
-    <input class="f" id="reponer-cantidad" type="number" min="1" value="1" placeholder="0">
-    <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">
-      <button class="btn btn-sm" onclick="closeModal('modal-reponer')">Cancelar</button>
-      <button class="btn btn-primary btn-sm" onclick="confirmarReposicion()">Reponer</button>
     </div>
   </div>
 </div>
@@ -1403,32 +1390,64 @@ function setCat(cat){
 async function agregarAlConsumo(prodId){
   const prod = _productos.find(p=>p.id===prodId);
   if(!prod) return;
-  const row = {
-    reserva_id: _consumoReservaId,
-    producto_id: prod.id,
-    producto_nombre: prod.nombre,
-    producto_precio: prod.precio,
-    cantidad: 1,
-    subtotal: prod.precio,
-    registrado_por: currentUser.user
-  };
-  const result = await sbInsert("consumos", row);
-  if(result){
-    _consumoActual.push(result);
-    // Descontar stock
-    const nuevoStock = Math.max(0, (prod.stock||0) - 1);
+  // Ver si ya existe en el consumo actual
+  const existente = _consumoActual.find(c=>c.producto_id===prodId);
+  if(existente){
+    // Sumar 1 a la cantidad existente
+    const nuevaCant = (existente.cantidad||1) + 1;
+    const nuevoSub = nuevaCant * existente.producto_precio;
+    const ok = await sbUpdate("consumos", existente.id, {cantidad: nuevaCant, subtotal: nuevoSub});
+    if(ok){ existente.cantidad = nuevaCant; existente.subtotal = nuevoSub; }
+  } else {
+    const row = {
+      reserva_id: _consumoReservaId,
+      producto_id: prod.id,
+      producto_nombre: prod.nombre,
+      producto_precio: prod.precio,
+      cantidad: 1,
+      subtotal: prod.precio,
+      registrado_por: currentUser.user
+    };
+    const result = await sbInsert("consumos", row);
+    if(result) _consumoActual.push(result);
+  }
+  // Descontar 1 del stock
+  const nuevoStock = Math.max(0, (prod.stock||0) - 1);
+  await sbUpdate("productos", prod.id, {stock: nuevoStock});
+  prod.stock = nuevoStock;
+  renderConsumoLista();
+  renderProductosGrid();
+}
+
+async function cambiarCantidad(consumoId, delta){
+  const item = _consumoActual.find(x=>x.id===consumoId);
+  if(!item) return;
+  const nuevaCant = (item.cantidad||1) + delta;
+  if(nuevaCant <= 0){
+    // Eliminar el item
+    await eliminarConsumoItem(consumoId);
+    return;
+  }
+  const nuevoSub = nuevaCant * item.producto_precio;
+  await sbUpdate("consumos", consumoId, {cantidad: nuevaCant, subtotal: nuevoSub});
+  // Ajustar stock según delta
+  const prod = _productos.find(p=>p.id===item.producto_id);
+  if(prod){
+    const nuevoStock = Math.max(0, (prod.stock||0) - delta);
     await sbUpdate("productos", prod.id, {stock: nuevoStock});
     prod.stock = nuevoStock;
-    renderConsumoLista();
-    renderProductosGrid(); // actualiza color de stock en el grid
   }
+  item.cantidad = nuevaCant;
+  item.subtotal = nuevoSub;
+  renderConsumoLista();
+  renderProductosGrid();
 }
 
 async function eliminarConsumoItem(id){
   const item = _consumoActual.find(x=>x.id===id);
   await sbDelete("consumos", id);
   _consumoActual = _consumoActual.filter(x=>x.id!==id);
-  // Devolver stock
+  // Devolver stock completo de esa fila
   if(item){
     const prod = _productos.find(p=>p.id===item.producto_id);
     if(prod){
@@ -1451,12 +1470,15 @@ function renderConsumoLista(){
   const total = _consumoActual.reduce((a,c)=>a+(c.subtotal||0),0);
   lista.innerHTML = _consumoActual.map(c=>`
     <div class="consumo-item">
-      <div>
+      <div style="flex:1">
         <div style="color:var(--text);font-weight:500">${c.producto_nombre}</div>
         <div style="color:var(--text3);font-size:11px">${fmt(c.producto_precio)} × ${c.cantidad}</div>
       </div>
-      <div style="display:flex;align-items:center;gap:8px">
-        <span style="color:var(--orange);font-weight:600">${fmt(c.subtotal)}</span>
+      <div style="display:flex;align-items:center;gap:6px">
+        <button onclick="cambiarCantidad(${c.id},-1)" style="width:28px;height:28px;border-radius:6px;border:1px solid rgba(255,255,255,0.15);background:var(--dark2);color:var(--text);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center">−</button>
+        <span style="color:var(--orange);font-weight:700;font-size:15px;min-width:22px;text-align:center">${c.cantidad}</span>
+        <button onclick="cambiarCantidad(${c.id},1)" style="width:28px;height:28px;border-radius:6px;border:1px solid rgba(224,120,32,0.4);background:rgba(224,120,32,0.15);color:var(--orange);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center">+</button>
+        <span style="color:var(--orange);font-weight:600;margin-left:4px">${fmt(c.subtotal)}</span>
         <button class="btn btn-sm btn-danger" style="padding:2px 7px;font-size:11px" onclick="eliminarConsumoItem(${c.id})">×</button>
       </div>
     </div>`).join("");
@@ -1503,17 +1525,68 @@ function imprimirConsumo(){
 // ---- GESTIÓN DE PRODUCTOS (admin) ----
 async function abrirGestionProductos(){
   await cargarProductos();
+  renderCategoriasUI();
+  renderInvTabs();
   renderListaProductosAdmin();
   document.getElementById("modal-productos").classList.add("show");
 }
 
 let _invFiltro = '';
+let _categorias = [];
+
+async function cargarCategorias(){
+  // Extraer categorías únicas de los productos existentes + las base
+  const base = ['MEKATO','LICOR','BEBIDAS','CERVEZAS','HELADOS'];
+  const deProd = _productos.map(p=>p.categoria||'').filter(Boolean);
+  _categorias = [...new Set([...base, ...deProd])].sort();
+}
+
+function renderCategoriasUI(){
+  cargarCategorias();
+  // Selector de nuevo producto
+  const sel = document.getElementById("np-cat");
+  sel.innerHTML = '<option value="">— Seleccionar —</option>' +
+    _categorias.map(c=>`<option value="${c}">${c.charAt(0)+c.slice(1).toLowerCase()}</option>`).join("");
+  // Lista de categorías con opción de eliminar
+  const lista = document.getElementById("lista-categorias");
+  lista.innerHTML = _categorias.map(c=>`
+    <div style="display:flex;align-items:center;gap:4px;background:var(--dark2);border-radius:20px;padding:3px 10px">
+      <span style="font-size:11px;color:var(--text2)">${c.charAt(0)+c.slice(1).toLowerCase()}</span>
+      <button onclick="eliminarCategoria('${c}')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:12px;padding:0 2px;line-height:1" title="Eliminar">×</button>
+    </div>`).join("");
+}
+
+function renderInvTabs(){
+  const cont = document.getElementById("inv-tabs-container");
+  cont.innerHTML = `<span class="prod-cat-tab ${!_invFiltro?'active':''}" onclick="filtroInventario('')">Todos</span>` +
+    _categorias.map(c=>`<span class="prod-cat-tab ${_invFiltro===c?'active':''}" onclick="filtroInventario('${c}')">${c.charAt(0)+c.slice(1).toLowerCase()}</span>`).join("");
+}
+
+function agregarCategoria(){
+  const input = document.getElementById("nueva-cat-input");
+  const val = input.value.trim().toUpperCase();
+  if(!val){alert("Escribe el nombre de la categoría.");return;}
+  if(_categorias.includes(val)){alert("Esa categoría ya existe.");return;}
+  _categorias.push(val);
+  _categorias.sort();
+  input.value = "";
+  renderCategoriasUI();
+  renderInvTabs();
+}
+
+function eliminarCategoria(cat){
+  const enUso = _productos.some(p=>p.categoria===cat);
+  if(enUso){alert(`No puedes eliminar "${cat}" porque tiene productos asignados.`);return;}
+  _categorias = _categorias.filter(c=>c!==cat);
+  if(_invFiltro===cat) _invFiltro='';
+  renderCategoriasUI();
+  renderInvTabs();
+  renderListaProductosAdmin();
+}
 
 function filtroInventario(cat){
   _invFiltro = cat;
-  document.querySelectorAll('[id^="inv-tab-"]').forEach(el=>el.classList.remove('active'));
-  const tab = document.getElementById('inv-tab-'+(cat||'todos'));
-  if(tab) tab.classList.add('active');
+  renderInvTabs();
   renderListaProductosAdmin();
 }
 
@@ -1521,11 +1594,6 @@ function stockColor(s){
   if(s<=0) return '#E07070';
   if(s<=5) return '#E09050';
   return '#8ABB8A';
-}
-function stockLabel(s){
-  if(s<=0) return '⚠ Sin stock';
-  if(s<=5) return '⚡ Poco: '+s;
-  return ''+s;
 }
 
 function renderListaProductosAdmin(){
@@ -1540,11 +1608,29 @@ function renderListaProductosAdmin(){
         <div style="font-size:11px;color:var(--text3);margin-top:2px">${p.categoria||'General'} · ${fmt(p.precio)}</div>
       </div>
       <div style="display:flex;align-items:center;gap:6px">
-        <span style="font-size:11px;font-weight:700;color:${stockColor(p.stock||0)};min-width:60px;text-align:right">${stockLabel(p.stock||0)}</span>
-        ${isAdmin()?`<button class="btn btn-sm" style="padding:3px 9px;font-size:11px;color:var(--orange);border-color:rgba(224,120,32,0.3)" onclick="abrirReponer(${p.id})">+ Stock</button>`:''}
+        ${isAdmin()?`
+          <input type="number" min="0" value="${p.stock||0}"
+            id="stock-input-${p.id}"
+            style="width:60px;padding:4px 6px;background:var(--dark2);border:1px solid ${stockColor(p.stock||0)}44;border-radius:6px;color:${stockColor(p.stock||0)};font-size:12px;font-weight:700;text-align:center"
+            onchange="guardarStockDirecto(${p.id})"
+            onblur="guardarStockDirecto(${p.id})">
+        `:`<span style="font-size:11px;font-weight:700;color:${stockColor(p.stock||0)}">${p.stock||0}</span>`}
         <button class="btn btn-sm btn-danger" style="padding:2px 8px" onclick="eliminarProducto(${p.id})">×</button>
       </div>
     </div>`).join("");
+}
+
+async function guardarStockDirecto(prodId){
+  const input = document.getElementById("stock-input-"+prodId);
+  if(!input) return;
+  const nuevoStock = parseInt(input.value)||0;
+  const p = _productos.find(x=>x.id===prodId);
+  if(!p || p.stock===nuevoStock) return;
+  await sbUpdate("productos", prodId, {stock: nuevoStock});
+  p.stock = nuevoStock;
+  input.style.borderColor = stockColor(nuevoStock)+'44';
+  input.style.color = stockColor(nuevoStock);
+  renderProductosGrid();
 }
 
 async function agregarProducto(){
@@ -1565,38 +1651,12 @@ async function agregarProducto(){
   }
 }
 
-let _reponerProdId = null;
-
-function abrirReponer(prodId){
-  const p = _productos.find(x=>x.id===prodId);
-  if(!p) return;
-  _reponerProdId = prodId;
-  document.getElementById("reponer-nombre").textContent = p.nombre;
-  document.getElementById("reponer-actual").textContent = "Stock actual: " + (p.stock||0) + " unidades";
-  document.getElementById("reponer-cantidad").value = 1;
-  document.getElementById("modal-reponer").classList.add("show");
-}
-
-async function confirmarReposicion(){
-  const cant = parseInt(document.getElementById("reponer-cantidad").value)||0;
-  if(cant<=0){alert("Ingresa una cantidad mayor a 0.");return;}
-  const p = _productos.find(x=>x.id===_reponerProdId);
-  if(!p) return;
-  const nuevoStock = (p.stock||0) + cant;
-  const ok = await sbUpdate("productos", _reponerProdId, {stock: nuevoStock});
-  if(ok){
-    p.stock = nuevoStock;
-    closeModal("modal-reponer");
-    renderListaProductosAdmin();
-    renderProductosGrid();
-  }
-}
-
 async function eliminarProducto(id){
   if(!confirm("¿Eliminar este producto?"))return;
   await sbDelete("productos",id);
   _productos = _productos.filter(p=>p.id!==id);
   renderListaProductosAdmin();
+  renderProductosGrid();
 }
 
 function closeModal(id){document.getElementById(id).classList.remove("show")}
