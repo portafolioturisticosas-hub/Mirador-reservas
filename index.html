@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mirador del Sol — Reservas 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --gold: #C9A84C;
+  --gold-light: #E8D5A3;
+  --dark: #1A1A18;
+  --dark2: #252520;
+  --dark3: #2E2E28;
+  --surface: #323228;
+  --surface2: #3A3A30;
+  --text: #F5F0E8;
+  --text2: #B8B0A0;
+  --text3: #7A7468;
+  --green: #5A8A5A;
+  --green-light: #3A5A3A;
+  --red: #8A3A3A;
+  --red-light: #5A2A2A;
+  --blue: #3A5A8A;
+  --blue-light: #2A3A5A;
+  --radius: 8px;
+  --radius-lg: 14px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'DM Sans', sans-serif; background: var(--dark); color: var(--text); min-height: 100vh; }
+
+/* LOGIN */
+#login-screen {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  background: var(--dark);
+  background-image: radial-gradient(ellipse at 20% 50%, rgba(201,168,76,0.06) 0%, transparent 60%),
+                    radial-gradient(ellipse at 80% 20%, rgba(201,168,76,0.04) 0%, transparent 50%);
+}
+.login-box {
+  width: 380px; padding: 48px 40px;
+  background: var(--dark2); border: 1px solid rgba(201,168,76,0.2);
+  border-radius: var(--radius-lg);
+}
+.login-logo { text-align: center; margin-bottom: 36px; }
+.login-logo .sun { font-size: 32px; margin-bottom: 12px; }
+.login-logo h1 { font-family: 'DM Serif Display', serif; font-size: 22px; color: var(--gold); letter-spacing: 0.5px; }
+.login-logo p { font-size: 12px; color: var(--text3); margin-top: 4px; letter-spacing: 1px; text-transform: uppercase; }
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; font-size: 11px; color: var(--text3); margin-bottom: 6px; letter-spacing: 0.5px; text-transform: uppercase; }
+.form-group input, .form-group select {
+  width: 100%; padding: 10px 14px;
+  background: var(--dark3); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: var(--radius); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px;
+  transition: border-color .2s;
+}
+.form-group input:focus, .form-group select:focus { outline: none; border-color: rgba(201,168,76,0.4); }
+.btn-login {
+  width: 100%; padding: 12px; margin-top: 8px;
+  background: var(--gold); border: none; border-radius: var(--radius);
+  color: var(--dark); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: opacity .2s;
+}
+.btn-login:hover { opacity: 0.9; }
+.login-error { color: #E07070; font-size: 12px; text-align: center; margin-top: 10px; display: none; }
+
+/* APP */
+#app { display: none; min-height: 100vh; }
+.sidebar {
+  position: fixed; left: 0; top: 0; bottom: 0; width: 220px;
+  background: var(--dark2); border-right: 1px solid rgba(255,255,255,0.06);
+  display: flex; flex-direction: column; z-index: 100;
+}
+.sidebar-logo { padding: 28px 20px 20px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.sidebar-logo h2 { font-family: 'DM Serif Display', serif; font-size: 16px; color: var(--gold); }
+.sidebar-logo p { font-size: 10px; color: var(--text3); margin-top: 2px; letter-spacing: 0.5px; }
+.sidebar-nav { flex: 1; padding: 12px 0; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px; padding: 10px 20px;
+  font-size: 13px; color: var(--text2); cursor: pointer; transition: all .15s;
+  border-left: 2px solid transparent;
+}
+.nav-item:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+.nav-item.active { color: var(--gold); border-left-color: var(--gold); background: rgba(201,168,76,0.06); }
+.nav-item .icon { font-size: 15px; width: 20px; text-align: center; }
+.sidebar-footer { padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.06); }
+.user-chip { display: flex; align-items: center; gap: 10px; }
+.user-avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: rgba(201,168,76,0.2); color: var(--gold);
+  display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600;
+}
+.user-name { font-size: 12px; color: var(--text2); flex: 1; }
+.user-role { font-size: 10px; color: var(--text3); }
+.btn-logout { background: none; border: none; color: var(--text3); cursor: pointer; font-size: 14px; padding: 4px; }
+.btn-logout:hover { color: var(--text); }
+
+.main { margin-left: 220px; padding: 32px; min-height: 100vh; }
+.page { display: none; }
+.page.active { display: block; }
+.page-title { font-family: 'DM Serif Display', serif; font-size: 26px; color: var(--text); margin-bottom: 6px; }
+.page-sub { font-size: 13px; color: var(--text3); margin-bottom: 28px; }
+
+/* CARDS */
+.card {
+  background: var(--dark2); border: 1px solid rgba(255,255,255,0.07);
+  border-radius: var(--radius-lg); padding: 24px;
+}
+.card-sm { padding: 18px 20px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+.grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+
+/* METRIC */
+.metric { background: var(--dark3); border-radius: var(--radius); padding: 18px; }
+.metric-label { font-size: 11px; color: var(--text3); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 8px; }
+.metric-val { font-size: 24px; font-weight: 500; color: var(--text); }
+.metric-sub { font-size: 11px; color: var(--text3); margin-top: 4px; }
+
+/* FORM */
+label.field-label { display: block; font-size: 11px; color: var(--text3); margin-bottom: 5px; margin-top: 14px; letter-spacing: 0.5px; text-transform: uppercase; }
+label.field-label:first-child { margin-top: 0; }
+input.field, select.field, textarea.field {
+  width: 100%; padding: 9px 12px;
+  background: var(--dark3); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: var(--radius); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 13px;
+  transition: border-color .2s;
+}
+input.field:focus, select.field:focus, textarea.field:focus { outline: none; border-color: rgba(201,168,76,0.35); }
+input.field:disabled, select.field:disabled { opacity: 0.4; }
+select.field option { background: var(--dark3); }
+
+/* BUTTONS */
+.btn { padding: 8px 18px; border-radius: var(--radius); border: 1px solid rgba(255,255,255,0.12); background: transparent; color: var(--text2); font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer; transition: all .15s; }
+.btn:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+.btn-gold { background: var(--gold); border-color: var(--gold); color: var(--dark); font-weight: 600; }
+.btn-gold:hover { opacity: 0.9; color: var(--dark); }
+.btn-danger { color: #E07070; border-color: rgba(224,112,112,0.3); }
+.btn-danger:hover { background: rgba(224,112,112,0.1); }
+.btn-sm { padding: 5px 12px; font-size: 12px; }
+
+/* TABLE */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+th { text-align: left; padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.07); color: var(--text3); font-weight: 500; font-size: 11px; letter-spacing: 0.5px; text-transform: uppercase; white-space: nowrap; }
+td { padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); color: var(--text2); vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(255,255,255,0.02); color: var(--text); }
+
+/* BADGES */
+.badge { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 10px; font-weight: 600; letter-spacing: 0.3px; }
+.badge-sol { background: rgba(201,168,76,0.15); color: var(--gold); }
+.badge-est { background: rgba(58,90,138,0.3); color: #8AABDD; }
+.badge-mul { background: rgba(90,138,90,0.25); color: #8ABB8A; }
+.badge-jac { background: rgba(138,58,138,0.25); color: #CC88CC; }
+.badge-ok { background: rgba(90,138,90,0.2); color: #8ABB8A; }
+.badge-pend { background: rgba(201,168,76,0.15); color: var(--gold); }
+.badge-admin { background: rgba(201,168,76,0.15); color: var(--gold); }
+.badge-recep { background: rgba(58,90,138,0.3); color: #8AABDD; }
+.badge-vend { background: rgba(90,138,90,0.25); color: #8ABB8A; }
+.badge-view { background: rgba(255,255,255,0.08); color: var(--text3); }
+
+/* ALERT */
+.alert { padding: 10px 14px; border-radius: var(--radius); font-size: 13px; margin-bottom: 14px; display: none; }
+.alert.show { display: block; }
+.alert-ok { background: rgba(90,138,90,0.2); color: #8ABB8A; border: 1px solid rgba(90,138,90,0.3); }
+.alert-err { background: rgba(138,58,58,0.2); color: #E07070; border: 1px solid rgba(138,58,58,0.3); }
+
+/* DISPONIBILIDAD */
+.disp-wrap { overflow-x: auto; }
+.disp-grid { display: grid; gap: 2px; }
+.disp-cell { padding: 5px 3px; border-radius: 3px; text-align: center; font-size: 9px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.disp-head { background: var(--dark3); color: var(--text3); font-size: 9px; font-weight: 500; padding: 5px 3px; text-align: center; border-radius: 3px; }
+.disp-libre { background: rgba(90,138,90,0.2); color: #6AAB6A; }
+.disp-ocup { background: rgba(138,58,58,0.35); color: #D07070; }
+.disp-hoy { background: rgba(201,168,76,0.2); color: var(--gold); }
+
+/* MODAL */
+.modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200; align-items: center; justify-content: center; }
+.modal-bg.show { display: flex; }
+.modal { background: var(--dark2); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radius-lg); padding: 28px; width: 580px; max-width: 95vw; max-height: 90vh; overflow-y: auto; }
+.modal-title { font-family: 'DM Serif Display', serif; font-size: 18px; color: var(--gold); margin-bottom: 20px; }
+
+/* SEARCH */
+.search-bar { display: flex; gap: 10px; margin-bottom: 16px; }
+.search-bar input { flex: 1; }
+.flex-between { display: flex; justify-content: space-between; align-items: center; }
+.flex-end { display: flex; justify-content: flex-end; gap: 10px; }
+.mb { margin-bottom: 16px; }
+
+/* RECIBO */
+.recibo { font-size: 12px; line-height: 2; }
+.recibo-title { font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--gold); text-align: center; margin-bottom: 4px; }
+.recibo-sub { text-align: center; color: var(--text3); font-size: 11px; margin-bottom: 20px; letter-spacing: 0.5px; }
+.recibo-row { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.recibo-total { display: flex; justify-content: space-between; padding: 8px 0; font-weight: 600; font-size: 14px; color: var(--gold); border-top: 1px solid rgba(201,168,76,0.3); margin-top: 4px; }
+
+/* RESPONSIVE */
+@media(max-width:768px) {
+  .sidebar { width: 100%; height: 56px; flex-direction: row; position: fixed; bottom: 0; top: auto; border-right: none; border-top: 1px solid rgba(255,255,255,0.06); }
+  .sidebar-logo, .sidebar-footer { display: none; }
+  .sidebar-nav { display: flex; flex-direction: row; padding: 0; overflow-x: auto; }
+  .nav-item { flex-direction: column; gap: 2px; padding: 8px 16px; border-left: none; border-top: 2px solid transparent; font-size: 10px; }
+  .nav-item.active { border-top-color: var(--gold); border-left-color: transparent; }
+  .main { margin-left: 0; margin-bottom: 56px; padding: 16px; }
+  .grid2, .grid3, .grid4 { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="sun">☀️</div>
+      <h1>Mirador del Sol</h1>
+      <p>Sistema de reservas 2026</p>
+    </div>
+    <div class="form-group">
+      <label>Usuario</label>
+      <input type="text" id="login-user" placeholder="tu.usuario" autocomplete="username">
+    </div>
+    <div class="form-group">
+      <label>Contraseña</label>
+      <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="btn-login" onclick="doLogin()">Ingresar</button>
+    <div class="login-error" id="login-error">Usuario o contraseña incorrectos</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <h2>☀️ Mirador del Sol</h2>
+      <p>Reservas 2026</p>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-item active" onclick="showPage('nueva')" id="nav-nueva">
+        <span class="icon">✦</span> Nueva reserva
+      </div>
+      <div class="nav-item" onclick="showPage('reservas')" id="nav-reservas">
+        <span class="icon">☰</span> Reservas
+      </div>
+      <div class="nav-item" onclick="showPage('disponibilidad')" id="nav-disponibilidad">
+        <span class="icon">◫</span> Disponibilidad
+      </div>
+      <div class="nav-item" onclick="showPage('resumen')" id="nav-resumen">
+        <span class="icon">◈</span> Resumen
+      </div>
+      <div class="nav-item" onclick="showPage('usuarios')" id="nav-usuarios" style="display:none">
+        <span class="icon">◉</span> Usuarios
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-chip">
+        <div class="user-avatar" id="user-avatar">--</div>
+        <div>
+          <div class="user-name" id="user-name-display">—</div>
+          <div class="user-role" id="user-role-display">—</div>
+        </div>
+        <button class="btn-logout" onclick="doLogout()" title="Cerrar sesión">⏻</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <!-- NUEVA RESERVA -->
+    <div class="page active" id="page-nueva">
+      <div class="page-title">Nueva reserva</div>
+      <div class="page-sub">Completa el formulario y guarda la reserva</div>
+      <div id="alert-nueva" class="alert"></div>
+      <div class="grid2">
+        <div class="card">
+          <div style="font-size:13px;font-weight:500;color:var(--gold);margin-bottom:16px">Datos del cliente</div>
+          <label class="field-label">Nombre completo *</label>
+          <input class="field" id="f-nombre" type="text" placeholder="JUAN PABLO GARCIA">
+          <label class="field-label">Celular</label>
+          <input class="field" id="f-celular" type="text" placeholder="3101234567">
+          <label class="field-label">N° Identificación</label>
+          <input class="field" id="f-id" type="text" placeholder="Cédula">
+          <label class="field-label">Correo electrónico</label>
+          <input class="field" id="f-correo" type="email" placeholder="email@ejemplo.com">
+          <label class="field-label">Tipo de cliente</label>
+          <select class="field" id="f-tipocliente">
+            <option value="">— Seleccionar —</option>
+            <option>Nuevo</option><option>Frecuente</option><option>VIP</option>
+          </select>
+          <label class="field-label">Observaciones</label>
+          <textarea class="field" id="f-obs" rows="2" placeholder="Ej: 2 PAX + 1 NIÑO"></textarea>
+        </div>
+        <div>
+          <div class="card mb">
+            <div style="font-size:13px;font-weight:500;color:var(--gold);margin-bottom:16px">Reserva</div>
+            <label class="field-label">Tipo de plan *</label>
+            <select class="field" id="f-plan" onchange="updatePlan()">
+              <option value="">— Seleccionar —</option>
+              <option value="DIA DE SOL">Día de sol</option>
+              <option value="ESTANDAR">Estándar</option>
+              <option value="MULTIPLE">Múltiple</option>
+              <option value="JACUZZI">Jacuzzi</option>
+            </select>
+            <label class="field-label">Fecha de entrada *</label>
+            <input class="field" id="f-entrada" type="date" onchange="calcTotal()">
+            <label class="field-label">Fecha de salida</label>
+            <input class="field" id="f-salida" type="date" onchange="calcTotal()">
+            <label class="field-label">Habitación N°</label>
+            <select class="field" id="f-hab">
+              <option value="NO">No aplica (Día de sol)</option>
+              <option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>12</option>
+              <option>7</option><option>8</option><option>9</option><option>10</option><option>11</option>
+              <option>13</option><option>14</option><option>15</option><option>16</option><option>17</option>
+            </select>
+            <div class="grid2" style="gap:10px">
+              <div>
+                <label class="field-label">N° personas *</label>
+                <input class="field" id="f-personas" type="number" min="1" placeholder="0" onchange="calcTotal()">
+              </div>
+              <div>
+                <label class="field-label">Valor/persona *</label>
+                <input class="field" id="f-vlr" type="number" min="0" placeholder="0" onchange="calcTotal()">
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div style="font-size:13px;font-weight:500;color:var(--gold);margin-bottom:16px">Pago</div>
+            <div class="grid2" style="gap:10px">
+              <div>
+                <label class="field-label">Abono ($)</label>
+                <input class="field" id="f-abono" type="number" min="0" value="0" onchange="calcTotal()">
+              </div>
+              <div>
+                <label class="field-label">Ventas bar ($)</label>
+                <input class="field" id="f-bar" type="number" min="0" value="0" onchange="calcTotal()">
+              </div>
+            </div>
+            <label class="field-label">Fecha del abono</label>
+            <input class="field" id="f-fabono" type="date">
+            <label class="field-label">Vendedor</label>
+            <input class="field" id="f-vendedor" type="text" placeholder="CARRETERA / KEVIN / ANGIE">
+            <label class="field-label">Consignatario</label>
+            <input class="field" id="f-consig" type="text" placeholder="RUBEN / KEVIN">
+          </div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:16px;background:var(--dark3)">
+        <div class="flex-between">
+          <div>
+            <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px">Vista previa</div>
+            <div style="font-size:13px;margin-top:6px;color:var(--text)" id="preview-txt">Completa el formulario para ver el total</div>
+          </div>
+          <div style="display:flex;gap:10px">
+            <button class="btn" onclick="limpiarForm()">Limpiar</button>
+            <button class="btn btn-gold" onclick="guardarReserva()">Guardar reserva</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESERVAS -->
+    <div class="page" id="page-reservas">
+      <div class="page-title">Reservas</div>
+      <div class="page-sub">Consulta, edita y gestiona todas las reservas</div>
+      <div class="card">
+        <div class="flex-between mb">
+          <span style="font-size:12px;color:var(--text3)" id="count-res">0 reservas</span>
+        </div>
+        <div class="search-bar">
+          <input class="field" id="busq" type="text" placeholder="Buscar por nombre, celular o habitación..." oninput="filtrarReservas()">
+          <select class="field" id="fil-plan" onchange="filtrarReservas()" style="width:160px">
+            <option value="">Todos los planes</option>
+            <option value="DIA DE SOL">Día de sol</option>
+            <option value="ESTANDAR">Estándar</option>
+            <option value="MULTIPLE">Múltiple</option>
+            <option value="JACUZZI">Jacuzzi</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th><th>Nombre</th><th>Entrada</th><th>Salida</th>
+                <th>Plan</th><th>Hab</th><th>Personas</th>
+                <th>Total</th><th>Resta</th><th></th>
+              </tr>
+            </thead>
+            <tbody id="tbody-reservas"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- DISPONIBILIDAD -->
+    <div class="page" id="page-disponibilidad">
+      <div class="page-title">Disponibilidad</div>
+      <div class="page-sub">Vista de habitaciones por día</div>
+      <div class="card">
+        <div class="flex-between mb">
+          <div style="display:flex;gap:12px;font-size:11px;align-items:center">
+            <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:rgba(90,138,90,0.2);display:inline-block"></span>Libre</span>
+            <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:rgba(138,58,58,0.35);display:inline-block"></span>Ocupada</span>
+            <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:rgba(201,168,76,0.2);display:inline-block"></span>Hoy</span>
+          </div>
+          <input type="month" class="field" id="mes-disp" onchange="renderDisp()" style="width:160px">
+        </div>
+        <div class="disp-wrap" id="disp-container"></div>
+      </div>
+    </div>
+
+    <!-- RESUMEN -->
+    <div class="page" id="page-resumen">
+      <div class="page-title">Resumen</div>
+      <div class="page-sub">Estadísticas y métricas del negocio</div>
+      <div class="grid4" style="margin-bottom:16px">
+        <div class="metric"><div class="metric-label">Total reservas</div><div class="metric-val" id="r-total">0</div></div>
+        <div class="metric"><div class="metric-label">Ventas totales</div><div class="metric-val" id="r-ventas">$0</div></div>
+        <div class="metric"><div class="metric-label">Abonos</div><div class="metric-val" id="r-abonos">$0</div></div>
+        <div class="metric"><div class="metric-label">Por cobrar</div><div class="metric-val" id="r-resta">$0</div></div>
+      </div>
+      <div class="grid2">
+        <div class="card"><div style="font-size:13px;font-weight:500;color:var(--gold);margin-bottom:14px">Por tipo de plan</div><div id="r-planes"></div></div>
+        <div class="card"><div style="font-size:13px;font-weight:500;color:var(--gold);margin-bottom:14px">Por mes</div><div id="r-meses"></div></div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <div style="font-size:13px;font-weight:500;color:var(--gold);margin-bottom:14px">Habitaciones más solicitadas</div>
+        <div id="r-habs"></div>
+      </div>
+    </div>
+
+    <!-- USUARIOS (solo admin) -->
+    <div class="page" id="page-usuarios">
+      <div class="page-title">Usuarios</div>
+      <div class="page-sub">Gestión de accesos al sistema</div>
+      <div id="alert-usuarios" class="alert"></div>
+      <div class="grid2">
+        <div class="card">
+          <div style="font-size:13px;font-weight:500;color:var(--gold);margin-bottom:16px">Crear usuario</div>
+          <label class="field-label">Nombre completo</label>
+          <input class="field" id="u-nombre" type="text" placeholder="Ana García">
+          <label class="field-label">Usuario (login)</label>
+          <input class="field" id="u-user" type="text" placeholder="ana.garcia">
+          <label class="field-label">Contraseña</label>
+          <input class="field" id="u-pass" type="password" placeholder="••••••••">
+          <label class="field-label">Rol</label>
+          <select class="field" id="u-rol">
+            <option value="admin">Administrador</option>
+            <option value="recepcionista">Recepcionista</option>
+            <option value="vendedor">Vendedor</option>
+            <option value="consulta">Solo consulta</option>
+          </select>
+          <div style="margin-top:16px">
+            <button class="btn btn-gold" onclick="crearUsuario()">Crear usuario</button>
+          </div>
+        </div>
+        <div class="card">
+          <div style="font-size:13px;font-weight:500;color:var(--gold);margin-bottom:14px">Usuarios del sistema</div>
+          <div id="lista-usuarios"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL EDITAR -->
+<div class="modal-bg" id="modal-edit">
+  <div class="modal">
+    <div class="modal-title" id="modal-edit-title">Editar reserva</div>
+    <div id="modal-edit-body"></div>
+    <div class="flex-end" style="margin-top:20px">
+      <button class="btn btn-danger btn-sm" onclick="eliminarReserva()">Eliminar</button>
+      <button class="btn btn-sm" onclick="verRecibo()">Ver recibo</button>
+      <button class="btn btn-sm" onclick="closeModal('modal-edit')">Cancelar</button>
+      <button class="btn btn-gold btn-sm" onclick="guardarEdicion()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL RECIBO -->
+<div class="modal-bg" id="modal-recibo">
+  <div class="modal">
+    <div class="recibo" id="recibo-body"></div>
+    <div class="flex-end" style="margin-top:20px">
+      <button class="btn btn-sm" onclick="closeModal('modal-recibo')">Cerrar</button>
+      <button class="btn btn-gold btn-sm" onclick="window.print()">Imprimir</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const HABS = ['2','3','4','5','6','12','7','8','9','10','11','13','14','15','16','17'];
+const HAB_TIPO = {'2':'Múl','3':'Múl','4':'Múl','5':'Múl','6':'Múl','12':'Múl','7':'Est','8':'Est','9':'Est','10':'Est','11':'Est','13':'Jac','14':'Jac','15':'Jac','16':'Jac','17':'Jac'};
+const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const ROLES = {admin:'Administrador',recepcionista:'Recepcionista',vendedor:'Vendedor',consulta:'Solo consulta'};
+const PERMS = {admin:['nueva','reservas','disponibilidad','resumen','usuarios'],recepcionista:['nueva','reservas','disponibilidad','resumen'],vendedor:['nueva','reservas'],consulta:['reservas','disponibilidad','resumen']};
+
+let currentUser = null;
+let editIdx = null;
+
+function getData(k,def){try{return JSON.parse(localStorage.getItem(k)||'null')||def}catch(e){return def}}
+function setData(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+
+function initUsers(){
+  let users = getData('mds_users', null);
+  if(!users){
+    users = [
+      {nombre:'Administrador',user:'admin',pass:'admin2026',rol:'admin'},
+      {nombre:'Recepcionista',user:'recepcion',pass:'mirador2026',rol:'recepcionista'},
+      {nombre:'Vendedor 1',user:'vendedor',pass:'ventas2026',rol:'vendedor'},
+    ];
+    setData('mds_users', users);
+  }
+  return users;
+}
+
+function doLogin(){
+  const u = document.getElementById('login-user').value.trim();
+  const p = document.getElementById('login-pass').value;
+  const users = initUsers();
+  const found = users.find(x => x.user === u && x.pass === p);
+  if(!found){document.getElementById('login-error').style.display='block';return;}
+  currentUser = found;
+  document.getElementById('login-error').style.display='none';
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='block';
+  document.getElementById('user-avatar').textContent = found.nombre.slice(0,2).toUpperCase();
+  document.getElementById('user-name-display').textContent = found.nombre;
+  document.getElementById('user-role-display').textContent = ROLES[found.rol]||found.rol;
+  const perms = PERMS[found.rol]||['reservas'];
+  document.querySelectorAll('.nav-item').forEach(el=>{
+    const page = el.id.replace('nav-','');
+    el.style.display = perms.includes(page) ? '' : 'none';
+  });
+  if(found.rol==='admin') document.getElementById('nav-usuarios').style.display='';
+  const firstPage = perms[0]||'reservas';
+  showPage(firstPage);
+}
+
+function doLogout(){
+  currentUser = null;
+  document.getElementById('app').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('login-user').value='';
+  document.getElementById('login-pass').value='';
+}
+
+function canEdit(){return currentUser && ['admin','recepcionista'].includes(currentUser.rol);}
+function canCreate(){return currentUser && ['admin','recepcionista','vendedor'].includes(currentUser.rol);}
+function isAdmin(){return currentUser && currentUser.rol==='admin';}
+
+function showPage(p){
+  document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  const nav = document.getElementById('nav-'+p);
+  if(nav) nav.classList.add('active');
+  if(p==='reservas') renderReservas();
+  if(p==='disponibilidad'){const m=document.getElementById('mes-disp');if(!m.value)m.value=today().slice(0,7);renderDisp();}
+  if(p==='resumen') renderResumen();
+  if(p==='usuarios') renderUsuarios();
+}
+
+function fmt(n){return new Intl.NumberFormat('es-CO',{style:'currency',currency:'COP',maximumFractionDigits:0}).format(n);}
+function fmtD(s){if(!s)return '—';const[y,m,d]=s.split('-');return`${d}/${m}/${y}`;}
+function today(){return new Date().toISOString().split('T')[0];}
+
+function updatePlan(){
+  const p = document.getElementById('f-plan').value;
+  const esDia = p==='DIA DE SOL';
+  document.getElementById('f-salida').disabled = esDia;
+  if(esDia) document.getElementById('f-salida').value='';
+  calcTotal();
+}
+
+function calcTotal(){
+  const entrada = document.getElementById('f-entrada').value;
+  const salida = document.getElementById('f-salida').value;
+  const personas = parseInt(document.getElementById('f-personas').value)||0;
+  const vlr = parseFloat(document.getElementById('f-vlr').value)||0;
+  const abono = parseFloat(document.getElementById('f-abono').value)||0;
+  const bar = parseFloat(document.getElementById('f-bar').value)||0;
+  const plan = document.getElementById('f-plan').value;
+  let dias = 1;
+  if(plan!=='DIA DE SOL'&&entrada&&salida){
+    const d = Math.round((new Date(salida)-new Date(entrada))/(86400000));
+    if(d>0) dias=d;
+  }
+  const total = vlr*personas*dias;
+  const resta = Math.max(0,total-abono);
+  const cobrar = resta+bar;
+  const el = document.getElementById('preview-txt');
+  if(total>0){
+    el.innerHTML=`<strong style="color:var(--gold)">${dias} día(s)</strong> · ${personas} personas · Total: <strong style="color:var(--gold)">${fmt(total)}</strong> · Abono: ${fmt(abono)} · Resta: <strong>${fmt(resta)}</strong>${bar>0?' · Bar: '+fmt(bar):''}`;
+  } else {
+    el.textContent='Completa el formulario para ver el total';
+  }
+}
+
+function showAlert(id,msg,tipo){
+  const a=document.getElementById(id);
+  a.className='alert show alert-'+(tipo||'ok');
+  a.textContent=msg;
+  setTimeout(()=>a.classList.remove('show'),4000);
+}
+
+function guardarReserva(){
+  if(!canCreate()){showAlert('alert-nueva','No tienes permiso para crear reservas.','err');return;}
+  const nombre=document.getElementById('f-nombre').value.trim().toUpperCase();
+  const plan=document.getElementById('f-plan').value;
+  const entrada=document.getElementById('f-entrada').value;
+  const salida=document.getElementById('f-salida').value;
+  const personas=parseInt(document.getElementById('f-personas').value)||0;
+  const vlr=parseFloat(document.getElementById('f-vlr').value)||0;
+  if(!nombre){showAlert('alert-nueva','El nombre del cliente es obligatorio.','err');return;}
+  if(!plan){showAlert('alert-nueva','Selecciona el tipo de plan.','err');return;}
+  if(!entrada){showAlert('alert-nueva','La fecha de entrada es obligatoria.','err');return;}
+  if(plan!=='DIA DE SOL'&&!salida){showAlert('alert-nueva','La fecha de salida es obligatoria para hospedaje.','err');return;}
+  if(plan!=='DIA DE SOL'&&salida&&salida<=entrada){showAlert('alert-nueva','La fecha de salida debe ser posterior a la de entrada.','err');return;}
+  if(personas<=0){showAlert('alert-nueva','El número de personas debe ser mayor a 0.','err');return;}
+  if(vlr<=0){showAlert('alert-nueva','El valor por persona debe ser mayor a 0.','err');return;}
+  let dias=1;
+  if(plan!=='DIA DE SOL'&&entrada&&salida) dias=Math.round((new Date(salida)-new Date(entrada))/86400000);
+  const total=vlr*personas*dias;
+  const abono=parseFloat(document.getElementById('f-abono').value)||0;
+  const bar=parseFloat(document.getElementById('f-bar').value)||0;
+  const resta=Math.max(0,total-abono);
+  const reservas=getData('mds_reservas',[]);
+  reservas.push({
+    id:Date.now(),nombre,
+    celular:document.getElementById('f-celular').value.trim(),
+    identificacion:document.getElementById('f-id').value.trim(),
+    correo:document.getElementById('f-correo').value.trim(),
+    tipoCliente:document.getElementById('f-tipocliente').value,
+    obs:document.getElementById('f-obs').value.trim(),
+    plan,entrada,salida,dias,
+    hab:document.getElementById('f-hab').value,
+    personas,vlr,total,abono,resta,bar,cobrar:resta+bar,
+    fabono:document.getElementById('f-fabono').value,
+    vendedor:document.getElementById('f-vendedor').value.trim().toUpperCase(),
+    consig:document.getElementById('f-consig').value.trim().toUpperCase(),
+    creadoPor:currentUser.user, fecha:today()
+  });
+  setData('mds_reservas',reservas);
+  limpiarForm();
+  showAlert('alert-nueva','Reserva guardada correctamente para '+nombre,'ok');
+}
+
+function limpiarForm(){
+  ['f-nombre','f-celular','f-id','f-correo','f-obs','f-entrada','f-salida','f-fabono','f-vendedor','f-consig'].forEach(id=>document.getElementById(id).value='');
+  ['f-plan','f-tipocliente','f-hab'].forEach(id=>document.getElementById(id).selectedIndex=0);
+  ['f-abono','f-bar'].forEach(id=>document.getElementById(id).value=0);
+  document.getElementById('f-personas').value='';
+  document.getElementById('f-vlr').value='';
+  document.getElementById('preview-txt').textContent='Completa el formulario para ver el total';
+}
+
+function planBadge(p){
+  const map={'DIA DE SOL':'badge-sol','ESTANDAR':'badge-est','MULTIPLE':'badge-mul','JACUZZI':'badge-jac'};
+  const label={'DIA DE SOL':'Día de sol','ESTANDAR':'Estándar','MULTIPLE':'Múltiple','JACUZZI':'Jacuzzi'};
+  return`<span class="badge ${map[p]||''}">${label[p]||p}</span>`;
+}
+
+function renderReservas(){filtrarReservas();}
+
+function filtrarReservas(){
+  const q=(document.getElementById('busq').value||'').toLowerCase();
+  const fp=document.getElementById('fil-plan').value;
+  const reservas=getData('mds_reservas',[]);
+  const filtered=reservas.filter(r=>{
+    const match=!q||(r.nombre||'').toLowerCase().includes(q)||(r.celular||'').includes(q)||(r.hab||'').includes(q);
+    return match&&(!fp||r.plan===fp);
+  }).sort((a,b)=>b.id-a.id);
+  document.getElementById('count-res').textContent=filtered.length+' reservas';
+  const tb=document.getElementById('tbody-reservas');
+  if(!filtered.length){tb.innerHTML='<tr><td colspan="10" style="text-align:center;color:var(--text3);padding:2rem">Sin reservas</td></tr>';return;}
+  tb.innerHTML=filtered.map(r=>{
+    const idx=reservas.indexOf(r);
+    return`<tr>
+      <td style="color:var(--text3)">${idx+1}</td>
+      <td style="font-weight:500;color:var(--text)">${r.nombre}</td>
+      <td>${fmtD(r.entrada)}</td><td>${fmtD(r.salida)}</td>
+      <td>${planBadge(r.plan)}</td>
+      <td>${r.hab==='NO'?'—':r.hab}</td>
+      <td>${r.personas}</td>
+      <td style="color:var(--text)">${fmt(r.total)}</td>
+      <td><span class="badge ${r.resta>0?'badge-pend':'badge-ok'}">${fmt(r.resta)}</span></td>
+      <td><button class="btn btn-sm" onclick="abrirEditar(${idx})">Ver</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function abrirEditar(idx){
+  editIdx=idx;
+  const r=getData('mds_reservas',[])[idx];
+  document.getElementById('modal-edit-title').textContent='Reserva #'+(idx+1)+' — '+r.nombre;
+  const editable=canEdit();
+  const dis=editable?'':'disabled';
+  document.getElementById('modal-edit-body').innerHTML=`
+    <div class="grid2">
+      <div>
+        <label class="field-label">Nombre</label><input class="field" id="e-nombre" value="${r.nombre}" ${dis}>
+        <label class="field-label">Celular</label><input class="field" id="e-celular" value="${r.celular||''}" ${dis}>
+        <label class="field-label">Identificación</label><input class="field" id="e-id" value="${r.identificacion||''}" ${dis}>
+        <label class="field-label">Correo</label><input class="field" id="e-correo" value="${r.correo||''}" ${dis}>
+        <label class="field-label">Observaciones</label><textarea class="field" id="e-obs" rows="2" ${dis}>${r.obs||''}</textarea>
+      </div>
+      <div>
+        <label class="field-label">Plan</label>
+        <select class="field" id="e-plan" ${dis}>
+          <option value="DIA DE SOL" ${r.plan==='DIA DE SOL'?'selected':''}>Día de sol</option>
+          <option value="ESTANDAR" ${r.plan==='ESTANDAR'?'selected':''}>Estándar</option>
+          <option value="MULTIPLE" ${r.plan==='MULTIPLE'?'selected':''}>Múltiple</option>
+          <option value="JACUZZI" ${r.plan==='JACUZZI'?'selected':''}>Jacuzzi</option>
+        </select>
+        <label class="field-label">Entrada</label><input class="field" id="e-entrada" type="date" value="${r.entrada||''}" ${dis}>
+        <label class="field-label">Salida</label><input class="field" id="e-salida" type="date" value="${r.salida||''}" ${dis}>
+        <label class="field-label">Habitación</label><input class="field" id="e-hab" value="${r.hab||''}" ${dis}>
+        <label class="field-label">Personas</label><input class="field" id="e-personas" type="number" value="${r.personas}" ${dis}>
+        <label class="field-label">Valor/persona</label><input class="field" id="e-vlr" type="number" value="${r.vlr}" ${dis}>
+        <label class="field-label">Abono</label><input class="field" id="e-abono" type="number" value="${r.abono||0}" ${dis}>
+        <label class="field-label">Ventas bar</label><input class="field" id="e-bar" type="number" value="${r.bar||0}" ${dis}>
+        <label class="field-label">Vendedor</label><input class="field" id="e-vendedor" value="${r.vendedor||''}" ${dis}>
+      </div>
+    </div>
+    <div class="metric" style="margin-top:14px">
+      <div class="metric-label">Total registrado</div>
+      <div class="metric-val" style="color:var(--gold)">${fmt(r.total)}</div>
+      <div class="metric-sub">Abono: ${fmt(r.abono||0)} · Resta: ${fmt(r.resta||0)} · Creado por: ${r.creadoPor||'—'}</div>
+    </div>`;
+  document.getElementById('modal-edit').classList.add('show');
+}
+
+function guardarEdicion(){
+  if(!canEdit()) return;
+  const reservas=getData('mds_reservas',[]);
+  const r=reservas[editIdx];
+  r.nombre=document.getElementById('e-nombre').value.trim().toUpperCase();
+  r.celular=document.getElementById('e-celular').value.trim();
+  r.identificacion=document.getElementById('e-id').value.trim();
+  r.correo=document.getElementById('e-correo').value.trim();
+  r.obs=document.getElementById('e-obs').value.trim();
+  r.plan=document.getElementById('e-plan').value;
+  r.entrada=document.getElementById('e-entrada').value;
+  r.salida=document.getElementById('e-salida').value;
+  r.hab=document.getElementById('e-hab').value;
+  r.personas=parseInt(document.getElementById('e-personas').value)||0;
+  r.vlr=parseFloat(document.getElementById('e-vlr').value)||0;
+  r.abono=parseFloat(document.getElementById('e-abono').value)||0;
+  r.bar=parseFloat(document.getElementById('e-bar').value)||0;
+  r.vendedor=document.getElementById('e-vendedor').value.trim().toUpperCase();
+  const dias=r.entrada&&r.salida&&r.plan!=='DIA DE SOL'?Math.round((new Date(r.salida)-new Date(r.entrada))/86400000):1;
+  r.dias=dias; r.total=r.vlr*r.personas*dias;
+  r.resta=Math.max(0,r.total-r.abono); r.cobrar=r.resta+r.bar;
+  setData('mds_reservas',reservas);
+  closeModal('modal-edit'); renderReservas();
+}
+
+function eliminarReserva(){
+  if(!isAdmin()){alert('Solo el administrador puede eliminar reservas.');return;}
+  if(!confirm('¿Eliminar esta reserva? Esta acción no se puede deshacer.'))return;
+  const reservas=getData('mds_reservas',[]);
+  reservas.splice(editIdx,1);
+  setData('mds_reservas',reservas);
+  closeModal('modal-edit'); renderReservas();
+}
+
+function verRecibo(){
+  const r=getData('mds_reservas',[])[editIdx];
+  closeModal('modal-edit');
+  document.getElementById('recibo-body').innerHTML=`
+    <div class="recibo-title">☀️ Mirador del Sol 2026</div>
+    <div class="recibo-sub">COMPROBANTE DE RESERVA #${editIdx+1}</div>
+    <div style="border-top:1px solid rgba(255,255,255,0.08);padding-top:12px;margin-bottom:12px">
+      <div class="recibo-row"><span style="color:var(--text3)">Cliente</span><span style="font-weight:600">${r.nombre}</span></div>
+      ${r.celular?`<div class="recibo-row"><span style="color:var(--text3)">Celular</span><span>${r.celular}</span></div>`:''}
+      ${r.identificacion?`<div class="recibo-row"><span style="color:var(--text3)">Identificación</span><span>${r.identificacion}</span></div>`:''}
+    </div>
+    <div style="border-top:1px solid rgba(255,255,255,0.08);padding-top:12px;margin-bottom:12px">
+      <div class="recibo-row"><span style="color:var(--text3)">Plan</span><span>${r.plan}</span></div>
+      <div class="recibo-row"><span style="color:var(--text3)">Habitación</span><span>${r.hab==='NO'?'No aplica':r.hab}</span></div>
+      <div class="recibo-row"><span style="color:var(--text3)">Fecha entrada</span><span>${fmtD(r.entrada)}</span></div>
+      ${r.salida?`<div class="recibo-row"><span style="color:var(--text3)">Fecha salida</span><span>${fmtD(r.salida)}</span></div>`:''}
+      <div class="recibo-row"><span style="color:var(--text3)">Días</span><span>${r.dias||1}</span></div>
+      <div class="recibo-row"><span style="color:var(--text3)">Personas</span><span>${r.personas}</span></div>
+      <div class="recibo-row"><span style="color:var(--text3)">Valor/persona</span><span>${fmt(r.vlr)}</span></div>
+    </div>
+    <div style="border-top:1px solid rgba(255,255,255,0.08);padding-top:8px">
+      <div class="recibo-row"><span style="color:var(--text3)">Subtotal</span><span>${fmt(r.total)}</span></div>
+      ${r.bar>0?`<div class="recibo-row"><span style="color:var(--text3)">Ventas bar</span><span>${fmt(r.bar)}</span></div>`:''}
+      <div class="recibo-row"><span style="color:var(--text3)">Abono recibido</span><span>${fmt(r.abono||0)}</span></div>
+      <div class="recibo-total"><span>TOTAL A COBRAR</span><span>${fmt(r.cobrar||r.resta)}</span></div>
+    </div>
+    ${r.obs?`<div style="margin-top:12px;padding:8px;background:var(--dark3);border-radius:var(--radius);font-size:11px;color:var(--text3)">Nota: ${r.obs}</div>`:''}
+    <div style="margin-top:12px;font-size:10px;color:var(--text3);text-align:right">Generado: ${fmtD(today())} · Vendedor: ${r.vendedor||'—'}</div>`;
+  document.getElementById('modal-recibo').classList.add('show');
+}
+
+function closeModal(id){document.getElementById(id).classList.remove('show');}
+
+function renderDisp(){
+  const val=document.getElementById('mes-disp').value;
+  if(!val) return;
+  const [yr,mn]=val.split('-').map(Number);
+  const diasMes=new Date(yr,mn,0).getDate();
+  const hoyStr=today();
+  const reservas=getData('mds_reservas',[]);
+  const cols=2+HABS.length;
+  let html=`<div style="display:grid;grid-template-columns:65px 35px repeat(${HABS.length},1fr);gap:2px;min-width:800px">`;
+  html+='<div class="disp-head">Fecha</div><div class="disp-head">Día</div>';
+  HABS.forEach(h=>html+=`<div class="disp-head">${h}<br><span style="font-size:8px;color:var(--text3)">${HAB_TIPO[h]}</span></div>`);
+  const dias=['Do','Lu','Ma','Mi','Ju','Vi','Sá'];
+  for(let d=1;d<=diasMes;d++){
+    const ds=`${yr}-${String(mn).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dow=new Date(yr,mn-1,d).getDay();
+    const esHoy=ds===hoyStr;
+    const bg=esHoy?'background:rgba(201,168,76,0.08)':'';
+    html+=`<div class="disp-cell" style="${bg};font-size:10px;color:var(--text3)">${d}/${mn}</div>`;
+    html+=`<div class="disp-cell" style="${bg};font-size:10px;color:var(--text3)">${dias[dow]}</div>`;
+    HABS.forEach(h=>{
+      const ocup=reservas.find(r=>{
+        if(r.hab!==h)return false;
+        if(r.plan==='DIA DE SOL')return r.entrada===ds;
+        if(!r.entrada)return false;
+        const fin=r.salida||r.entrada;
+        return ds>=r.entrada&&ds<fin;
+      });
+      if(ocup) html+=`<div class="disp-cell disp-ocup" title="${ocup.nombre}">${ocup.nombre.split(' ')[0]}</div>`;
+      else if(esHoy) html+=`<div class="disp-cell disp-hoy">hoy</div>`;
+      else html+=`<div class="disp-cell disp-libre">libre</div>`;
+    });
+  }
+  html+='</div>';
+  document.getElementById('disp-container').innerHTML=html;
+}
+
+function renderResumen(){
+  const reservas=getData('mds_reservas',[]);
+  const total=reservas.length;
+  const ventas=reservas.reduce((s,r)=>s+(r.total||0),0);
+  const abonos=reservas.reduce((s,r)=>s+(r.abono||0),0);
+  const resta=reservas.reduce((s,r)=>s+(r.resta||0),0);
+  document.getElementById('r-total').textContent=total;
+  document.getElementById('r-ventas').textContent=fmt(ventas);
+  document.getElementById('r-abonos').textContent=fmt(abonos);
+  document.getElementById('r-resta').textContent=fmt(resta);
+  const planes={};
+  reservas.forEach(r=>{const p=r.plan||'?';if(!planes[p])planes[p]={n:0,total:0};planes[p].n++;planes[p].total+=r.total||0;});
+  document.getElementById('r-planes').innerHTML=Object.entries(planes).sort((a,b)=>b[1].n-a[1].n).map(([p,v])=>`
+    <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:12px">
+      <span>${planBadge(p)}</span><span style="color:var(--text3)">${v.n} reservas</span><span style="color:var(--text)">${fmt(v.total)}</span>
+    </div>`).join('')||'<div style="color:var(--text3);font-size:12px">Sin datos</div>';
+  const meses={};
+  reservas.forEach(r=>{if(!r.entrada)return;const m=parseInt(r.entrada.split('-')[1])-1;const k=MESES[m];if(!meses[k])meses[k]={n:0,total:0};meses[k].n++;meses[k].total+=r.total||0;});
+  document.getElementById('r-meses').innerHTML=Object.entries(meses).map(([m,v])=>`
+    <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:12px">
+      <span style="color:var(--text2)">${m}</span><span style="color:var(--text3)">${v.n}</span><span style="color:var(--text)">${fmt(v.total)}</span>
+    </div>`).join('')||'<div style="color:var(--text3);font-size:12px">Sin datos</div>';
+  const habs={};
+  reservas.forEach(r=>{if(r.hab&&r.hab!=='NO'){if(!habs[r.hab])habs[r.hab]=0;habs[r.hab]++;}});
+  const sorted=Object.entries(habs).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const max=sorted[0]?sorted[0][1]:1;
+  document.getElementById('r-habs').innerHTML=sorted.map(([h,n])=>`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;font-size:12px">
+      <span style="width:55px;color:var(--text3)">Hab ${h} <span style="font-size:10px">${HAB_TIPO[h]||''}</span></span>
+      <div style="flex:1;background:var(--dark3);border-radius:3px;height:8px">
+        <div style="width:${Math.round(n/max*100)}%;background:var(--gold);height:8px;border-radius:3px;opacity:0.6"></div>
+      </div>
+      <span style="width:24px;text-align:right;color:var(--text);font-weight:500">${n}</span>
+    </div>`).join('')||'<div style="color:var(--text3);font-size:12px">Sin reservas con habitación</div>';
+}
+
+function renderUsuarios(){
+  if(!isAdmin()) return;
+  const users=getData('mds_users',[]);
+  const rolBadge={admin:'badge-admin',recepcionista:'badge-recep',vendedor:'badge-vend',consulta:'badge-view'};
+  document.getElementById('lista-usuarios').innerHTML=users.map((u,i)=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+      <div style="width:32px;height:32px;border-radius:50%;background:rgba(201,168,76,0.15);color:var(--gold);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600">${u.nombre.slice(0,2).toUpperCase()}</div>
+      <div style="flex:1">
+        <div style="font-size:13px;color:var(--text)">${u.nombre}</div>
+        <div style="font-size:11px;color:var(--text3)">${u.user}</div>
+      </div>
+      <span class="badge ${rolBadge[u.rol]||''}">${ROLES[u.rol]||u.rol}</span>
+      ${u.user!=='admin'?`<button class="btn btn-sm btn-danger" onclick="eliminarUsuario(${i})">×</button>`:''}
+    </div>`).join('');
+}
+
+function crearUsuario(){
+  const nombre=document.getElementById('u-nombre').value.trim();
+  const user=document.getElementById('u-user').value.trim().toLowerCase();
+  const pass=document.getElementById('u-pass').value;
+  const rol=document.getElementById('u-rol').value;
+  if(!nombre||!user||!pass){showAlert('alert-usuarios','Todos los campos son obligatorios.','err');return;}
+  const users=getData('mds_users',[]);
+  if(users.find(u=>u.user===user)){showAlert('alert-usuarios','Ese nombre de usuario ya existe.','err');return;}
+  users.push({nombre,user,pass,rol});
+  setData('mds_users',users);
+  document.getElementById('u-nombre').value='';
+  document.getElementById('u-user').value='';
+  document.getElementById('u-pass').value='';
+  showAlert('alert-usuarios','Usuario creado correctamente.','ok');
+  renderUsuarios();
+}
+
+function eliminarUsuario(i){
+  if(!confirm('¿Eliminar este usuario?'))return;
+  const users=getData('mds_users',[]);
+  users.splice(i,1);
+  setData('mds_users',users);
+  renderUsuarios();
+}
+
+initUsers();
+</script>
+</body>
+</html>
