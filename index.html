@@ -1211,8 +1211,19 @@ async function guardarEdicion(){
   r.descValor=Math.round(r.totalBruto*(r.descPct/100));
   r.total=r.totalBruto-r.descValor;
   r.deber=Math.max(0,r.total-r.abono);
-  setData("mds_reservas",reservas);
-  closeModal("modal-edit");renderReservas();
+  const upd={
+    nombre:r.nombre,celular:r.celular,identificacion:r.identificacion,correo:r.correo,obs:r.obs,
+    plan:r.plan,entrada:r.entrada,salida:r.salida||null,hab:r.hab,personas:r.personas,
+    abono:r.abono,vendedor:r.vendedor,consig:r.consig,decoracion:r.decoracion,
+    ninos1:r.ninos1,ninos2:r.ninos2,mascotas:r.mascotas,
+    total_bruto:r.totalBruto,desc_pct:r.descPct,desc_valor:r.descValor,
+    total:r.total,deber:r.deber,dias:r.dias
+  };
+  const ok=await sbUpdate("reservas",editIdx,upd);
+  if(!ok){alert("Error al guardar. Intenta de nuevo.");return;}
+  closeModal("modal-edit");
+  _reservasCache=await sbGet("reservas");
+  renderReservas();
 }
 
 async function eliminarReserva(){
@@ -1538,6 +1549,9 @@ function verDetalleDisp(id){
         <span id="disp-estado-badge">${estadoBadge(r.estado)}</span>
         <button class="btn btn-sm" onclick="cambiarEstadoDesdeDisp(${r.id})" id="disp-estado-btn">${estadoLabel(r.estado)}</button>
       </div>
+    </div>
+    <div style="margin-top:12px">
+      <button class="btn btn-primary" style="width:100%;font-size:14px;padding:11px" onclick="closeModal('modal-disp');abrirConsumos(${r.id})">🛒 Ver / Agregar Consumos</button>
     </div>`;
   document.getElementById("modal-disp").classList.add("show");
 }
