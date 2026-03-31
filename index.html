@@ -680,8 +680,7 @@ function showAlert(id,msg,tipo){
 
 function habOcupada(hab,entrada,salida,plan,excludeId){
   if(!hab||hab==="NO"||esDiaSol(plan))return false;
-  const reservas=getData("mds_reservas",[]);
-  return reservas.some(r=>{
+  return _reservasCache.some(r=>{
     if(r.id===excludeId)return false;
     if(r.hab!==hab)return false;
     if(esDiaSol(r.plan))return false;
@@ -718,25 +717,7 @@ async function guardarReserva(){
   const total=totalBruto-descValor;
   const abono=parseFloat(document.getElementById("f-abono").value)||0;
   const deber=Math.max(0,total-abono);
-  const reservas=getData("mds_reservas",[]);
-  reservas.push({
-    id:Date.now(),nombre,
-    celular:document.getElementById("f-celular").value.trim(),
-    identificacion:document.getElementById("f-id").value.trim(),
-    correo:document.getElementById("f-correo").value.trim(),
-    tipoCliente:document.getElementById("f-tipocliente").value,
-    obs:document.getElementById("f-obs").value.trim(),
-    plan,entrada,salida,dias,hab,personas,
-    totalBruto,descPct,descValor,total,abono,deber,
-    ninos1:parseInt(document.getElementById("f-ninos1").value)||0,
-    ninos2:parseInt(document.getElementById("f-ninos2").value)||0,
-    mascotas:parseInt(document.getElementById("f-mascotas").value)||0,
-    decoracion:document.getElementById("f-decoracion").value,
-    fabono:document.getElementById("f-fabono").value,
-    vendedor:document.getElementById("f-vendedor").value,
-    consig:document.getElementById("f-consig").value,
-    creadoPor:currentUser.user,fecha:today()
-  });
+
   const row = {
     nombre, celular:document.getElementById("f-celular").value.trim(),
     identificacion:document.getElementById("f-id").value.trim(),
@@ -822,8 +803,8 @@ function renderTablaReservas(){
     </tr>`).join("");
 }
 
-function exportarExcel(){
-  const reservas=getData("mds_reservas",[]);
+async function exportarExcel(){
+  const reservas=_reservasCache.length?_reservasCache:await sbGet("reservas");
   if(!reservas.length){alert("No hay reservas para exportar.");return}
   const headers=["#","Nombre","Celular","Identificación","Plan","Habitación","Entrada","Salida","Días","Personas","Valor/Persona","Total","Abono","A Deber","Vendedor","Consignatario","Tipo Cliente","Observaciones","Creado Por","Fecha Registro"];
   const rows=reservas.map((r,i)=>[i+1,r.nombre,r.celular||"",r.identificacion||"",r.plan,r.hab==="NO"?"":r.hab,fmtD(r.entrada),fmtD(r.salida),r.dias||1,r.personas,r.vlr,r.total,r.abono||0,r.deber||0,r.vendedor||"",r.consig||"",r.tipoCliente||"",r.obs||"",r.creadoPor||"",fmtD(r.fecha)]);
@@ -909,8 +890,8 @@ function abrirEditar(id){
 
 async function guardarEdicion(){
   if(!canEdit())return;
-  const reservas=getData("mds_reservas",[]);
-  const r=reservas[editIdx];
+  const r=_reservasCache.find(x=>x.id===editIdx);
+  if(!r)return;
   r.nombre=document.getElementById("e-nombre").value.trim().toUpperCase();
   r.celular=document.getElementById("e-celular").value.trim();
   r.identificacion=document.getElementById("e-id").value.trim();
@@ -946,10 +927,9 @@ async function guardarEdicion(){
 async function eliminarReserva(){
   if(!isAdmin()){alert("Solo el administrador puede eliminar reservas.");return}
   if(!confirm("¿Eliminar esta reserva?"))return;
-  const reservas=getData("mds_reservas",[]);
-  reservas.splice(editIdx,1);
-  setData("mds_reservas",reservas);
-  closeModal("modal-edit");renderReservas();
+  await sbDelete("reservas", editIdx);
+  closeModal("modal-edit");
+  await renderReservas();
 }
 
 function verRecibo(){
