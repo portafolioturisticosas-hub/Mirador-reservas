@@ -1820,8 +1820,9 @@ function verDetalleDisp(id){
         <button class="btn btn-sm" onclick="cambiarEstadoDesdeDisp(${r.id})" id="disp-estado-btn">${estadoLabel(r.estado)}</button>
       </div>
     </div>
-    <div style="margin-top:12px">
-      <button class="btn btn-primary" style="width:100%;font-size:14px;padding:11px" onclick="closeModal('modal-disp');abrirConsumos(${r.id})">🛒 Ver / Agregar Consumos</button>
+    <div style="margin-top:12px;display:flex;gap:8px">
+      <button class="btn btn-primary" style="flex:1;font-size:13px;padding:10px" onclick="closeModal('modal-disp');abrirConsumos(${r.id})">🛒 Consumos</button>
+      <button class="btn" style="flex:1;font-size:13px;padding:10px;border-color:rgba(224,120,32,0.4);color:var(--orange)" onclick="closeModal('modal-disp');abrirEditar(${r.id})">✏ Editar reserva</button>
     </div>`;
   document.getElementById("modal-disp").classList.add("show");
 }
