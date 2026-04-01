@@ -214,7 +214,7 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
     <!-- NUEVA RESERVA -->
     <div class="page active" id="page-nueva">
       <div class="page-title">Nueva reserva</div>
-      <div class="page-sub">Completa el formulario y guarda la reserva</div>
+      <div class="page-sub">Selecciona el tipo de reserva y completa el formulario</div>
 
       <!-- DASHBOARD DE HOY -->
       <div id="dashboard-hoy" style="margin-bottom:20px;display:none">
@@ -228,104 +228,234 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
         <div id="dash-alertas"></div>
       </div>
 
+      <!-- TABS -->
+      <div style="display:flex;gap:0;margin-bottom:20px;border-bottom:2px solid rgba(255,255,255,0.07)">
+        <button id="tab-hospedaje" onclick="switchTab('hospedaje')" style="padding:10px 28px;background:var(--orange);border:none;border-radius:8px 8px 0 0;color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;margin-right:4px">🏠 Hospedaje</button>
+        <button id="tab-diasol" onclick="switchTab('diasol')" style="padding:10px 28px;background:var(--dark3);border:none;border-radius:8px 8px 0 0;color:var(--text3);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer">☀ Día de Sol</button>
+      </div>
+
       <div id="alert-nueva" class="alert"></div>
-      <div class="grid2">
-        <div class="card">
-          <div class="card-title">Datos del cliente</div>
-          <label class="fl">Nombre completo *</label>
-          <input class="f" id="f-nombre" type="text" placeholder="JUAN PABLO GARCIA">
-          <label class="fl">Celular</label>
-          <input class="f" id="f-celular" type="text" placeholder="3101234567">
-          <label class="fl">N° Identificación</label>
-          <input class="f" id="f-id" type="text" placeholder="Cédula">
-          <label class="fl">Correo electrónico</label>
-          <input class="f" id="f-correo" type="email" placeholder="email@ejemplo.com">
-          <label class="fl">Tipo de cliente</label>
-          <select class="f" id="f-tipocliente">
-            <option value="">— Seleccionar —</option>
-            <option>Nuevo</option><option>Frecuente</option><option>VIP</option>
-          </select>
-          <label class="fl">Observaciones</label>
-          <textarea class="f" id="f-obs" rows="2" placeholder="Ej: 2 PAX + 1 NIÑO"></textarea>
-        </div>
-        <div>
-          <div class="card mb">
-            <div class="card-title">Reserva</div>
-            <label class="fl">Tipo de plan *</label>
-            <select class="f" id="f-plan" onchange="updatePlan()">
+
+      <!-- ===== FORMULARIO HOSPEDAJE ===== -->
+      <div id="form-hospedaje">
+        <div class="grid2">
+          <div class="card">
+            <div class="card-title">Datos del Titular</div>
+            <label class="fl">Nombre completo *</label>
+            <input class="f" id="f-nombre" type="text" placeholder="JUAN PABLO GARCIA">
+            <label class="fl">Tipo de documento</label>
+            <select class="f" id="f-tipodoc">
+              <option value="CC">Cédula de Ciudadanía</option>
+              <option value="TI">Tarjeta de Identidad</option>
+              <option value="RC">Registro Civil</option>
+              <option value="PA">Pasaporte</option>
+            </select>
+            <label class="fl">N° Identificación</label>
+            <input class="f" id="f-id" type="text" placeholder="Número de documento">
+            <label class="fl">Celular</label>
+            <input class="f" id="f-celular" type="text" placeholder="3101234567">
+            <label class="fl">Correo electrónico</label>
+            <input class="f" id="f-correo" type="email" placeholder="email@ejemplo.com">
+            <label class="fl">Tipo de cliente</label>
+            <select class="f" id="f-tipocliente">
               <option value="">— Seleccionar —</option>
-              <option value="DIA DE SOL A">Día de sol — Plan A</option>
-              <option value="DIA DE SOL B">Día de sol — Plan B</option>
-              <option value="DIA DE SOL C">Día de sol — Plan C</option>
-              <option value="ESTANDAR">Estándar</option>
-              <option value="MULTIPLE">Múltiple</option>
-              <option value="JACUZZI">Jacuzzi</option>
+              <option>Nuevo</option><option>Frecuente</option><option>VIP</option>
             </select>
-            <label class="fl">Fecha de entrada *</label>
-            <input class="f" id="f-entrada" type="date" onchange="calcTotal();actualizarHabs()">
-            <label class="fl" id="lbl-salida">Fecha de salida</label>
-            <input class="f" id="f-salida" type="date" onchange="calcTotal();actualizarHabs()">
-            <label class="fl" id="lbl-hab">Habitación N°</label>
-            <select class="f" id="f-hab" onchange="checkHabDisp()">
-              <option value="NO">No aplica</option>
-              <option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>12</option>
-              <option>7</option><option>8</option><option>9</option><option>10</option><option>11</option>
-              <option>13</option><option>14</option><option>15</option><option>16</option><option>17</option>
-            </select>
-            <div id="hab-status" style="margin-top:6px;font-size:12px;display:none"></div>
-            <label class="fl">N° personas *</label>
-            <input class="f" id="f-personas" type="number" min="1" placeholder="0" onchange="calcTotal()">
-            <div class="grid2" style="gap:10px;margin-top:0">
-              <div><label class="fl">Niños 0-4 años</label><input class="f" id="f-ninos1" type="number" min="0" value="0" placeholder="0"></div>
-              <div><label class="fl">Niños 5-9 años</label><input class="f" id="f-ninos2" type="number" min="0" value="0" placeholder="0"></div>
-            </div>
-            <div class="grid2" style="gap:10px">
-              <div><label class="fl">Mascotas</label><input class="f" id="f-mascotas" type="number" min="0" value="0" placeholder="0"></div>
-              <div><label class="fl">Decoración</label>
-                <select class="f" id="f-decoracion">
-                  <option value="Sin decoración">Sin decoración</option>
-                  <option value="Romántica">Romántica</option>
-                  <option value="Cumpleaños">Cumpleaños</option>
-                </select>
+            <label class="fl">Observaciones</label>
+            <textarea class="f" id="f-obs" rows="2" placeholder="Ej: 2 PAX + 1 NIÑO"></textarea>
+          </div>
+          <div>
+            <div class="card mb">
+              <div class="card-title">Reserva</div>
+              <label class="fl">Tipo de plan *</label>
+              <select class="f" id="f-plan" onchange="updatePlan()">
+                <option value="">— Seleccionar —</option>
+                <option value="ESTANDAR">Estándar</option>
+                <option value="MULTIPLE">Múltiple</option>
+                <option value="JACUZZI">Jacuzzi</option>
+              </select>
+              <label class="fl">Fecha de entrada *</label>
+              <input class="f" id="f-entrada" type="date" onchange="calcTotal();actualizarHabs()">
+              <label class="fl">Fecha de salida *</label>
+              <input class="f" id="f-salida" type="date" onchange="calcTotal();actualizarHabs()">
+              <label class="fl">Habitación N°</label>
+              <select class="f" id="f-hab" onchange="checkHabDisp()">
+                <option value="NO">No aplica</option>
+                <option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>12</option>
+                <option>7</option><option>8</option><option>9</option><option>10</option><option>11</option>
+                <option>13</option><option>14</option><option>15</option><option>16</option><option>17</option>
+              </select>
+              <div id="hab-status" style="margin-top:6px;font-size:12px;display:none"></div>
+              <label class="fl">N° personas (adultos) *</label>
+              <input class="f" id="f-personas" type="number" min="1" placeholder="0" onchange="calcTotal();generarAcompanantes('hosp')">
+              <div class="grid2" style="gap:10px;margin-top:0">
+                <div><label class="fl">Niños 0-4 años</label><input class="f" id="f-ninos1" type="number" min="0" value="0" placeholder="0" onchange="generarAcompanantes('hosp')"></div>
+                <div><label class="fl">Niños 5-9 años</label><input class="f" id="f-ninos2" type="number" min="0" value="0" placeholder="0" onchange="generarAcompanantes('hosp')"></div>
+              </div>
+              <div class="grid2" style="gap:10px">
+                <div><label class="fl">Mascotas</label><input class="f" id="f-mascotas" type="number" min="0" value="0" placeholder="0"></div>
+                <div><label class="fl">Decoración</label>
+                  <select class="f" id="f-decoracion">
+                    <option value="Sin decoración">Sin decoración</option>
+                    <option value="Romántica">Romántica</option>
+                    <option value="Cumpleaños">Cumpleaños</option>
+                  </select>
+                </div>
               </div>
             </div>
+            <div class="card">
+              <div class="card-title">Pago</div>
+              <div class="grid2" style="gap:10px">
+                <div><label class="fl">Valor total ($) *</label><input class="f" id="f-total" type="number" min="0" placeholder="0" onchange="calcTotal()"></div>
+                <div><label class="fl">Descuento (%)</label><input class="f" id="f-descuento" type="number" min="0" max="100" value="0" placeholder="0" onchange="calcTotal()"></div>
+              </div>
+              <div class="grid2" style="gap:10px">
+                <div><label class="fl">Total con descuento</label><input class="f" id="f-total-desc" type="number" disabled style="opacity:0.7"></div>
+                <div><label class="fl">Abono ($)</label><input class="f" id="f-abono" type="number" min="0" value="0" onchange="calcTotal()"></div>
+              </div>
+              <label class="fl">Restante a pagar ($)</label>
+              <input class="f" id="f-deber" type="number" disabled style="opacity:0.7;color:var(--orange)">
+              <label class="fl">Fecha del abono</label>
+              <input class="f" id="f-fabono" type="date">
+              <label class="fl">Vendedor</label>
+              <select class="f" id="f-vendedor">
+                <option value="">— Seleccionar —</option>
+                <option>KEVIN</option><option>RUBEN</option><option>CAROLINA</option><option>GILBERTO</option><option>RECEPCIÓN</option>
+              </select>
+              <label class="fl">Consignatario</label>
+              <select class="f" id="f-consig">
+                <option value="">— Seleccionar —</option>
+                <option>RUBEN</option><option>GILBERTO</option><option>KEVIN</option>
+              </select>
+            </div>
           </div>
+        </div>
+
+        <!-- ACOMPAÑANTES HOSPEDAJE -->
+        <div id="acomp-hosp-wrap" style="display:none;margin-top:16px">
           <div class="card">
-            <div class="card-title">Pago</div>
-            <div class="grid2" style="gap:10px">
-              <div><label class="fl">Valor total ($) *</label><input class="f" id="f-total" type="number" min="0" placeholder="0" onchange="calcTotal()"></div>
-              <div><label class="fl">Descuento (%)</label><input class="f" id="f-descuento" type="number" min="0" max="100" value="0" placeholder="0" onchange="calcTotal()"></div>
+            <div class="card-title">👥 Datos de Acompañantes</div>
+            <div id="acomp-hosp-lista"></div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:16px;background:var(--dark3)">
+          <div class="flex-between">
+            <div>
+              <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px">Vista previa</div>
+              <div style="font-size:13px;margin-top:6px;color:var(--text)" id="preview-txt">Completa el formulario para ver el total</div>
             </div>
-            <div class="grid2" style="gap:10px">
-              <div><label class="fl">Total con descuento</label><input class="f" id="f-total-desc" type="number" disabled style="opacity:0.7"></div>
-              <div><label class="fl">Abono ($)</label><input class="f" id="f-abono" type="number" min="0" value="0" onchange="calcTotal()"></div>
+            <div style="display:flex;gap:10px">
+              <button class="btn" onclick="limpiarForm()">Limpiar</button>
+              <button class="btn btn-primary" onclick="guardarReserva()">Guardar reserva</button>
             </div>
-            <label class="fl">Restante a pagar ($)</label>
-            <input class="f" id="f-deber" type="number" disabled style="opacity:0.7;color:var(--orange)">
-            <label class="fl">Fecha del abono</label>
-            <input class="f" id="f-fabono" type="date">
-            <label class="fl">Vendedor</label>
-            <select class="f" id="f-vendedor">
-              <option value="">— Seleccionar —</option>
-              <option>KEVIN</option><option>RUBEN</option><option>CAROLINA</option><option>GILBERTO</option><option>RECEPCIÓN</option>
-            </select>
-            <label class="fl">Consignatario</label>
-            <select class="f" id="f-consig">
-              <option value="">— Seleccionar —</option>
-              <option>RUBEN</option><option>GILBERTO</option><option>KEVIN</option>
-            </select>
           </div>
         </div>
       </div>
-      <div class="card" style="margin-top:16px;background:var(--dark3)">
-        <div class="flex-between">
-          <div>
-            <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px">Vista previa</div>
-            <div style="font-size:13px;margin-top:6px;color:var(--text)" id="preview-txt">Completa el formulario para ver el total</div>
+
+      <!-- ===== FORMULARIO DIA DE SOL ===== -->
+      <div id="form-diasol" style="display:none">
+        <div class="grid2">
+          <div class="card">
+            <div class="card-title">Datos del Titular</div>
+            <label class="fl">Nombre completo *</label>
+            <input class="f" id="ds-nombre" type="text" placeholder="JUAN PABLO GARCIA">
+            <label class="fl">Tipo de documento</label>
+            <select class="f" id="ds-tipodoc">
+              <option value="CC">Cédula de Ciudadanía</option>
+              <option value="TI">Tarjeta de Identidad</option>
+              <option value="RC">Registro Civil</option>
+              <option value="PA">Pasaporte</option>
+            </select>
+            <label class="fl">N° Identificación</label>
+            <input class="f" id="ds-id" type="text" placeholder="Número de documento">
+            <label class="fl">Celular</label>
+            <input class="f" id="ds-celular" type="text" placeholder="3101234567">
+            <label class="fl">Correo electrónico</label>
+            <input class="f" id="ds-correo" type="email" placeholder="email@ejemplo.com">
+            <label class="fl">Tipo de cliente</label>
+            <select class="f" id="ds-tipocliente">
+              <option value="">— Seleccionar —</option>
+              <option>Nuevo</option><option>Frecuente</option><option>VIP</option>
+            </select>
+            <label class="fl">Observaciones</label>
+            <textarea class="f" id="ds-obs" rows="2" placeholder="Notas adicionales"></textarea>
           </div>
-          <div style="display:flex;gap:10px">
-            <button class="btn" onclick="limpiarForm()">Limpiar</button>
-            <button class="btn btn-primary" onclick="guardarReserva()">Guardar reserva</button>
+          <div>
+            <div class="card mb">
+              <div class="card-title">Reserva Día de Sol</div>
+              <label class="fl">Plan *</label>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:6px;margin-bottom:6px">
+                <div id="ds-plan-A" onclick="selPlanSol('DIA DE SOL A')" style="cursor:pointer;padding:12px;border-radius:8px;border:2px solid rgba(224,120,32,0.3);text-align:center;transition:all .15s">
+                  <div style="font-size:13px;font-weight:700;color:var(--orange)">Plan A</div>
+                  <div style="font-size:10px;color:var(--text3);margin-top:2px">Día de Sol A</div>
+                </div>
+                <div id="ds-plan-B" onclick="selPlanSol('DIA DE SOL B')" style="cursor:pointer;padding:12px;border-radius:8px;border:2px solid rgba(224,120,32,0.3);text-align:center;transition:all .15s">
+                  <div style="font-size:13px;font-weight:700;color:var(--orange)">Plan B</div>
+                  <div style="font-size:10px;color:var(--text3);margin-top:2px">Día de Sol B</div>
+                </div>
+                <div id="ds-plan-C" onclick="selPlanSol('DIA DE SOL C')" style="cursor:pointer;padding:12px;border-radius:8px;border:2px solid rgba(224,120,32,0.3);text-align:center;transition:all .15s">
+                  <div style="font-size:13px;font-weight:700;color:var(--orange)">Plan C</div>
+                  <div style="font-size:10px;color:var(--text3);margin-top:2px">Día de Sol C</div>
+                </div>
+              </div>
+              <input type="hidden" id="ds-plan" value="">
+              <label class="fl">Fecha *</label>
+              <input class="f" id="ds-entrada" type="date">
+              <label class="fl">N° personas (adultos) *</label>
+              <input class="f" id="ds-personas" type="number" min="1" placeholder="0" onchange="calcTotalSol();generarAcompanantes('sol')">
+              <div class="grid2" style="gap:10px;margin-top:0">
+                <div><label class="fl">Niños 0-4 años</label><input class="f" id="ds-ninos1" type="number" min="0" value="0" placeholder="0" onchange="generarAcompanantes('sol')"></div>
+                <div><label class="fl">Niños 5-9 años</label><input class="f" id="ds-ninos2" type="number" min="0" value="0" placeholder="0" onchange="generarAcompanantes('sol')"></div>
+              </div>
+              <div><label class="fl">Mascotas</label><input class="f" id="ds-mascotas" type="number" min="0" value="0" placeholder="0"></div>
+            </div>
+            <div class="card">
+              <div class="card-title">Pago</div>
+              <div class="grid2" style="gap:10px">
+                <div><label class="fl">Valor total ($) *</label><input class="f" id="ds-total" type="number" min="0" placeholder="0" onchange="calcTotalSol()"></div>
+                <div><label class="fl">Descuento (%)</label><input class="f" id="ds-descuento" type="number" min="0" max="100" value="0" placeholder="0" onchange="calcTotalSol()"></div>
+              </div>
+              <div class="grid2" style="gap:10px">
+                <div><label class="fl">Total con descuento</label><input class="f" id="ds-total-desc" type="number" disabled style="opacity:0.7"></div>
+                <div><label class="fl">Abono ($)</label><input class="f" id="ds-abono" type="number" min="0" value="0" onchange="calcTotalSol()"></div>
+              </div>
+              <label class="fl">Restante a pagar ($)</label>
+              <input class="f" id="ds-deber" type="number" disabled style="opacity:0.7;color:var(--orange)">
+              <label class="fl">Fecha del abono</label>
+              <input class="f" id="ds-fabono" type="date">
+              <label class="fl">Vendedor</label>
+              <select class="f" id="ds-vendedor">
+                <option value="">— Seleccionar —</option>
+                <option>KEVIN</option><option>RUBEN</option><option>CAROLINA</option><option>GILBERTO</option><option>RECEPCIÓN</option>
+              </select>
+              <label class="fl">Consignatario</label>
+              <select class="f" id="ds-consig">
+                <option value="">— Seleccionar —</option>
+                <option>RUBEN</option><option>GILBERTO</option><option>KEVIN</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- ACOMPAÑANTES DIA DE SOL -->
+        <div id="acomp-sol-wrap" style="display:none;margin-top:16px">
+          <div class="card">
+            <div class="card-title">👥 Datos de Acompañantes</div>
+            <div id="acomp-sol-lista"></div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:16px;background:var(--dark3)">
+          <div class="flex-between">
+            <div>
+              <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px">Vista previa</div>
+              <div style="font-size:13px;margin-top:6px;color:var(--text)" id="preview-txt-sol">Completa el formulario para ver el total</div>
+            </div>
+            <div style="display:flex;gap:10px">
+              <button class="btn" onclick="limpiarFormSol()">Limpiar</button>
+              <button class="btn btn-primary" onclick="guardarReservaSol()">Guardar reserva</button>
+            </div>
           </div>
         </div>
       </div>
@@ -536,6 +666,7 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
     <div class="flex-end" style="margin-top:20px">
       <button class="btn btn-danger btn-sm" onclick="eliminarReserva()">Eliminar</button>
       <button class="btn btn-sm" onclick="verRecibo()">Ver recibo</button>
+      <button class="btn btn-sm" style="color:var(--orange);border-color:rgba(224,120,32,0.4)" onclick="generarVoucher()">📄 Voucher</button>
       <button class="btn btn-sm" onclick="closeModal('modal-edit')">Cancelar</button>
       <button class="btn btn-primary btn-sm" onclick="guardarEdicion()">Guardar</button>
     </div>
@@ -790,6 +921,158 @@ function fmt(n){return new Intl.NumberFormat("es-CO",{style:"currency",currency:
 function fmtD(s){if(!s)return"—";const[y,m,d]=s.split("-");return`${d}/${m}/${y}`}
 function today(){return new Date().toISOString().split("T")[0]}
 
+// ---- TABS NUEVA RESERVA ----
+let _tabActual = 'hospedaje';
+
+function switchTab(tab){
+  _tabActual = tab;
+  document.getElementById("form-hospedaje").style.display = tab==='hospedaje'?'':'none';
+  document.getElementById("form-diasol").style.display = tab==='diasol'?'':'none';
+  document.getElementById("tab-hospedaje").style.background = tab==='hospedaje'?'var(--orange)':'var(--dark3)';
+  document.getElementById("tab-hospedaje").style.color = tab==='hospedaje'?'#fff':'var(--text3)';
+  document.getElementById("tab-diasol").style.background = tab==='diasol'?'var(--orange)':'var(--dark3)';
+  document.getElementById("tab-diasol").style.color = tab==='diasol'?'#fff':'var(--text3)';
+}
+
+let _planSolSel = '';
+function selPlanSol(plan){
+  _planSolSel = plan;
+  document.getElementById("ds-plan").value = plan;
+  ["A","B","C"].forEach(x=>{
+    const el = document.getElementById("ds-plan-"+x);
+    const activo = plan==="DIA DE SOL "+x;
+    el.style.background = activo?'rgba(224,120,32,0.2)':'transparent';
+    el.style.borderColor = activo?'var(--orange)':'rgba(224,120,32,0.3)';
+  });
+}
+
+// ---- ACOMPAÑANTES ----
+function generarAcompanantes(tipo){
+  const prefix = tipo==='hosp'?'f':'ds';
+  const wrapId = tipo==='hosp'?'acomp-hosp-wrap':'acomp-sol-wrap';
+  const listaId = tipo==='hosp'?'acomp-hosp-lista':'acomp-sol-lista';
+  const adultos = parseInt(document.getElementById(prefix+"-personas").value)||0;
+  const ninos1 = parseInt(document.getElementById(prefix+"-ninos1").value)||0;
+  const ninos2 = parseInt(document.getElementById(prefix+"-ninos2").value)||0;
+  const total = adultos + ninos1 + ninos2;
+  const acomp = total - 1; // el titular no cuenta
+  const wrap = document.getElementById(wrapId);
+  const lista = document.getElementById(listaId);
+  if(acomp<=0){wrap.style.display='none';lista.innerHTML='';return;}
+  wrap.style.display='block';
+  const tiposDoc = ['CC - Cédula de Ciudadanía','TI - Tarjeta de Identidad','RC - Registro Civil','PA - Pasaporte'];
+  lista.innerHTML = Array.from({length:acomp},(_,i)=>`
+    <div style="border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:14px;margin-bottom:10px">
+      <div style="font-size:11px;color:var(--orange);font-weight:600;margin-bottom:10px;text-transform:uppercase">Acompañante ${i+1} ${i>=adultos-1?'(Menor)':''}</div>
+      <div class="grid2" style="gap:10px">
+        <div><label class="fl" style="margin-top:0">Nombre completo</label><input class="f" id="${tipo}-ac-nombre-${i}" type="text" placeholder="Nombre completo"></div>
+        <div><label class="fl" style="margin-top:0">Tipo de documento</label>
+          <select class="f" id="${tipo}-ac-tipodoc-${i}">
+            ${tiposDoc.map(t=>`<option value="${t.split(' - ')[0]}">${t}</option>`).join('')}
+          </select>
+        </div>
+        <div><label class="fl" style="margin-top:0">N° Documento</label><input class="f" id="${tipo}-ac-doc-${i}" type="text" placeholder="Número"></div>
+        <div><label class="fl" style="margin-top:0">Celular</label><input class="f" id="${tipo}-ac-cel-${i}" type="text" placeholder="3101234567"></div>
+        <div style="grid-column:span 2"><label class="fl" style="margin-top:0">Correo</label><input class="f" id="${tipo}-ac-correo-${i}" type="email" placeholder="email@ejemplo.com"></div>
+      </div>
+    </div>`).join('');
+}
+
+function recogerAcompanantes(tipo){
+  const prefix = tipo==='hosp'?'f':'ds';
+  const adultos = parseInt(document.getElementById(prefix+"-personas").value)||0;
+  const ninos1 = parseInt(document.getElementById(prefix+"-ninos1").value)||0;
+  const ninos2 = parseInt(document.getElementById(prefix+"-ninos2").value)||0;
+  const total = adultos + ninos1 + ninos2 - 1;
+  if(total<=0) return [];
+  return Array.from({length:total},(_,i)=>({
+    nombre: document.getElementById(`${tipo}-ac-nombre-${i}`)?.value?.trim()||'',
+    tipo_doc: document.getElementById(`${tipo}-ac-tipodoc-${i}`)?.value||'CC',
+    documento: document.getElementById(`${tipo}-ac-doc-${i}`)?.value?.trim()||'',
+    celular: document.getElementById(`${tipo}-ac-cel-${i}`)?.value?.trim()||'',
+    correo: document.getElementById(`${tipo}-ac-correo-${i}`)?.value?.trim()||''
+  })).filter(a=>a.nombre||a.documento);
+}
+
+// ---- CALCULO DIA DE SOL ----
+function calcTotalSol(){
+  const totalBruto = parseFloat(document.getElementById("ds-total").value)||0;
+  const descPct = parseFloat(document.getElementById("ds-descuento").value)||0;
+  const abono = parseFloat(document.getElementById("ds-abono").value)||0;
+  const descValor = Math.round(totalBruto*(descPct/100));
+  const totalDesc = totalBruto - descValor;
+  const deber = Math.max(0, totalDesc - abono);
+  document.getElementById("ds-total-desc").value = totalDesc;
+  document.getElementById("ds-deber").value = deber;
+  const personas = parseInt(document.getElementById("ds-personas").value)||0;
+  if(totalBruto>0){
+    document.getElementById("preview-txt-sol").innerHTML = `<strong style="color:var(--orange)">${_planSolSel||'Sin plan'}</strong> · ${personas} personas · Total: <strong style="color:var(--orange)">${fmt(totalBruto)}</strong>${descPct>0?` · Desc ${descPct}%: -${fmt(descValor)} · Neto: <strong>${fmt(totalDesc)}</strong>`:''} · Abono: ${fmt(abono)} · Restante: <strong style="color:var(--orange)">${fmt(deber)}</strong>`;
+  }
+}
+
+// ---- GUARDAR DIA DE SOL ----
+async function guardarReservaSol(){
+  if(!canCreate()){showAlert("alert-nueva","No tienes permiso para crear reservas.","err");return}
+  const nombre = document.getElementById("ds-nombre").value.trim().toUpperCase();
+  const plan = document.getElementById("ds-plan").value;
+  const entrada = document.getElementById("ds-entrada").value;
+  const personas = parseInt(document.getElementById("ds-personas").value)||0;
+  const totalBruto = parseFloat(document.getElementById("ds-total").value)||0;
+  if(!nombre){showAlert("alert-nueva","El nombre del cliente es obligatorio.","err");return}
+  if(!plan){showAlert("alert-nueva","Selecciona un plan de día de sol.","err");return}
+  if(!entrada){showAlert("alert-nueva","La fecha es obligatoria.","err");return}
+  if(personas<=0){showAlert("alert-nueva","El número de personas debe ser mayor a 0.","err");return}
+  if(totalBruto<=0){showAlert("alert-nueva","El valor total es obligatorio.","err");return}
+  const descPct = parseFloat(document.getElementById("ds-descuento").value)||0;
+  const descValor = Math.round(totalBruto*(descPct/100));
+  const total = totalBruto - descValor;
+  const abono = parseFloat(document.getElementById("ds-abono").value)||0;
+  const deber = Math.max(0, total - abono);
+  const acompanantes = recogerAcompanantes('sol');
+  const row = {
+    nombre, plan, entrada, salida:null, dias:1, hab:null,
+    celular: document.getElementById("ds-celular").value.trim()||null,
+    identificacion: document.getElementById("ds-id").value.trim()||null,
+    correo: document.getElementById("ds-correo").value.trim()||null,
+    tipo_cliente: document.getElementById("ds-tipocliente").value||null,
+    obs: document.getElementById("ds-obs").value.trim()||null,
+    personas, ninos1: parseInt(document.getElementById("ds-ninos1").value)||0,
+    ninos2: parseInt(document.getElementById("ds-ninos2").value)||0,
+    mascotas: parseInt(document.getElementById("ds-mascotas").value)||0,
+    total_bruto: totalBruto, desc_pct: descPct, desc_valor: descValor,
+    total, abono, deber, ventas_bar:0, ventas_restaurante:0,
+    fabono: document.getElementById("ds-fabono").value||null,
+    vendedor: document.getElementById("ds-vendedor").value,
+    consig: document.getElementById("ds-consig").value,
+    creado_por: currentUser.user, fecha: today(),
+    acompanantes: acompanantes.length?JSON.stringify(acompanantes):null
+  };
+  const result = await sbInsert("reservas", row);
+  if(result){
+    limpiarFormSol();
+    showAlert("alert-nueva","Reserva día de sol guardada para "+nombre,"ok");
+    _reservasCache = await sbGet("reservas");
+  } else {
+    const {error} = await supa.from("reservas").insert(row).select();
+    showAlert("alert-nueva","Error: "+(error?error.message:"Sin resultado"),"err");
+  }
+}
+
+function limpiarFormSol(){
+  ["ds-nombre","ds-id","ds-celular","ds-correo","ds-obs","ds-entrada","ds-fabono"].forEach(id=>{const el=document.getElementById(id);if(el)el.value="";});
+  ["ds-tipocliente","ds-vendedor","ds-consig"].forEach(id=>{const el=document.getElementById(id);if(el)el.selectedIndex=0;});
+  ["ds-abono","ds-ninos1","ds-ninos2","ds-mascotas"].forEach(id=>{const el=document.getElementById(id);if(el)el.value=0;});
+  document.getElementById("ds-personas").value="";
+  document.getElementById("ds-total").value="";
+  document.getElementById("ds-descuento").value=0;
+  document.getElementById("ds-total-desc").value="";
+  document.getElementById("ds-deber").value=0;
+  document.getElementById("preview-txt-sol").textContent="Completa el formulario para ver el total";
+  selPlanSol('');_planSolSel='';
+  document.getElementById("acomp-sol-wrap").style.display='none';
+  document.getElementById("acomp-sol-lista").innerHTML='';
+}
+
 function updatePlan(){
   const p=document.getElementById("f-plan").value;
   const ds=esDiaSol(p);
@@ -990,7 +1273,8 @@ async function guardarReserva(){
     fabono:document.getElementById("f-fabono").value||null,
     vendedor:document.getElementById("f-vendedor").value,
     consig:document.getElementById("f-consig").value,
-    creado_por:currentUser.user, fecha:today()
+    creado_por:currentUser.user, fecha:today(),
+    acompanantes: recogerAcompanantes('hosp').length?JSON.stringify(recogerAcompanantes('hosp')):null
   };
   const result = await sbInsert("reservas", row);
   if(result){
@@ -1006,7 +1290,7 @@ async function guardarReserva(){
 
 function limpiarForm(){
   ["f-nombre","f-celular","f-id","f-correo","f-obs","f-entrada","f-salida","f-fabono"].forEach(id=>document.getElementById(id).value="");
-  ["f-plan","f-tipocliente","f-hab","f-vendedor","f-consig","f-decoracion"].forEach(id=>document.getElementById(id).selectedIndex=0);
+  ["f-plan","f-tipocliente","f-hab","f-vendedor","f-consig","f-decoracion","f-tipodoc"].forEach(id=>document.getElementById(id).selectedIndex=0);
   ["f-abono","f-ninos1","f-ninos2","f-mascotas"].forEach(id=>document.getElementById(id).value=0);
   document.getElementById("f-personas").value="";
   document.getElementById("f-total").value="";
@@ -1014,6 +1298,8 @@ function limpiarForm(){
   document.getElementById("f-total-desc").value="";
   document.getElementById("f-deber").value=0;
   document.getElementById("preview-txt").textContent="Completa el formulario para ver el total";
+  document.getElementById("acomp-hosp-wrap").style.display='none';
+  document.getElementById("acomp-hosp-lista").innerHTML='';
 }
 
 function planBadge(p){
@@ -1472,7 +1758,178 @@ function verRecibo(){
 }
 
 
-// ---- ESTADO CHECK-IN ----
+function generarVoucher(){
+  const r = _reservasCache.find(x=>x.id===editIdx);
+  if(!r) return;
+  const esSol = esDiaSol(r.plan);
+  const numReg = String(r.id).padStart(4,'0');
+  const fechaHoy = new Date().toLocaleDateString("es-CO",{day:"2-digit",month:"2-digit",year:"numeric"});
+
+  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+  <title>Voucher Mirador del Sol</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:Arial,sans-serif;font-size:11px;color:#222;background:#fff;padding:20px}
+    .header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;border-bottom:3px solid #e07820;padding-bottom:12px}
+    .logo-area{display:flex;flex-direction:column;gap:4px}
+    .logo-title{font-size:22px;font-weight:900;color:#e07820;letter-spacing:1px}
+    .logo-sub{font-size:10px;color:#888;letter-spacing:0.5px;text-transform:uppercase}
+    .reg-box{text-align:right}
+    .reg-num{font-size:28px;font-weight:900;color:#e07820}
+    .reg-label{font-size:9px;color:#888;text-transform:uppercase;letter-spacing:1px}
+    .dates-row{display:flex;gap:8px;margin-bottom:14px}
+    .date-box{flex:1;border:1px solid #ddd;border-radius:6px;padding:8px 10px;text-align:center}
+    .date-box .label{font-size:9px;color:#888;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px}
+    .date-box .value{font-size:14px;font-weight:700;color:#222}
+    .section{margin-bottom:12px}
+    .section-title{font-size:9px;font-weight:700;color:#e07820;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;border-bottom:1px solid #f0d0b0;padding-bottom:3px}
+    .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+    .info-item{background:#fafafa;border:1px solid #eee;border-radius:5px;padding:6px 10px}
+    .info-item .label{font-size:9px;color:#888;text-transform:uppercase;letter-spacing:0.3px}
+    .info-item .value{font-size:12px;font-weight:600;color:#222;margin-top:2px}
+    .ocupantes-table{width:100%;border-collapse:collapse;margin-top:6px}
+    .ocupantes-table th{background:#e07820;color:#fff;padding:6px 10px;font-size:10px;text-align:center;font-weight:600}
+    .ocupantes-table td{padding:8px 10px;border:1px solid #eee;text-align:center;font-size:13px;font-weight:700}
+    .pagos-row{display:flex;gap:8px;margin-top:6px}
+    .pago-box{flex:1;border-radius:6px;padding:10px;text-align:center}
+    .pago-consig{background:#fff7f0;border:1px solid #f0d0b0}
+    .pago-rest{background:#fff0f0;border:1px solid #f0b0b0}
+    .pago-box .label{font-size:9px;color:#888;text-transform:uppercase;letter-spacing:0.5px}
+    .pago-box .value{font-size:16px;font-weight:900;margin-top:4px}
+    .pago-consig .value{color:#e07820}
+    .pago-rest .value{color:#c0392b}
+    .tipo-badge{display:inline-block;background:#e07820;color:#fff;padding:4px 14px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:0.5px}
+    .terminos{font-size:8.5px;color:#555;line-height:1.5;margin-top:14px;border-top:1px solid #ddd;padding-top:10px}
+    .terminos p{margin-bottom:5px}
+    .footer{margin-top:12px;text-align:center;font-size:9px;color:#aaa;letter-spacing:0.5px}
+    .highlight{color:#e07820;font-weight:700}
+    @media print{body{padding:10px}.no-print{display:none}}
+  </style>
+</head><body>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="logo-area">
+      <div class="logo-title">MIRADOR DEL SOL</div>
+      <div class="logo-sub">Hostería · RNT 60444</div>
+    </div>
+    <div class="reg-box">
+      <div class="reg-label">Número de Registro</div>
+      <div class="reg-num">${numReg}</div>
+      <div style="font-size:10px;color:#888;margin-top:4px">Fecha registro: <strong>${fechaHoy}</strong></div>
+    </div>
+  </div>
+
+  <!-- FECHAS -->
+  <div class="dates-row">
+    <div class="date-box">
+      <div class="label">Fecha de Ingreso</div>
+      <div class="value">${fmtD(r.entrada)}</div>
+    </div>
+    <div class="date-box">
+      <div class="label">Fecha de Salida</div>
+      <div class="value">${r.salida?fmtD(r.salida):fmtD(r.entrada)}</div>
+    </div>
+    <div class="date-box">
+      <div class="label">Tipo de Plan</div>
+      <div class="value"><span class="tipo-badge">${esSol?"DÍA DE SOL":r.plan}</span></div>
+    </div>
+    ${!esSol?`<div class="date-box">
+      <div class="label">Habitación</div>
+      <div class="value">${r.hab&&r.hab!=="NO"?r.hab:"—"}</div>
+    </div>`:""}
+  </div>
+
+  <!-- DATOS DEL TITULAR -->
+  <div class="section">
+    <div class="section-title">Datos del Titular</div>
+    <div class="info-grid">
+      <div class="info-item"><div class="label">Nombre del Titular</div><div class="value">${r.nombre}</div></div>
+      <div class="info-item"><div class="label">Tipo y N° Documento</div><div class="value">CC ${r.identificacion||"—"}</div></div>
+      <div class="info-item"><div class="label">Celular</div><div class="value">${r.celular||"—"}</div></div>
+      <div class="info-item"><div class="label">Email</div><div class="value">${r.correo||"—"}</div></div>
+    </div>
+  </div>
+
+  <!-- OCUPANTES -->
+  <div class="section">
+    <div class="section-title">Ocupantes</div>
+    <table class="ocupantes-table">
+      <thead>
+        <tr>
+          <th>Adultos</th>
+          <th>Niños (5-9)</th>
+          <th>Bebés (0-4)</th>
+          ${!esSol?`<th>Noches</th>`:""}
+          <th>Check In</th>
+          <th>Check Out</th>
+          <th>Cliente</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>${r.personas||0}</td>
+          <td>${r.ninos2||0}</td>
+          <td>${r.ninos1||0}</td>
+          ${!esSol?`<td>${r.dias||1}</td>`:""}
+          <td>8:30 am</td>
+          <td>${esSol?"6:00 pm":"12:00 pm"}</td>
+          <td>PARTICULAR</td>
+        </tr>
+      </tbody>
+    </table>
+    ${r.mascotas>0?`<div style="margin-top:6px;font-size:10px;color:#e07820">🐾 Mascotas: ${r.mascotas}</div>`:""}
+    ${r.decoracion&&r.decoracion!=="Sin decoración"?`<div style="margin-top:4px;font-size:10px;color:#e07820">🎉 Decoración: ${r.decoracion}</div>`:""}
+  </div>
+
+  <!-- PAGOS -->
+  <div class="section">
+    <div class="section-title">Información de Pago</div>
+    <div class="pagos-row">
+      <div class="pago-box pago-consig">
+        <div class="label">Valor Consignado</div>
+        <div class="value">$${(r.abono||0).toLocaleString("es-CO")}</div>
+        ${r.medio_abono?`<div style="font-size:9px;color:#888;margin-top:2px">${r.medio_abono}</div>`:""}
+      </div>
+      <div class="pago-box" style="background:#f0fff0;border:1px solid #b0d0b0">
+        <div class="label">Total Reserva</div>
+        <div class="value" style="color:#27ae60">$${(r.total||0).toLocaleString("es-CO")}</div>
+      </div>
+      <div class="pago-box pago-rest">
+        <div class="label">Valor Restante</div>
+        <div class="value">$${(r.deber||0).toLocaleString("es-CO")}</div>
+        ${r.medio_restante?`<div style="font-size:9px;color:#888;margin-top:2px">${r.medio_restante}</div>`:""}
+      </div>
+    </div>
+  </div>
+
+  <!-- TERMINOS -->
+  <div class="terminos">
+    <p><strong>LA HOSTERIA MIRADOR DEL SOL SE RESERVA EL DERECHO DE ADMISIÓN</strong></p>
+    <p>Se exonera la Hostería de toda responsabilidad en caso de pérdida de objetos de valor como joyas, cámara, equipos, dinero, etc. Todos estos objetos estarán bajo el único riesgo del huésped. Igualmente, no nos hacemos responsables por daños en los vehículos dejados en el parqueadero; ni por la pérdida de objetos dejados en los mismos.</p>
+    <p>Le recordamos que la resolución 1956 del 30 de mayo de 2008 prohíbe fumar en los espacios cerrados. Si usted fuma en una habitación, áreas sociales o pasillos, se le realizará un cargo adicional por valor de $150.000.</p>
+    <p>En la Hostería está permitido el ingreso de mascotas, estas no deben estar en la zona del restaurante ni de la piscina, tampoco podrán dormir sobre las camas ni usar la lencería de la habitación. En caso de incumplimiento se realizará un cobro adicional por valor de $150.000.</p>
+    <p>Cumplimos con las disposiciones de la Ley 679 del 3 de agosto de 2001 expedida por El Congreso de la República. RNT 60444</p>
+    <p><strong>Podrá aplazar su reserva con mínimo 72 horas de anticipación</strong>, tendrá 2 meses para retomarla y no se hace devolución del dinero por ningún motivo. En caso de no presentarse ni aplazar la reserva, pierde la totalidad del dinero consignado.</p>
+    <p>ESTÁ PROHIBIDO EL INGRESO A LAS HABITACIONES DE PERSONAS QUE NO ESTÉN REGISTRADAS. FAVOR TENER LA MÚSICA CON VOLUMEN BAJO Y MÁXIMO HASTA LAS 12 DE LA NOCHE.</p>
+    ${r.obs?`<p><strong>Nota:</strong> ${r.obs}</p>`:""}
+  </div>
+
+  <div class="footer">
+    Hostería Mirador del Sol · Generado el ${fechaHoy} · Vendedor: ${r.vendedor||"—"}
+  </div>
+
+  <div class="no-print" style="text-align:center;margin-top:20px">
+    <button onclick="window.print()" style="background:#e07820;color:#fff;border:none;padding:10px 28px;border-radius:6px;font-size:14px;font-weight:700;cursor:pointer">🖨 Imprimir / Guardar PDF</button>
+  </div>
+
+<script>window.onload=()=>setTimeout(()=>window.print(),500)<\/script>
+</body></html>`;
+
+  const w = window.open("","_blank","width=900,height=700");
+  w.document.write(html);
+  w.document.close();
+}
 function estadoBadge(e){
   if(e==="llego") return '<span class="badge-llego">✅ Llegó</span>';
   if(e==="salio") return '<span class="badge-salio">🔴 Salió</span>';
