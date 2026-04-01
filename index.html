@@ -215,6 +215,19 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
     <div class="page active" id="page-nueva">
       <div class="page-title">Nueva reserva</div>
       <div class="page-sub">Completa el formulario y guarda la reserva</div>
+
+      <!-- DASHBOARD DE HOY -->
+      <div id="dashboard-hoy" style="margin-bottom:20px;display:none">
+        <div style="font-size:11px;color:var(--orange);font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">📅 Hoy — <span id="dash-fecha"></span></div>
+        <div class="grid4" style="margin-bottom:12px">
+          <div class="metric"><div class="metric-label">Huéspedes hoy</div><div class="metric-val" id="dash-hoy-total">0</div></div>
+          <div class="metric"><div class="metric-label">Check-in hoy</div><div class="metric-val" style="color:#8ABB8A" id="dash-checkin">0</div></div>
+          <div class="metric"><div class="metric-label">Check-out hoy</div><div class="metric-val" style="color:#E07070" id="dash-checkout">0</div></div>
+          <div class="metric"><div class="metric-label">Día de Sol hoy</div><div class="metric-val" style="color:var(--orange)" id="dash-diasol">0</div></div>
+        </div>
+        <div id="dash-alertas"></div>
+      </div>
+
       <div id="alert-nueva" class="alert"></div>
       <div class="grid2">
         <div class="card">
@@ -449,7 +462,7 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
 
     <!-- BAR & RESTAURANTE -->
     <div class="page" id="page-bar">
-      <div class="flex-between"><div class="page-title">Bar & Restaurante</div><button class="btn btn-sm btn-primary" onclick="abrirGestionProductos()" style="margin-top:4px">⚙ Gestionar productos</button></div>
+      <div class="flex-between"><div class="page-title">Bar & Restaurante</div><div style="display:flex;gap:8px;margin-top:4px"><button class="btn btn-sm btn-primary" onclick="abrirEstadisticas()">📊 Estadísticas</button><button class="btn btn-sm btn-primary" onclick="abrirGestionProductos()">⚙ Gestionar productos</button></div></div>
       <div class="page-sub">Registro de ventas diarias y consumos de reservas</div>
       <div id="alert-bar" class="alert"></div>
       <div class="grid2" style="margin-bottom:16px">
@@ -597,8 +610,12 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
           <select class="f" id="np-cat">
             <option value="">— Seleccionar —</option>
           </select>
-          <label class="fl">Precio ($)</label>
+          <label class="fl">Precio de venta ($)</label>
           <input class="f" id="np-precio" type="number" min="0" placeholder="0">
+          <label class="fl">Costo interno ($)</label>
+          <input class="f" id="np-costo" type="number" min="0" value="0" placeholder="0">
+          <label class="fl">Código de referencia</label>
+          <input class="f" id="np-codigo" type="text" placeholder="Ej: LIC-001">
           <label class="fl">Stock inicial (unidades)</label>
           <input class="f" id="np-stock" type="number" min="0" value="0" placeholder="0">
           <button class="btn btn-primary" style="margin-top:14px;width:100%" onclick="agregarProducto()">+ Agregar producto</button>
@@ -627,6 +644,62 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
 
 <script>
 const HABS=["2","3","4","5","6","12","7","8","9","10","11","13","14","15","16","17"];
+</script>
+
+<div class="modal-bg" id="modal-editar-producto">
+  <div class="modal" style="width:420px">
+    <div class="modal-title">Editar Producto</div>
+    <input type="hidden" id="ep-id">
+    <label class="fl" style="margin-top:0">Nombre</label>
+    <input class="f" id="ep-nombre" placeholder="Nombre del producto">
+    <label class="fl">Categoría</label>
+    <select class="f" id="ep-cat"></select>
+    <label class="fl">Precio de venta ($)</label>
+    <input class="f" id="ep-precio" type="number" min="0">
+    <label class="fl">Costo interno ($)</label>
+    <input class="f" id="ep-costo" type="number" min="0" value="0">
+    <label class="fl">Código de referencia</label>
+    <input class="f" id="ep-codigo" placeholder="Ej: LIC-001">
+    <label class="fl">Stock actual</label>
+    <input class="f" id="ep-stock" type="number" min="0" value="0">
+    <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">
+      <button class="btn btn-sm" onclick="closeModal('modal-editar-producto')">Cancelar</button>
+      <button class="btn btn-primary btn-sm" onclick="guardarEdicionProducto()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ESTADISTICAS BAR -->
+<div class="modal-bg" id="modal-estadisticas">
+  <div class="modal" style="width:780px;max-width:97vw;max-height:92vh;overflow-y:auto">
+    <div class="modal-title">📊 Estadísticas de Ventas</div>
+    <div style="display:flex;gap:10px;margin-bottom:16px;align-items:center">
+      <label style="font-size:12px;color:var(--text3)">Mes:</label>
+      <input type="month" class="f" id="est-mes" style="width:160px" onchange="renderEstadisticas()">
+      <button class="btn btn-sm" onclick="renderEstadisticas()">Actualizar</button>
+    </div>
+    <div class="grid4" style="margin-bottom:16px" id="est-metrics"></div>
+    <div class="grid2" style="gap:16px">
+      <div class="card">
+        <div class="card-title">🏆 Más vendidos</div>
+        <div id="est-mas-vendidos"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">📉 Menos vendidos</div>
+        <div id="est-menos-vendidos"></div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <div class="card-title">Todos los productos del mes</div>
+      <div id="est-tabla"></div>
+    </div>
+    <div style="text-align:right;margin-top:16px">
+      <button class="btn btn-sm" onclick="closeModal('modal-estadisticas')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<script>
 const HAB_TIPO={"2":"Múl","3":"Múl","4":"Múl","5":"Múl","6":"Múl","12":"Múl","7":"Est","8":"Est","9":"Est","10":"Est","11":"Est","13":"Jac","14":"Jac","15":"Jac","16":"Jac","17":"Jac"};
 const MESES=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 const ROLES={admin:"Administrador",recepcionista:"Recepcionista",vendedor:"Vendedor",consulta:"Solo consulta"};
@@ -678,6 +751,7 @@ async function doLogin(){
   });
   if(found.rol==="admin")document.getElementById("nav-usuarios").style.display="";
   showPage(perms[0]||"reservas");
+  renderDashboard();
 }
 
 function doLogout(){
@@ -829,6 +903,46 @@ function habOcupada(hab,entrada,salida,plan,excludeId){
     const nFin=salida||entrada;
     return entrada<rFin&&nFin>r.entrada;
   });
+}
+
+async function renderDashboard(){
+  const hoy = today();
+  const dash = document.getElementById("dashboard-hoy");
+  if(!dash) return;
+  if(!_reservasCache.length) _reservasCache = await sbGet("reservas");
+  const reservas = _reservasCache;
+
+  const checkinHoy = reservas.filter(r=>!esDiaSol(r.plan)&&r.entrada===hoy);
+  const checkoutHoy = reservas.filter(r=>!esDiaSol(r.plan)&&r.salida===hoy);
+  const diasolHoy = reservas.filter(r=>esDiaSol(r.plan)&&r.entrada===hoy);
+  const enCasa = reservas.filter(r=>!esDiaSol(r.plan)&&r.entrada<=hoy&&(r.salida||r.entrada)>=hoy&&r.estado!=="salio");
+
+  document.getElementById("dash-fecha").textContent = new Date().toLocaleDateString("es-CO",{weekday:"long",day:"numeric",month:"long"});
+  document.getElementById("dash-hoy-total").textContent = enCasa.length;
+  document.getElementById("dash-checkin").textContent = checkinHoy.length;
+  document.getElementById("dash-checkout").textContent = checkoutHoy.length;
+  document.getElementById("dash-diasol").textContent = diasolHoy.length;
+
+  // Alertas
+  let alertas = [];
+  // Check-out pendientes
+  const checkoutPend = checkoutHoy.filter(r=>r.estado!=="salio");
+  if(checkoutPend.length) alertas.push(`<div style="background:rgba(224,112,112,0.15);border:1px solid rgba(224,112,112,0.3);border-radius:8px;padding:10px 14px;margin-bottom:8px;font-size:12px">
+    🔴 <strong>${checkoutPend.length} reserva(s) con check-out HOY pendiente:</strong> ${checkoutPend.map(r=>r.nombre).join(", ")}</div>`);
+  // Check-in pendientes
+  const checkinPend = checkinHoy.filter(r=>!r.estado||r.estado==="pendiente");
+  if(checkinPend.length) alertas.push(`<div style="background:rgba(90,138,90,0.15);border:1px solid rgba(90,138,90,0.3);border-radius:8px;padding:10px 14px;margin-bottom:8px;font-size:12px">
+    🟢 <strong>${checkinPend.length} reserva(s) con check-in HOY esperadas:</strong> ${checkinPend.map(r=>r.nombre).join(", ")}</div>`);
+  // Stock bajo
+  const stockBajo = _productos.filter(p=>(p.stock||0)<=5&&(p.stock||0)>0);
+  const sinStock = _productos.filter(p=>(p.stock||0)<=0);
+  if(sinStock.length) alertas.push(`<div style="background:rgba(224,112,112,0.15);border:1px solid rgba(224,112,112,0.3);border-radius:8px;padding:10px 14px;margin-bottom:8px;font-size:12px">
+    ⚠️ <strong>Sin stock:</strong> ${sinStock.map(p=>p.nombre).join(", ")}</div>`);
+  if(stockBajo.length) alertas.push(`<div style="background:rgba(224,120,32,0.12);border:1px solid rgba(224,120,32,0.3);border-radius:8px;padding:10px 14px;margin-bottom:8px;font-size:12px">
+    ⚡ <strong>Stock bajo (≤5):</strong> ${stockBajo.map(p=>p.nombre+" ("+p.stock+")").join(", ")}</div>`);
+
+  document.getElementById("dash-alertas").innerHTML = alertas.join("");
+  dash.style.display = "block";
 }
 
 async function guardarReserva(){
@@ -1684,16 +1798,17 @@ function renderListaProductosAdmin(){
   el.innerHTML = prods.map(p=>`
     <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 6px;border-bottom:1px solid rgba(255,255,255,0.05)">
       <div style="flex:1">
-        <div style="font-size:12px;color:var(--text);font-weight:500">${p.nombre}</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:2px">${p.categoria||'General'} · ${fmt(p.precio)}</div>
+        <div style="font-size:12px;color:var(--text);font-weight:500">${p.nombre} ${p.codigo?`<span style="font-size:10px;color:var(--text3);background:var(--dark2);padding:1px 6px;border-radius:4px">${p.codigo}</span>`:''}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">${p.categoria||'General'} · Precio: ${fmt(p.precio)} ${p.costo?`· Costo: ${fmt(p.costo)}`:''}  · Margen: ${p.costo?Math.round((p.precio-p.costo)/p.precio*100)+'%':'—'}</div>
       </div>
       <div style="display:flex;align-items:center;gap:6px">
         ${isAdmin()?`
           <input type="number" min="0" value="${p.stock||0}"
             id="stock-input-${p.id}"
-            style="width:60px;padding:4px 6px;background:var(--dark2);border:1px solid ${stockColor(p.stock||0)}44;border-radius:6px;color:${stockColor(p.stock||0)};font-size:12px;font-weight:700;text-align:center"
+            style="width:55px;padding:4px 6px;background:var(--dark2);border:1px solid ${stockColor(p.stock||0)}44;border-radius:6px;color:${stockColor(p.stock||0)};font-size:12px;font-weight:700;text-align:center"
             onchange="guardarStockDirecto(${p.id})"
             onblur="guardarStockDirecto(${p.id})">
+          <button class="btn btn-sm" style="padding:3px 9px;font-size:11px;color:var(--orange);border-color:rgba(224,120,32,0.3)" onclick="abrirEditarProducto(${p.id})">✏</button>
         `:`<span style="font-size:11px;font-weight:700;color:${stockColor(p.stock||0)}">${p.stock||0}</span>`}
         <button class="btn btn-sm btn-danger" style="padding:2px 8px" onclick="eliminarProducto(${p.id})">×</button>
       </div>
@@ -1717,18 +1832,141 @@ async function agregarProducto(){
   const nombre = document.getElementById("np-nombre").value.trim();
   const cat = document.getElementById("np-cat").value||"General";
   const precio = parseFloat(document.getElementById("np-precio").value)||0;
+  const costo = parseFloat(document.getElementById("np-costo").value)||0;
+  const codigo = document.getElementById("np-codigo").value.trim()||null;
   const stock = parseInt(document.getElementById("np-stock").value)||0;
   if(!nombre||precio<=0){alert("Nombre y precio son obligatorios.");return;}
-  const result = await sbInsert("productos",{nombre:nombre.toUpperCase(),categoria:cat.toUpperCase(),precio,stock,activo:true});
+  const result = await sbInsert("productos",{nombre:nombre.toUpperCase(),categoria:cat.toUpperCase(),precio,costo,codigo,stock,activo:true});
   if(result){
     _productos.push(result);
     document.getElementById("np-nombre").value="";
     document.getElementById("np-precio").value="";
+    document.getElementById("np-costo").value="0";
+    document.getElementById("np-codigo").value="";
     document.getElementById("np-stock").value="0";
     document.getElementById("np-cat").selectedIndex=0;
     renderListaProductosAdmin();
     renderProductosGrid();
   }
+}
+
+function abrirEditarProducto(prodId){
+  const p = _productos.find(x=>x.id===prodId);
+  if(!p) return;
+  document.getElementById("ep-id").value = p.id;
+  document.getElementById("ep-nombre").value = p.nombre;
+  document.getElementById("ep-precio").value = p.precio||0;
+  document.getElementById("ep-costo").value = p.costo||0;
+  document.getElementById("ep-codigo").value = p.codigo||"";
+  document.getElementById("ep-stock").value = p.stock||0;
+  // Fill category select
+  const sel = document.getElementById("ep-cat");
+  sel.innerHTML = _categorias.map(c=>`<option value="${c}" ${p.categoria===c?"selected":""}>${c.charAt(0)+c.slice(1).toLowerCase()}</option>`).join("");
+  document.getElementById("modal-editar-producto").classList.add("show");
+}
+
+async function guardarEdicionProducto(){
+  const id = parseInt(document.getElementById("ep-id").value);
+  const nombre = document.getElementById("ep-nombre").value.trim().toUpperCase();
+  const cat = document.getElementById("ep-cat").value;
+  const precio = parseFloat(document.getElementById("ep-precio").value)||0;
+  const costo = parseFloat(document.getElementById("ep-costo").value)||0;
+  const codigo = document.getElementById("ep-codigo").value.trim()||null;
+  const stock = parseInt(document.getElementById("ep-stock").value)||0;
+  if(!nombre||precio<=0){alert("Nombre y precio son obligatorios.");return;}
+  const ok = await sbUpdate("productos", id, {nombre,categoria:cat,precio,costo,codigo,stock});
+  if(ok){
+    const p = _productos.find(x=>x.id===id);
+    if(p){Object.assign(p,{nombre,categoria:cat,precio,costo,codigo,stock});}
+    closeModal("modal-editar-producto");
+    renderListaProductosAdmin();
+    renderProductosGrid();
+  } else {
+    alert("Error al guardar. Intenta de nuevo.");
+  }
+}
+
+async function abrirEstadisticas(){
+  const mes = document.getElementById("est-mes");
+  if(!mes.value) mes.value = today().slice(0,7);
+  document.getElementById("modal-estadisticas").classList.add("show");
+  await renderEstadisticas();
+}
+
+async function renderEstadisticas(){
+  const mes = document.getElementById("est-mes").value;
+  if(!mes) return;
+  const [yr,mn] = mes.split("-");
+  const desde = `${yr}-${mn}-01`;
+  const hasta = `${yr}-${mn}-31`;
+
+  // Cargar consumos del mes
+  const {data:consumos} = await supa.from("consumos").select("*").gte("created_at", desde).lte("created_at", hasta+"T23:59:59");
+  const items = consumos||[];
+
+  // Agrupar por producto
+  const porProd = {};
+  items.forEach(c=>{
+    const key = c.producto_id;
+    if(!porProd[key]) porProd[key] = {nombre:c.producto_nombre, precio:c.producto_precio, cantidad:0, total:0};
+    porProd[key].cantidad += (c.cantidad||1);
+    porProd[key].total += (c.subtotal||0);
+  });
+
+  const lista = Object.values(porProd).sort((a,b)=>b.cantidad-a.cantidad);
+  const totalUnidades = lista.reduce((s,p)=>s+p.cantidad,0);
+  const totalVentas = lista.reduce((s,p)=>s+p.total,0);
+
+  // Metricas
+  document.getElementById("est-metrics").innerHTML = `
+    <div class="metric"><div class="metric-label">Productos distintos</div><div class="metric-val">${lista.length}</div></div>
+    <div class="metric"><div class="metric-label">Unidades vendidas</div><div class="metric-val">${totalUnidades}</div></div>
+    <div class="metric"><div class="metric-label">Total vendido</div><div class="metric-val" style="font-size:18px">${fmt(totalVentas)}</div></div>
+    <div class="metric"><div class="metric-label">Ticket promedio</div><div class="metric-val" style="font-size:18px">${lista.length?fmt(totalVentas/totalUnidades):'$0'}</div></div>`;
+
+  // Mas vendidos (top 5)
+  const top5 = lista.slice(0,5);
+  document.getElementById("est-mas-vendidos").innerHTML = top5.length ? top5.map((p,i)=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:16px;font-weight:700;color:var(--orange);width:20px">${i+1}</span>
+        <div>
+          <div style="font-size:12px;color:var(--text);font-weight:500">${p.nombre}</div>
+          <div style="font-size:11px;color:var(--text3)">${fmt(p.precio)} · ${fmt(p.total)}</div>
+        </div>
+      </div>
+      <span style="font-size:14px;font-weight:700;color:var(--orange)">${p.cantidad} u.</span>
+    </div>`).join("") : '<div style="color:var(--text3);font-size:12px;padding:10px">Sin datos</div>';
+
+  // Menos vendidos (bottom 5)
+  const bot5 = [...lista].reverse().slice(0,5);
+  document.getElementById("est-menos-vendidos").innerHTML = bot5.length ? bot5.map((p,i)=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+      <div>
+        <div style="font-size:12px;color:var(--text);font-weight:500">${p.nombre}</div>
+        <div style="font-size:11px;color:var(--text3)">${fmt(p.precio)} · ${fmt(p.total)}</div>
+      </div>
+      <span style="font-size:14px;font-weight:700;color:#E07070">${p.cantidad} u.</span>
+    </div>`).join("") : '<div style="color:var(--text3);font-size:12px;padding:10px">Sin datos</div>';
+
+  // Tabla completa
+  document.getElementById("est-tabla").innerHTML = lista.length ? `
+    <table style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead><tr>
+        <th style="text-align:left;padding:8px;border-bottom:1px solid rgba(255,255,255,0.07);color:var(--text3)">#</th>
+        <th style="text-align:left;padding:8px;border-bottom:1px solid rgba(255,255,255,0.07);color:var(--text3)">Producto</th>
+        <th style="text-align:right;padding:8px;border-bottom:1px solid rgba(255,255,255,0.07);color:var(--text3)">Unidades</th>
+        <th style="text-align:right;padding:8px;border-bottom:1px solid rgba(255,255,255,0.07);color:var(--text3)">Total vendido</th>
+        <th style="text-align:right;padding:8px;border-bottom:1px solid rgba(255,255,255,0.07);color:var(--text3)">% del total</th>
+      </tr></thead>
+      <tbody>${lista.map((p,i)=>`<tr>
+        <td style="padding:7px 8px;border-bottom:1px solid rgba(255,255,255,0.04);color:var(--text3)">${i+1}</td>
+        <td style="padding:7px 8px;border-bottom:1px solid rgba(255,255,255,0.04);color:var(--text);font-weight:500">${p.nombre}</td>
+        <td style="padding:7px 8px;border-bottom:1px solid rgba(255,255,255,0.04);color:var(--orange);text-align:right;font-weight:600">${p.cantidad}</td>
+        <td style="padding:7px 8px;border-bottom:1px solid rgba(255,255,255,0.04);color:var(--text);text-align:right">${fmt(p.total)}</td>
+        <td style="padding:7px 8px;border-bottom:1px solid rgba(255,255,255,0.04);color:var(--text3);text-align:right">${totalVentas?Math.round(p.total/totalVentas*100)+'%':'0%'}</td>
+      </tr>`).join("")}</tbody>
+    </table>` : '<div style="color:var(--text3);font-size:12px;padding:10px">Sin consumos registrados este mes</div>';
 }
 
 async function eliminarProducto(id){
