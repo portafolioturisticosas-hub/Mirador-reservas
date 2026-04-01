@@ -666,7 +666,7 @@ async function sbInsert(table, row){
 async function sbUpdate(table, id, row){
   const {data,error}=await supa.from(table).update(row).eq('id',id).select();
   if(error){console.error(error);return null;}
-  return data?data[0]:null;
+  return data?data[0]:true;
 }
 async function sbDelete(table, id){
   const {error}=await supa.from(table).delete().eq('id',id);
@@ -1296,8 +1296,6 @@ async function guardarEdicion(){
   r.abono=parseFloat(document.getElementById("e-abono").value)||0;
   r.vendedor=document.getElementById("e-vendedor").value;
   r.consig=document.getElementById("e-consig").value;
-  r.ventas_bar=parseFloat(document.getElementById("e-vbar").value)||0;
-  r.ventas_restaurante=parseFloat(document.getElementById("e-vrest").value)||0;
   r.decoracion=document.getElementById("e-decoracion").value;
   r.ninos1=parseInt(document.getElementById("e-ninos1").value)||0;
   r.ninos2=parseInt(document.getElementById("e-ninos2").value)||0;
@@ -1323,7 +1321,13 @@ async function guardarEdicion(){
     medio_abono:r.medio_abono,pago_restante:r.pago_restante,medio_restante:r.medio_restante
   };
   const ok=await sbUpdate("reservas",editIdx,upd);
-  if(!ok){alert("Error al guardar. Intenta de nuevo.");return;}
+  if(!ok){
+    // Intentar ver el error real
+    const {data,error}=await supa.from("reservas").update(upd).eq("id",editIdx).select();
+    const msg=error?error.message+" (code:"+error.code+")":"Sin resultado";
+    alert("Error al guardar: "+msg);
+    return;
+  }
   closeModal("modal-edit");
   _reservasCache=await sbGet("reservas");
   renderReservas();
