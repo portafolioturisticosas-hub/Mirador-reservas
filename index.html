@@ -195,9 +195,12 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
     <nav class="sidebar-nav">
       <div class="nav-item active" onclick="showPage('nueva')" id="nav-nueva"><span class="icon">✦</span> Nueva reserva</div>
       <div class="nav-item" onclick="showPage('reservas')" id="nav-reservas"><span class="icon">☰</span> Reservas Hospedaje</div>
+      <div class="nav-item" onclick="showPage('calendario')" id="nav-calendario"><span class="icon">◫</span> Calendario</div>
       <div class="nav-item" onclick="showPage('diasol')" id="nav-diasol"><span class="icon">☀</span> Reservas Día de Sol</div>
+      <div class="nav-item" onclick="showPage('aplazadas')" id="nav-aplazadas"><span class="icon">⏸</span> Aplazadas</div>
       <div class="nav-item" onclick="showPage('resumen')" id="nav-resumen"><span class="icon">◈</span> Resumen</div>
       <div class="nav-item" onclick="showPage('bar')" id="nav-bar"><span class="icon">◐</span> Bar & Rest.</div>
+      <div class="nav-item" onclick="showPage('compras')" id="nav-compras"><span class="icon">◉</span> Compras</div>
       <div class="nav-item" onclick="showPage('usuarios')" id="nav-usuarios" style="display:none"><span class="icon">◉</span> Usuarios</div>
     </nav>
     <div class="sidebar-footer">
@@ -493,20 +496,44 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
           </table>
         </div>
       </div>
-      <!-- CALENDARIO HOSPEDAJE -->
+      <!-- CALENDARIO HOSPEDAJE (removido - ahora es pestaña propia) -->
+    </div>
+
+    <!-- CALENDARIO -->
+    <div class="page" id="page-calendario">
+      <div class="page-title">Calendario de Hospedaje</div>
+      <div class="page-sub">Haz clic en una celda ocupada para ver los datos de la reserva</div>
       <div class="card">
         <div class="flex-between mb">
-          <div>
-            <div class="card-title" style="margin:0">Calendario de Hospedaje</div>
-            <div style="display:flex;gap:12px;font-size:11px;align-items:center;margin-top:8px">
-              <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:rgba(90,138,90,0.2);display:inline-block"></span>Libre</span>
-              <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:rgba(224,120,32,0.3);display:inline-block"></span>Ocupada (clic para ver)</span>
-              <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:rgba(201,168,76,0.2);display:inline-block"></span>Hoy</span>
-            </div>
+          <div style="display:flex;gap:12px;font-size:11px;align-items:center">
+            <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:rgba(90,138,90,0.2);display:inline-block"></span>Libre</span>
+            <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:rgba(224,120,32,0.3);display:inline-block"></span>Ocupada (clic para ver)</span>
+            <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:rgba(201,168,76,0.2);display:inline-block"></span>Hoy</span>
           </div>
           <input type="month" class="f" id="mes-disp" onchange="renderDisp()" style="width:160px">
         </div>
         <div class="disp-wrap" id="disp-container"></div>
+      </div>
+    </div>
+
+    <!-- APLAZADAS -->
+    <div class="page" id="page-aplazadas">
+      <div class="page-title">Reservas Aplazadas</div>
+      <div class="page-sub">Reservas pendientes de nueva fecha</div>
+      <div class="card">
+        <div class="flex-between mb">
+          <span style="font-size:12px;color:var(--text3)" id="count-aplazadas">0 reservas</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th><th>Nombre</th><th>Celular</th><th>Plan</th><th>Fecha original</th><th>Nueva fecha</th><th>Total</th><th>Restante</th><th></th>
+              </tr>
+            </thead>
+            <tbody id="tbody-aplazadas"></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
@@ -562,6 +589,62 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
     <div class="page" id="page-caldisasol" style="display:none!important"></div>
     <div class="page" id="page-disponibilidad" style="display:none!important"></div>
 
+    <!-- COMPRAS -->
+    <div class="page" id="page-compras">
+      <div class="flex-between"><div class="page-title">Compras</div>
+        <div style="display:flex;gap:8px;margin-top:4px">
+          <button class="btn btn-sm btn-primary" onclick="abrirCierreCaja()">🔒 Cierre de Caja</button>
+          <button class="btn btn-sm" onclick="abrirCategoriasCompra()" style="color:var(--orange);border-color:rgba(224,120,32,0.4)">⚙ Categorías</button>
+        </div>
+      </div>
+      <div class="page-sub">Registro de compras y gastos de caja</div>
+      <div id="alert-compras" class="alert"></div>
+      <div class="grid2" style="margin-bottom:16px">
+        <div class="card">
+          <div class="card-title">Registrar compra</div>
+          <label class="fl">Fecha</label>
+          <input class="f" id="comp-fecha" type="date">
+          <label class="fl">Descripción *</label>
+          <input class="f" id="comp-desc" type="text" placeholder="Ej: Mercado semanal">
+          <label class="fl">Categoría</label>
+          <select class="f" id="comp-cat">
+            <option value="">— Seleccionar —</option>
+          </select>
+          <label class="fl">Valor ($) *</label>
+          <input class="f" id="comp-valor" type="number" min="0" placeholder="0">
+          <label class="fl">Medio de pago</label>
+          <select class="f" id="comp-medio">
+            <option value="">— Seleccionar —</option>
+            <option>Efectivo</option>
+            <option>Transferencia</option>
+            <option>Datáfono</option>
+          </select>
+          <div style="margin-top:14px"><button class="btn btn-primary" onclick="guardarCompra()">Guardar compra</button></div>
+        </div>
+        <div class="grid2" style="gap:12px;align-content:start">
+          <div class="metric"><div class="metric-label">Compras hoy</div><div class="metric-val" id="comp-hoy">$0</div></div>
+          <div class="metric"><div class="metric-label">Compras del mes</div><div class="metric-val" id="comp-mes">$0</div></div>
+          <div class="metric"><div class="metric-label">En efectivo</div><div class="metric-val" id="comp-efect">$0</div></div>
+          <div class="metric"><div class="metric-label">Transferencia</div><div class="metric-val" id="comp-transf">$0</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="flex-between mb">
+          <div class="card-title" style="margin:0">Historial de compras</div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input type="month" class="f" id="comp-mes-fil" onchange="renderCompras()" style="width:160px">
+            <button class="btn btn-excel btn-sm" onclick="exportarComprasExcel()">↓ Excel</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Fecha</th><th>Descripción</th><th>Categoría</th><th>Medio pago</th><th>Valor</th><th>Registrado por</th><th></th></tr></thead>
+            <tbody id="tbody-compras"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <!-- RESUMEN -->
     <div class="page" id="page-resumen">
       <div class="page-title">Resumen</div>
@@ -595,6 +678,13 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
       <div class="flex-between"><div class="page-title">Bar & Restaurante</div><div style="display:flex;gap:8px;margin-top:4px"><button class="btn btn-sm btn-primary" onclick="abrirEstadisticas()">📊 Estadísticas</button><button class="btn btn-sm btn-primary" onclick="abrirGestionProductos()">⚙ Gestionar productos</button></div></div>
       <div class="page-sub">Registro de ventas diarias y consumos de reservas</div>
       <div id="alert-bar" class="alert"></div>
+      <!-- RESUMEN HOY -->
+      <div class="grid4" style="margin-bottom:16px">
+        <div class="metric"><div class="metric-label">Ventas hoy</div><div class="metric-val" id="bar-hoy-total">$0</div></div>
+        <div class="metric"><div class="metric-label">Efectivo hoy</div><div class="metric-val" style="color:#8ABB8A" id="bar-hoy-efect">$0</div></div>
+        <div class="metric"><div class="metric-label">Transferencia hoy</div><div class="metric-val" style="color:#8AABDD" id="bar-hoy-transf">$0</div></div>
+        <div class="metric"><div class="metric-label">Datáfono hoy</div><div class="metric-val" style="color:#CC88CC" id="bar-hoy-data">$0</div></div>
+      </div>
       <div class="grid2" style="margin-bottom:16px">
         <div class="card">
           <div class="card-title">Registrar venta del día</div>
@@ -604,6 +694,13 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
             <div><label class="fl">Ventas bar ($)</label><input class="f" id="bar-vbar" type="number" min="0" value="0" placeholder="0"></div>
             <div><label class="fl">Ventas restaurante ($)</label><input class="f" id="bar-vrest" type="number" min="0" value="0" placeholder="0"></div>
           </div>
+          <label class="fl">Medio de pago</label>
+          <select class="f" id="bar-medio">
+            <option value="">— Seleccionar —</option>
+            <option>Efectivo</option>
+            <option>Transferencia</option>
+            <option>Datáfono</option>
+          </select>
           <label class="fl">Observaciones</label>
           <textarea class="f" id="bar-obs" rows="2" placeholder="Nota opcional"></textarea>
           <div style="margin-top:14px"><button class="btn btn-primary" onclick="guardarVentaMenuda()">Guardar venta</button></div>
@@ -625,7 +722,7 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
         </div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Fecha</th><th>Bar</th><th>Restaurante</th><th>Total</th><th>Observaciones</th><th></th></tr></thead>
+            <thead><tr><th>Fecha</th><th>Bar</th><th>Restaurante</th><th>Total</th><th>Medio pago</th><th>Observaciones</th><th></th></tr></thead>
             <tbody id="tbody-bar"></tbody>
           </table>
         </div>
@@ -667,6 +764,7 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
       <button class="btn btn-danger btn-sm" onclick="eliminarReserva()">Eliminar</button>
       <button class="btn btn-sm" onclick="verRecibo()">Ver recibo</button>
       <button class="btn btn-sm" style="color:var(--orange);border-color:rgba(224,120,32,0.4)" onclick="generarVoucher()">📄 Voucher</button>
+      <button class="btn btn-sm" style="color:#8AABDD;border-color:rgba(58,90,138,0.4)" onclick="closeModal('modal-edit');abrirAplazar(editIdx)">⏸ Aplazar</button>
       <button class="btn btn-sm" onclick="closeModal('modal-edit')">Cancelar</button>
       <button class="btn btn-primary btn-sm" onclick="guardarEdicion()">Guardar</button>
     </div>
@@ -830,11 +928,81 @@ const HABS=["2","3","4","5","6","12","7","8","9","10","11","13","14","15","16","
   </div>
 </div>
 
+      <button class="btn btn-sm" onclick="closeModal('modal-estadisticas')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL APLAZAR RESERVA -->
+<div class="modal-bg" id="modal-aplazar">
+  <div class="modal" style="width:420px">
+    <div class="modal-title">Aplazar Reserva</div>
+    <div id="aplazar-nombre" style="font-size:14px;color:var(--text);margin-bottom:4px;font-weight:600"></div>
+    <div id="aplazar-info" style="font-size:12px;color:var(--text3);margin-bottom:16px"></div>
+    <label class="fl" style="margin-top:0">Nueva fecha (opcional)</label>
+    <input class="f" id="aplazar-fecha" type="date" placeholder="Dejar vacío si no sabe la fecha">
+    <div style="font-size:11px;color:var(--text3);margin-top:4px">Si el cliente no conoce la fecha, déjalo vacío y quedará como "Pendiente de fecha"</div>
+    <label class="fl">Observación</label>
+    <textarea class="f" id="aplazar-obs" rows="2" placeholder="Motivo del aplazamiento..."></textarea>
+    <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">
+      <button class="btn btn-sm" onclick="closeModal('modal-aplazar')">Cancelar</button>
+      <button class="btn btn-primary btn-sm" onclick="confirmarAplazar()">Aplazar reserva</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CIERRE DE CAJA -->
+<div class="modal-bg" id="modal-cierre">
+  <div class="modal" style="width:560px">
+    <div class="modal-title">🔒 Cierre de Caja</div>
+    <div id="cierre-fecha-label" style="font-size:12px;color:var(--text3);margin-bottom:16px"></div>
+    <div class="grid2" style="gap:10px;margin-bottom:16px">
+      <div class="metric"><div class="metric-label">Ventas efectivo</div><div class="metric-val" style="color:#8ABB8A" id="cie-vefect">$0</div></div>
+      <div class="metric"><div class="metric-label">Ventas transferencia</div><div class="metric-val" style="color:#8AABDD" id="cie-vtransf">$0</div></div>
+      <div class="metric"><div class="metric-label">Ventas datáfono</div><div class="metric-val" style="color:#CC88CC" id="cie-vdata">$0</div></div>
+      <div class="metric"><div class="metric-label">Compras del día</div><div class="metric-val" style="color:#E07070" id="cie-compras">$0</div></div>
+    </div>
+    <div style="background:var(--dark3);border-radius:8px;padding:14px;margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px">
+        <span style="color:var(--text3)">Efectivo esperado en caja</span>
+        <span style="color:var(--orange);font-weight:700" id="cie-esperado">$0</span>
+      </div>
+      <label class="fl" style="margin-top:8px">Efectivo físico contado ($)</label>
+      <input class="f" id="cie-contado" type="number" min="0" value="0" placeholder="0" onchange="calcDiferencia()">
+      <div style="display:flex;justify-content:space-between;font-size:14px;margin-top:10px;font-weight:600">
+        <span>Diferencia</span>
+        <span id="cie-diferencia" style="color:#8ABB8A">$0</span>
+      </div>
+    </div>
+    <label class="fl">Observaciones del cierre</label>
+    <textarea class="f" id="cie-obs" rows="2" placeholder="Notas del cierre..."></textarea>
+    <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">
+      <button class="btn btn-sm" onclick="closeModal('modal-cierre')">Cancelar</button>
+      <button class="btn btn-primary btn-sm" onclick="guardarCierreCaja()">Registrar cierre</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CATEGORIAS COMPRA -->
+<div class="modal-bg" id="modal-cats-compra">
+  <div class="modal" style="width:400px">
+    <div class="modal-title">Categorías de Compra</div>
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <input class="f" id="nueva-cat-compra" placeholder="Nueva categoría..." style="flex:1">
+      <button class="btn btn-primary btn-sm" onclick="agregarCatCompra()">+ Agregar</button>
+    </div>
+    <div id="lista-cats-compra" style="max-height:300px;overflow-y:auto"></div>
+    <div style="text-align:right;margin-top:14px">
+      <button class="btn btn-sm" onclick="closeModal('modal-cats-compra')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const HAB_TIPO={"2":"Múl","3":"Múl","4":"Múl","5":"Múl","6":"Múl","12":"Múl","7":"Est","8":"Est","9":"Est","10":"Est","11":"Est","13":"Jac","14":"Jac","15":"Jac","16":"Jac","17":"Jac"};
 const MESES=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 const ROLES={admin:"Administrador",recepcionista:"Recepcionista",vendedor:"Vendedor",consulta:"Solo consulta"};
-const PERMS={admin:["nueva","reservas","diasol","resumen","bar","usuarios"],recepcionista:["nueva","reservas","diasol","resumen","bar"],vendedor:["nueva","reservas","diasol","bar"],consulta:["reservas","diasol","resumen","bar"]};
+const PERMS={admin:["nueva","reservas","calendario","diasol","aplazadas","resumen","bar","compras","usuarios"],recepcionista:["nueva","reservas","calendario","diasol","aplazadas","resumen","bar","compras"],vendedor:["nueva","reservas","diasol","bar"],consulta:["reservas","calendario","diasol","resumen","bar"]};
 const esDiaSol=p=>p&&p.startsWith("DIA DE SOL");
 
 let currentUser=null,editIdx=null;
@@ -903,7 +1071,8 @@ function showPage(p){
   document.getElementById("page-"+p).classList.add("active");
   const nav=document.getElementById("nav-"+p);
   if(nav)nav.classList.add("active");
-  if(p==="reservas"){renderReservas();const m=document.getElementById("mes-disp");if(!m.value)m.value=today().slice(0,7);renderDisp();}
+  if(p==="reservas"){renderReservas();}
+  if(p==="calendario"){const m=document.getElementById("mes-disp");if(!m.value)m.value=today().slice(0,7);renderDisp();}
   if(p==="diasol"){
     const m=document.getElementById("mes-diasol");
     if(!m.value)m.value=today().slice(0,7);
@@ -912,14 +1081,18 @@ function showPage(p){
     renderDiaSol();
     renderCalDiaSol2();
   }
+  if(p==="aplazadas")renderAplazadas();
   if(p==="resumen")renderResumen();
   if(p==="usuarios")renderUsuarios();
-  if(p==="bar"){const m=document.getElementById("bar-mes");if(!m.value)m.value=today().slice(0,7);const bf=document.getElementById('bar-fecha');if(!bf.value)bf.value=today();renderBar();}
+  if(p==="bar"){const m=document.getElementById("bar-mes");if(!m.value)m.value=today().slice(0,7);const bf=document.getElementById('bar-fecha');if(!bf.value)bf.value=today();renderBar();renderResumenHoy();}
+  if(p==="compras"){const m=document.getElementById("comp-mes-fil");if(!m.value)m.value=today().slice(0,7);const cf=document.getElementById('comp-fecha');if(!cf.value)cf.value=today();renderCompras();renderComprasMetrics();cargarCatsCompra();}
 }
 
 function fmt(n){return new Intl.NumberFormat("es-CO",{style:"currency",currency:"COP",maximumFractionDigits:0}).format(n)}
 function fmtD(s){if(!s)return"—";const[y,m,d]=s.split("-");return`${d}/${m}/${y}`}
-function today(){return new Date().toISOString().split("T")[0]}
+function today(){
+  return new Date().toLocaleDateString("en-CA", {timeZone:"America/Bogota"});
+}
 
 // ---- TABS NUEVA RESERVA ----
 let _tabActual = 'hospedaje';
@@ -1333,10 +1506,17 @@ function renderTablaReservas(){
   });
   document.getElementById("count-res").textContent=filtered.length+" reservas";
   const tb=document.getElementById("tbody-reservas");
-  if(!filtered.length){tb.innerHTML="<tr><td colspan='11' style='text-align:center;color:var(--text3);padding:2rem'>Sin reservas</td></tr>";return}
-  tb.innerHTML=filtered.map((r,i)=>`<tr>
+  if(!filtered.length){tb.innerHTML="<tr><td colspan='12' style='text-align:center;color:var(--text3);padding:2rem'>Sin reservas</td></tr>";return}
+  // Detectar titulares con múltiples reservas
+  const counts={};
+  filtered.forEach(r=>{counts[r.nombre]=(counts[r.nombre]||0)+1;});
+  const multiNombres=[...new Set(filtered.filter(r=>counts[r.nombre]>1).map(r=>r.nombre))];
+  tb.innerHTML=filtered.map((r,i)=>{
+    const colorIdx=multiNombres.indexOf(r.nombre);
+    const rowBg=colorIdx>=0?`background:${TITULAR_COLORS[colorIdx%TITULAR_COLORS.length]}`:"";
+    return`<tr style="${rowBg}">
       <td style="color:var(--text3)">${i+1}</td>
-      <td style="font-weight:500;color:var(--text)">${r.nombre}</td>
+      <td style="font-weight:500;color:var(--text)">${r.nombre}${r.aplazada?'<span style="font-size:9px;color:#8AABDD;margin-left:4px">⏸ Aplazada</span>':''}</td>
       <td>${fmtD(r.entrada)}</td><td>${fmtD(r.salida)}</td>
       <td>${planBadge(r.plan)}</td>
       <td>${r.hab==="NO"||!r.hab?"—":r.hab}</td>
@@ -1349,7 +1529,8 @@ function renderTablaReservas(){
         <button class="btn btn-sm" onclick="abrirEditar(${r.id})">Ver</button>
         <button class="btn btn-sm btn-primary" onclick="abrirConsumos(${r.id})">Consumos</button>
       </td>
-    </tr>`).join("");
+    </tr>`;
+  }).join("");
 }
 
 // ---- DIA DE SOL ----
@@ -2639,17 +2820,34 @@ async function guardarVentaMenuda(){
   const vbar=parseFloat(document.getElementById("bar-vbar").value)||0;
   const vrest=parseFloat(document.getElementById("bar-vrest").value)||0;
   const obs=document.getElementById("bar-obs").value.trim();
+  const medio=document.getElementById("bar-medio").value||null;
   if(vbar<=0&&vrest<=0){showAlert("alert-bar","Ingresa al menos un valor mayor a 0.","err");return}
-  const result=await sbInsert("ventas_menudas",{fecha,ventas_bar:vbar,ventas_restaurante:vrest,obs,registrado_por:currentUser.user});
+  const result=await sbInsert("ventas_menudas",{fecha,ventas_bar:vbar,ventas_restaurante:vrest,obs,medio_pago:medio,registrado_por:currentUser.user});
   if(result){
     document.getElementById("bar-vbar").value=0;
     document.getElementById("bar-vrest").value=0;
     document.getElementById("bar-obs").value="";
+    document.getElementById("bar-medio").selectedIndex=0;
     showAlert("alert-bar","Venta registrada correctamente.","ok");
     renderBar();
+    renderResumenHoy();
   } else {
     showAlert("alert-bar","Error al guardar. Intenta de nuevo.","err");
   }
+}
+
+async function renderResumenHoy(){
+  const hoy=today();
+  const {data:ventas}=await supa.from("ventas_menudas").select("*").eq("fecha",hoy);
+  const v=ventas||[];
+  const total=v.reduce((s,r)=>s+(r.ventas_bar||0)+(r.ventas_restaurante||0),0);
+  const efect=v.filter(r=>r.medio_pago==="Efectivo").reduce((s,r)=>s+(r.ventas_bar||0)+(r.ventas_restaurante||0),0);
+  const transf=v.filter(r=>r.medio_pago==="Transferencia").reduce((s,r)=>s+(r.ventas_bar||0)+(r.ventas_restaurante||0),0);
+  const data=v.filter(r=>r.medio_pago==="Datáfono").reduce((s,r)=>s+(r.ventas_bar||0)+(r.ventas_restaurante||0),0);
+  document.getElementById("bar-hoy-total").textContent=fmt(total);
+  document.getElementById("bar-hoy-efect").textContent=fmt(efect);
+  document.getElementById("bar-hoy-transf").textContent=fmt(transf);
+  document.getElementById("bar-hoy-data").textContent=fmt(data);
 }
 
 async function renderBar(){
@@ -2658,31 +2856,27 @@ async function renderBar(){
   const [yr,mn]=mes.split("-");
   const desde=`${yr}-${mn}-01`;
   const hasta=`${yr}-${mn}-31`;
-
-  // Ventas menudas del mes
   const {data:menudas}=await supa.from("ventas_menudas").select("*").gte("fecha",desde).lte("fecha",hasta).order("fecha",{ascending:false});
   const filas=menudas||[];
   const totalBar=filas.reduce((s,r)=>s+(r.ventas_bar||0),0);
   const totalRest=filas.reduce((s,r)=>s+(r.ventas_restaurante||0),0);
-
-  // Ventas de reservas del mes
   const reservas=await sbGet("reservas");
   const resMes=reservas.filter(r=>r.entrada&&r.entrada.startsWith(`${yr}-${mn}`));
   const resBar=resMes.reduce((s,r)=>s+(r.ventas_bar||0),0);
   const resRest=resMes.reduce((s,r)=>s+(r.ventas_restaurante||0),0);
-
   document.getElementById("bar-total-bar").textContent=fmt(totalBar);
   document.getElementById("bar-total-rest").textContent=fmt(totalRest);
   document.getElementById("bar-res-bar").textContent=fmt(resBar);
   document.getElementById("bar-res-rest").textContent=fmt(resRest);
-
+  renderResumenHoy();
   const tb=document.getElementById("tbody-bar");
-  if(!filas.length){tb.innerHTML="<tr><td colspan='6' style='text-align:center;color:var(--text3);padding:2rem'>Sin ventas registradas</td></tr>";return}
+  if(!filas.length){tb.innerHTML="<tr><td colspan='7' style='text-align:center;color:var(--text3);padding:2rem'>Sin ventas registradas</td></tr>";return}
   tb.innerHTML=filas.map(r=>`<tr>
     <td>${fmtD(r.fecha)}</td>
     <td style="color:var(--text)">${fmt(r.ventas_bar||0)}</td>
     <td style="color:var(--text)">${fmt(r.ventas_restaurante||0)}</td>
     <td style="color:var(--orange);font-weight:500">${fmt((r.ventas_bar||0)+(r.ventas_restaurante||0))}</td>
+    <td><span class="badge ${r.medio_pago==='Efectivo'?'badge-ok':r.medio_pago==='Transferencia'?'badge-est':'badge-jac'}">${r.medio_pago||'—'}</span></td>
     <td style="color:var(--text3)">${r.obs||"—"}</td>
     <td><button class="btn btn-sm btn-danger" onclick="eliminarVenta(${r.id})">×</button></td>
   </tr>`).join("");
@@ -2700,8 +2894,8 @@ async function exportarBarExcel(){
   const [yr,mn]=mes.split("-");
   const {data:filas}=await supa.from("ventas_menudas").select("*").gte("fecha",`${yr}-${mn}-01`).lte("fecha",`${yr}-${mn}-31`).order("fecha");
   if(!filas||!filas.length){alert("No hay datos para exportar.");return}
-  const headers=["Fecha","Bar ($)","Restaurante ($)","Total ($)","Observaciones","Registrado por"];
-  const rows=(filas||[]).map(r=>[fmtD(r.fecha),r.ventas_bar||0,r.ventas_restaurante||0,(r.ventas_bar||0)+(r.ventas_restaurante||0),r.obs||"",r.registrado_por||""]);
+  const headers=["Fecha","Bar ($)","Restaurante ($)","Total ($)","Medio Pago","Observaciones","Registrado por"];
+  const rows=(filas||[]).map(r=>[fmtD(r.fecha),r.ventas_bar||0,r.ventas_restaurante||0,(r.ventas_bar||0)+(r.ventas_restaurante||0),r.medio_pago||"",r.obs||"",r.registrado_por||""]);
   const SEP="\n";
   const csv=headers.join(",")+SEP+rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(",")).join(SEP);
   const blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8"});
@@ -2709,6 +2903,269 @@ async function exportarBarExcel(){
   a.href=URL.createObjectURL(blob);
   a.download="bar_restaurante_"+mes+".csv";
   a.click();
+}
+
+// ---- APLAZAR RESERVAS ----
+let _aplazarId = null;
+
+function abrirAplazar(id){
+  const r=_reservasCache.find(x=>x.id===id);
+  if(!r)return;
+  _aplazarId=id;
+  document.getElementById("aplazar-nombre").textContent=r.nombre;
+  document.getElementById("aplazar-info").textContent=`Plan: ${r.plan} · Fecha original: ${fmtD(r.entrada)}`;
+  document.getElementById("aplazar-fecha").value=r.fecha_aplazamiento||"";
+  document.getElementById("aplazar-obs").value="";
+  document.getElementById("modal-aplazar").classList.add("show");
+}
+
+async function confirmarAplazar(){
+  const nuevaFecha=document.getElementById("aplazar-fecha").value||null;
+  const obs=document.getElementById("aplazar-obs").value.trim();
+  const upd={aplazada:true,fecha_aplazamiento:nuevaFecha||null};
+  if(nuevaFecha) upd.entrada=nuevaFecha;
+  if(obs){
+    const r=_reservasCache.find(x=>x.id===_aplazarId);
+    upd.obs=(r.obs?r.obs+"\n":"")+"[APLAZADA] "+obs;
+  }
+  const ok=await sbUpdate("reservas",_aplazarId,upd);
+  if(ok){
+    closeModal("modal-aplazar");
+    _reservasCache=await sbGet("reservas");
+    renderReservas();
+    renderAplazadas();
+    alert(nuevaFecha?"Reserva aplazada a "+fmtD(nuevaFecha):"Reserva marcada como pendiente de fecha.");
+  }
+}
+
+async function reactivarReserva(id){
+  if(!confirm("¿Marcar esta reserva como activa?"))return;
+  await sbUpdate("reservas",id,{aplazada:false,fecha_aplazamiento:null});
+  _reservasCache=await sbGet("reservas");
+  renderAplazadas();
+  renderReservas();
+}
+
+async function renderAplazadas(){
+  if(!_reservasCache.length) _reservasCache=await sbGet("reservas");
+  const aplazadas=_reservasCache.filter(r=>r.aplazada);
+  document.getElementById("count-aplazadas").textContent=aplazadas.length+" reservas";
+  const tb=document.getElementById("tbody-aplazadas");
+  if(!aplazadas.length){tb.innerHTML="<tr><td colspan='9' style='text-align:center;color:var(--text3);padding:2rem'>No hay reservas aplazadas</td></tr>";return}
+  tb.innerHTML=aplazadas.map((r,i)=>`<tr>
+    <td style="color:var(--text3)">${i+1}</td>
+    <td style="font-weight:500;color:var(--text)">${r.nombre}</td>
+    <td>${r.celular||"—"}</td>
+    <td>${planBadge(r.plan)}</td>
+    <td>${fmtD(r.entrada)}</td>
+    <td>${r.fecha_aplazamiento?fmtD(r.fecha_aplazamiento):'<span style="color:var(--orange);font-size:11px">⏳ Sin fecha</span>'}</td>
+    <td style="color:var(--text)">${fmt(r.total||0)}</td>
+    <td><span class="badge ${(r.deber||0)>0?'badge-pend':'badge-ok'}">${fmt(r.deber||0)}</span></td>
+    <td style="display:flex;gap:4px">
+      <button class="btn btn-sm" onclick="abrirEditar(${r.id})">Ver</button>
+      <button class="btn btn-sm" style="color:#8ABB8A;border-color:rgba(90,138,90,0.3)" onclick="reactivarReserva(${r.id})">✓ Activar</button>
+    </td>
+  </tr>`).join("");
+}
+
+// ---- COLORES MISMO TITULAR ----
+const TITULAR_COLORS=[
+  'rgba(58,90,138,0.15)','rgba(90,138,58,0.15)','rgba(138,58,138,0.15)',
+  'rgba(138,90,58,0.15)','rgba(58,138,138,0.15)','rgba(138,58,90,0.15)'
+];
+function getTitularColor(nombre, cache){
+  const nombres=[...new Set(cache.filter(r=>!esDiaSol(r.plan)).map(r=>r.nombre))];
+  const counts={};
+  cache.forEach(r=>{if(!esDiaSol(r.plan))counts[r.nombre]=(counts[r.nombre]||0)+1;});
+  const multi=nombres.filter(n=>counts[n]>1);
+  const idx=multi.indexOf(nombre);
+  return idx>=0?TITULAR_COLORS[idx%TITULAR_COLORS.length]:null;
+}
+
+// ---- COMPRAS ----
+const CATS_COMPRA_KEY='mds_cats_compra';
+const CATS_COMPRA_BASE=['Mercado','Mantenimiento','Servicios','Limpieza','Otros'];
+let _catsCompra=[];
+
+function cargarCatsCompra(){
+  try{
+    const saved=localStorage.getItem(CATS_COMPRA_KEY);
+    const extra=saved?JSON.parse(saved):[];
+    _catsCompra=[...new Set([...CATS_COMPRA_BASE,...extra])].sort();
+  }catch(e){_catsCompra=[...CATS_COMPRA_BASE];}
+  const sel=document.getElementById("comp-cat");
+  if(sel){sel.innerHTML='<option value="">— Seleccionar —</option>'+_catsCompra.map(c=>`<option>${c}</option>`).join("");}
+}
+
+function abrirCategoriasCompra(){
+  cargarCatsCompra();
+  const lista=document.getElementById("lista-cats-compra");
+  lista.innerHTML=_catsCompra.map(c=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+      <span style="font-size:13px;color:var(--text)">${c}</span>
+      ${!CATS_COMPRA_BASE.includes(c)?`<button class="btn btn-sm btn-danger" style="padding:2px 8px" onclick="eliminarCatCompra('${c}')">×</button>`:'<span style="font-size:10px;color:var(--text3)">Base</span>'}
+    </div>`).join("");
+  document.getElementById("modal-cats-compra").classList.add("show");
+}
+
+function agregarCatCompra(){
+  const input=document.getElementById("nueva-cat-compra");
+  const val=(input.value||"").trim();
+  if(!val){alert("Escribe el nombre de la categoría.");return}
+  cargarCatsCompra();
+  if(_catsCompra.map(c=>c.toLowerCase()).includes(val.toLowerCase())){alert("Ya existe.");return}
+  const extras=_catsCompra.filter(c=>!CATS_COMPRA_BASE.includes(c));
+  extras.push(val);
+  localStorage.setItem(CATS_COMPRA_KEY,JSON.stringify(extras));
+  input.value="";
+  abrirCategoriasCompra();
+  cargarCatsCompra();
+}
+
+function eliminarCatCompra(cat){
+  if(!confirm(`¿Eliminar categoría "${cat}"?`))return;
+  const extras=_catsCompra.filter(c=>!CATS_COMPRA_BASE.includes(c)&&c!==cat);
+  localStorage.setItem(CATS_COMPRA_KEY,JSON.stringify(extras));
+  abrirCategoriasCompra();
+  cargarCatsCompra();
+}
+
+async function guardarCompra(){
+  const fecha=document.getElementById("comp-fecha").value||today();
+  const desc=document.getElementById("comp-desc").value.trim();
+  const cat=document.getElementById("comp-cat").value||"Otros";
+  const valor=parseFloat(document.getElementById("comp-valor").value)||0;
+  const medio=document.getElementById("comp-medio").value||null;
+  if(!desc){showAlert("alert-compras","La descripción es obligatoria.","err");return}
+  if(valor<=0){showAlert("alert-compras","El valor debe ser mayor a 0.","err");return}
+  const ok=await sbInsert("compras",{fecha,descripcion:desc,categoria:cat,valor,medio_pago:medio,registrado_por:currentUser.user});
+  if(ok){
+    document.getElementById("comp-desc").value="";
+    document.getElementById("comp-valor").value="";
+    document.getElementById("comp-cat").selectedIndex=0;
+    document.getElementById("comp-medio").selectedIndex=0;
+    showAlert("alert-compras","Compra registrada correctamente.","ok");
+    renderCompras();
+    renderComprasMetrics();
+  } else {
+    showAlert("alert-compras","Error al guardar.","err");
+  }
+}
+
+async function renderComprasMetrics(){
+  const hoy=today();
+  const mes=hoy.slice(0,7);
+  const [yr,mn]=mes.split("-");
+  const {data:comprasHoy}=await supa.from("compras").select("*").eq("fecha",hoy);
+  const {data:comprasMes}=await supa.from("compras").select("*").gte("fecha",`${yr}-${mn}-01`).lte("fecha",`${yr}-${mn}-31`);
+  const ch=comprasHoy||[];const cm=comprasMes||[];
+  document.getElementById("comp-hoy").textContent=fmt(ch.reduce((s,r)=>s+(r.valor||0),0));
+  document.getElementById("comp-mes").textContent=fmt(cm.reduce((s,r)=>s+(r.valor||0),0));
+  document.getElementById("comp-efect").textContent=fmt(cm.filter(r=>r.medio_pago==="Efectivo").reduce((s,r)=>s+(r.valor||0),0));
+  document.getElementById("comp-transf").textContent=fmt(cm.filter(r=>r.medio_pago==="Transferencia").reduce((s,r)=>s+(r.valor||0),0));
+}
+
+async function renderCompras(){
+  const mes=document.getElementById("comp-mes-fil").value;
+  if(!mes)return;
+  const [yr,mn]=mes.split("-");
+  const {data:filas}=await supa.from("compras").select("*").gte("fecha",`${yr}-${mn}-01`).lte("fecha",`${yr}-${mn}-31`).order("fecha",{ascending:false});
+  const tb=document.getElementById("tbody-compras");
+  if(!filas||!filas.length){tb.innerHTML="<tr><td colspan='7' style='text-align:center;color:var(--text3);padding:2rem'>Sin compras registradas</td></tr>";return}
+  tb.innerHTML=filas.map(r=>`<tr>
+    <td>${fmtD(r.fecha)}</td>
+    <td style="color:var(--text);font-weight:500">${r.descripcion}</td>
+    <td><span class="badge badge-view">${r.categoria||"—"}</span></td>
+    <td><span class="badge ${r.medio_pago==='Efectivo'?'badge-ok':r.medio_pago==='Transferencia'?'badge-est':'badge-jac'}">${r.medio_pago||"—"}</span></td>
+    <td style="color:var(--orange);font-weight:500">${fmt(r.valor||0)}</td>
+    <td style="color:var(--text3)">${r.registrado_por||"—"}</td>
+    <td><button class="btn btn-sm btn-danger" onclick="eliminarCompra(${r.id})">×</button></td>
+  </tr>`).join("");
+}
+
+async function eliminarCompra(id){
+  if(!confirm("¿Eliminar esta compra?"))return;
+  await sbDelete("compras",id);
+  renderCompras();
+  renderComprasMetrics();
+}
+
+async function exportarComprasExcel(){
+  const mes=document.getElementById("comp-mes-fil").value;
+  if(!mes){alert("Selecciona un mes.");return}
+  const [yr,mn]=mes.split("-");
+  const {data:filas}=await supa.from("compras").select("*").gte("fecha",`${yr}-${mn}-01`).lte("fecha",`${yr}-${mn}-31`).order("fecha");
+  if(!filas||!filas.length){alert("No hay datos para exportar.");return}
+  const headers=["Fecha","Descripción","Categoría","Medio pago","Valor ($)","Registrado por"];
+  const rows=filas.map(r=>[fmtD(r.fecha),r.descripcion,r.categoria||"",r.medio_pago||"",r.valor||0,r.registrado_por||""]);
+  const SEP="\n";
+  const csv=headers.join(",")+SEP+rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(",")).join(SEP);
+  const blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="compras_"+mes+".csv";a.click();
+}
+
+// ---- CIERRE DE CAJA ----
+async function abrirCierreCaja(){
+  const hoy=today();
+  document.getElementById("cierre-fecha-label").textContent="Cierre del día: "+fmtD(hoy);
+  // Ventas del día por medio
+  const {data:ventas}=await supa.from("ventas_menudas").select("*").eq("fecha",hoy);
+  const v=ventas||[];
+  const vEfect=v.filter(r=>r.medio_pago==="Efectivo").reduce((s,r)=>s+(r.ventas_bar||0)+(r.ventas_restaurante||0),0);
+  const vTransf=v.filter(r=>r.medio_pago==="Transferencia").reduce((s,r)=>s+(r.ventas_bar||0)+(r.ventas_restaurante||0),0);
+  const vData=v.filter(r=>r.medio_pago==="Datáfono").reduce((s,r)=>s+(r.ventas_bar||0)+(r.ventas_restaurante||0),0);
+  // Compras del día
+  const {data:compras}=await supa.from("compras").select("*").eq("fecha",hoy);
+  const totalCompras=(compras||[]).filter(c=>c.medio_pago==="Efectivo").reduce((s,r)=>s+(r.valor||0),0);
+  const esperado=vEfect-totalCompras;
+  document.getElementById("cie-vefect").textContent=fmt(vEfect);
+  document.getElementById("cie-vtransf").textContent=fmt(vTransf);
+  document.getElementById("cie-vdata").textContent=fmt(vData);
+  document.getElementById("cie-compras").textContent=fmt(totalCompras);
+  document.getElementById("cie-esperado").textContent=fmt(esperado);
+  document.getElementById("cie-contado").value=0;
+  document.getElementById("cie-diferencia").textContent=fmt(-esperado);
+  document.getElementById("cie-diferencia").style.color="#E07070";
+  document.getElementById("cie-obs").value="";
+  document.getElementById("modal-cierre").classList.add("show");
+}
+
+function calcDiferencia(){
+  const esperado=parseFloat(document.getElementById("cie-esperado").textContent.replace(/[^0-9-]/g,""))||0;
+  const contado=parseFloat(document.getElementById("cie-contado").value)||0;
+  const diff=contado-esperado;
+  const el=document.getElementById("cie-diferencia");
+  el.textContent=fmt(diff);
+  el.style.color=diff>=0?"#8ABB8A":"#E07070";
+}
+
+async function guardarCierreCaja(){
+  const hoy=today();
+  const contado=parseFloat(document.getElementById("cie-contado").value)||0;
+  const obs=document.getElementById("cie-obs").value.trim();
+  const esperadoTxt=document.getElementById("cie-esperado").textContent;
+  const esperado=parseFloat(esperadoTxt.replace(/[^0-9-]/g,""))||0;
+  const diff=contado-esperado;
+  const {data:ventas}=await supa.from("ventas_menudas").select("*").eq("fecha",hoy);
+  const v=ventas||[];
+  const {data:compras}=await supa.from("compras").select("*").eq("fecha",hoy);
+  const totalVentas=v.reduce((s,r)=>s+(r.ventas_bar||0)+(r.ventas_restaurante||0),0);
+  const totalCompras=(compras||[]).reduce((s,r)=>s+(r.valor||0),0);
+  const ok=await sbInsert("cierres_caja",{
+    fecha:hoy,
+    total_efectivo:parseFloat(document.getElementById("cie-vefect").textContent.replace(/[^0-9]/g,""))||0,
+    total_transferencia:parseFloat(document.getElementById("cie-vtransf").textContent.replace(/[^0-9]/g,""))||0,
+    total_datafono:parseFloat(document.getElementById("cie-vdata").textContent.replace(/[^0-9]/g,""))||0,
+    total_ventas:totalVentas,total_compras:totalCompras,
+    efectivo_contado:contado,diferencia:diff,
+    cerrado_por:currentUser.user,observaciones:obs
+  });
+  if(ok){
+    closeModal("modal-cierre");
+    alert(`Cierre registrado.\nEfectivo esperado: ${fmt(esperado)}\nContado: ${fmt(contado)}\nDiferencia: ${fmt(diff)}`);
+  } else {
+    alert("Error al registrar el cierre.");
+  }
 }
 </script>
 </body>
