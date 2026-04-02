@@ -319,6 +319,13 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
                 <div><label class="fl">Total con descuento</label><input class="f" id="f-total-desc" type="number" disabled style="opacity:0.7"></div>
                 <div><label class="fl">Abono ($)</label><input class="f" id="f-abono" type="number" min="0" value="0" onchange="calcTotal()"></div>
               </div>
+              <label class="fl">Medio de pago del abono</label>
+              <select class="f" id="f-medio-abono-ini">
+                <option value="">— Seleccionar —</option>
+                <option>Efectivo</option>
+                <option>Transferencia</option>
+                <option>Datáfono</option>
+              </select>
               <label class="fl">Restante a pagar ($)</label>
               <input class="f" id="f-deber" type="number" disabled style="opacity:0.7;color:var(--orange)">
               <label class="fl">Fecha del abono</label>
@@ -426,6 +433,13 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
                 <div><label class="fl">Total con descuento</label><input class="f" id="ds-total-desc" type="number" disabled style="opacity:0.7"></div>
                 <div><label class="fl">Abono ($)</label><input class="f" id="ds-abono" type="number" min="0" value="0" onchange="calcTotalSol()"></div>
               </div>
+              <label class="fl">Medio de pago del abono</label>
+              <select class="f" id="ds-medio-abono-ini">
+                <option value="">— Seleccionar —</option>
+                <option>Efectivo</option>
+                <option>Transferencia</option>
+                <option>Datáfono</option>
+              </select>
               <label class="fl">Restante a pagar ($)</label>
               <input class="f" id="ds-deber" type="number" disabled style="opacity:0.7;color:var(--orange)">
               <label class="fl">Fecha del abono</label>
@@ -594,14 +608,50 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
 
     <!-- COMPRAS -->
     <div class="page" id="page-compras">
-      <div class="flex-between"><div class="page-title">Compras</div>
+      <div class="flex-between"><div class="page-title">Compras y Caja</div>
         <div style="display:flex;gap:8px;margin-top:4px">
           <button class="btn btn-sm btn-primary" onclick="abrirCierreCaja()">🔒 Cierre de Caja</button>
           <button class="btn btn-sm" onclick="abrirCategoriasCompra()" style="color:var(--orange);border-color:rgba(224,120,32,0.4)">⚙ Categorías</button>
         </div>
       </div>
-      <div class="page-sub">Registro de compras y gastos de caja</div>
+      <div class="page-sub">Control de caja, compras y gastos</div>
       <div id="alert-compras" class="alert"></div>
+
+      <!-- CAJA DEL DIA -->
+      <div class="card" style="margin-bottom:16px;border:1px solid rgba(224,120,32,0.3)">
+        <div class="flex-between" style="margin-bottom:12px">
+          <div class="card-title" style="margin:0">💰 Caja del día — <span id="caja-fecha-label" style="color:var(--text3);font-weight:400"></span></div>
+          <button class="btn btn-sm" onclick="renderCajaDelDia()" style="font-size:11px">↻ Actualizar</button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px">
+          <div class="metric" style="border:1px solid rgba(90,138,90,0.3)">
+            <div class="metric-label">Abonos efectivo</div>
+            <div class="metric-val" style="color:#8ABB8A;font-size:18px" id="caja-abonos">$0</div>
+            <div class="metric-sub">Reservas nuevas</div>
+          </div>
+          <div class="metric" style="border:1px solid rgba(90,138,90,0.3)">
+            <div class="metric-label">Pagos restante</div>
+            <div class="metric-val" style="color:#8ABB8A;font-size:18px" id="caja-restantes">$0</div>
+            <div class="metric-sub">En efectivo</div>
+          </div>
+          <div class="metric" style="border:1px solid rgba(90,138,90,0.3)">
+            <div class="metric-label">Ventas bar</div>
+            <div class="metric-val" style="color:#8ABB8A;font-size:18px" id="caja-bar">$0</div>
+            <div class="metric-sub">En efectivo</div>
+          </div>
+          <div class="metric" style="border:1px solid rgba(224,112,112,0.3)">
+            <div class="metric-label">Compras</div>
+            <div class="metric-val" style="color:#E07070;font-size:18px" id="caja-compras">$0</div>
+            <div class="metric-sub">En efectivo</div>
+          </div>
+          <div class="metric" style="border:2px solid var(--orange);background:rgba(224,120,32,0.08)">
+            <div class="metric-label">TOTAL EN CAJA</div>
+            <div class="metric-val" style="color:var(--orange);font-size:20px" id="caja-total">$0</div>
+            <div class="metric-sub">Efectivo esperado</div>
+          </div>
+        </div>
+        <div id="caja-detalle" style="font-size:11px;color:var(--text3)"></div>
+      </div>
       <div class="grid2" style="margin-bottom:16px">
         <div class="card">
           <div class="card-title">Registrar compra</div>
@@ -1088,7 +1138,7 @@ function showPage(p){
   if(p==="resumen")renderResumen();
   if(p==="usuarios")renderUsuarios();
   if(p==="bar"){const m=document.getElementById("bar-mes");if(!m.value)m.value=today().slice(0,7);const bf=document.getElementById('bar-fecha');if(!bf.value)bf.value=today();renderBar();renderResumenHoy();}
-  if(p==="compras"){const m=document.getElementById("comp-mes-fil");if(!m.value)m.value=today().slice(0,7);const cf=document.getElementById('comp-fecha');if(!cf.value)cf.value=today();renderCompras();renderComprasMetrics();cargarCatsCompra();}
+  if(p==="compras"){const m=document.getElementById("comp-mes-fil");if(!m.value)m.value=today().slice(0,7);const cf=document.getElementById('comp-fecha');if(!cf.value)cf.value=today();renderCompras();renderComprasMetrics();cargarCatsCompra();renderCajaDelDia();}
 }
 
 function fmt(n){return new Intl.NumberFormat("es-CO",{style:"currency",currency:"COP",maximumFractionDigits:0}).format(n)}
@@ -1218,6 +1268,7 @@ async function guardarReservaSol(){
     total_bruto: totalBruto, desc_pct: descPct, desc_valor: descValor,
     total, abono, deber, ventas_bar:0, ventas_restaurante:0,
     fabono: document.getElementById("ds-fabono").value||null,
+    medio_abono_inicial: document.getElementById("ds-medio-abono-ini").value||null,
     vendedor: document.getElementById("ds-vendedor").value,
     consig: document.getElementById("ds-consig").value,
     creado_por: currentUser.user, fecha: today(),
@@ -1236,7 +1287,7 @@ async function guardarReservaSol(){
 
 function limpiarFormSol(){
   ["ds-nombre","ds-id","ds-celular","ds-correo","ds-obs","ds-entrada","ds-fabono"].forEach(id=>{const el=document.getElementById(id);if(el)el.value="";});
-  ["ds-tipocliente","ds-vendedor","ds-consig"].forEach(id=>{const el=document.getElementById(id);if(el)el.selectedIndex=0;});
+  ["ds-tipocliente","ds-vendedor","ds-consig","ds-medio-abono-ini"].forEach(id=>{const el=document.getElementById(id);if(el)el.selectedIndex=0;});
   ["ds-abono","ds-ninos1","ds-ninos2","ds-mascotas"].forEach(id=>{const el=document.getElementById(id);if(el)el.value=0;});
   document.getElementById("ds-personas").value="";
   document.getElementById("ds-total").value="";
@@ -1458,6 +1509,7 @@ async function guardarReserva(){
     ventas_bar:0, ventas_restaurante:0,
     fabono:document.getElementById("f-fabono").value||null,
     vendedor:document.getElementById("f-vendedor").value,
+    medio_abono_inicial:document.getElementById("f-medio-abono-ini").value||null,
     consig:document.getElementById("f-consig").value,
     creado_por:currentUser.user, fecha:today(),
     acompanantes: recogerAcompanantes('hosp').length?JSON.stringify(recogerAcompanantes('hosp')):null
@@ -1476,7 +1528,7 @@ async function guardarReserva(){
 
 function limpiarForm(){
   ["f-nombre","f-celular","f-id","f-correo","f-obs","f-entrada","f-salida","f-fabono"].forEach(id=>document.getElementById(id).value="");
-  ["f-plan","f-tipocliente","f-hab","f-vendedor","f-consig","f-decoracion","f-tipodoc"].forEach(id=>document.getElementById(id).selectedIndex=0);
+  ["f-plan","f-tipocliente","f-hab","f-vendedor","f-consig","f-decoracion","f-tipodoc","f-medio-abono-ini"].forEach(id=>document.getElementById(id).selectedIndex=0);
   ["f-abono","f-ninos1","f-ninos2","f-mascotas"].forEach(id=>document.getElementById(id).value=0);
   document.getElementById("f-personas").value="";
   document.getElementById("f-total").value="";
@@ -3117,7 +3169,62 @@ async function exportarComprasExcel(){
   const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="compras_"+mes+".csv";a.click();
 }
 
-// ---- CIERRE DE CAJA ----
+// ---- CAJA DEL DIA ----
+async function renderCajaDelDia(){
+  const hoy = today();
+  const cajaFecha = document.getElementById("caja-fecha-label");
+  if(cajaFecha) cajaFecha.textContent = fmtD(hoy);
+
+  // 1. Abonos en efectivo de reservas creadas hoy
+  if(!_reservasCache.length) _reservasCache = await sbGet("reservas");
+  const reservasHoy = _reservasCache.filter(r=>r.fecha===hoy);
+  const abonosEfectivo = reservasHoy
+    .filter(r=>r.medio_abono_inicial==="Efectivo")
+    .reduce((s,r)=>s+(r.abono||0),0);
+
+  // 2. Pagos restante en efectivo registrados hoy
+  const pagosRestante = _reservasCache
+    .filter(r=>r.medio_restante==="Efectivo" && r.pago_restante>0)
+    .reduce((s,r)=>s+(r.pago_restante||0),0);
+
+  // 3. Ventas bar en efectivo hoy
+  const {data:ventasHoy} = await supa.from("ventas_menudas").select("*").eq("fecha",hoy);
+  const ventasEfectivo = (ventasHoy||[])
+    .filter(r=>r.medio_pago==="Efectivo")
+    .reduce((s,r)=>s+(r.ventas_bar||0)+(r.ventas_restaurante||0),0);
+
+  // 4. Compras en efectivo hoy
+  const {data:comprasHoy} = await supa.from("compras").select("*").eq("fecha",hoy);
+  const comprasEfectivo = (comprasHoy||[])
+    .filter(r=>r.medio_pago==="Efectivo")
+    .reduce((s,r)=>s+(r.valor||0),0);
+
+  // Total en caja
+  const totalCaja = abonosEfectivo + pagosRestante + ventasEfectivo - comprasEfectivo;
+
+  // Actualizar UI
+  if(document.getElementById("caja-abonos")) document.getElementById("caja-abonos").textContent = fmt(abonosEfectivo);
+  if(document.getElementById("caja-restantes")) document.getElementById("caja-restantes").textContent = fmt(pagosRestante);
+  if(document.getElementById("caja-bar")) document.getElementById("caja-bar").textContent = fmt(ventasEfectivo);
+  if(document.getElementById("caja-compras")) document.getElementById("caja-compras").textContent = fmt(comprasEfectivo);
+  if(document.getElementById("caja-total")){
+    document.getElementById("caja-total").textContent = fmt(totalCaja);
+    document.getElementById("caja-total").style.color = totalCaja>=0?"var(--orange)":"#E07070";
+  }
+
+  // Detalle
+  const det = document.getElementById("caja-detalle");
+  if(det){
+    const lineas = [];
+    if(abonosEfectivo>0) lineas.push(`✅ ${reservasHoy.filter(r=>r.medio_abono_inicial==="Efectivo").length} reserva(s) con abono en efectivo: ${fmt(abonosEfectivo)}`);
+    if(pagosRestante>0) lineas.push(`✅ Pagos restante en efectivo: ${fmt(pagosRestante)}`);
+    if(ventasEfectivo>0) lineas.push(`✅ Ventas bar/rest. en efectivo: ${fmt(ventasEfectivo)}`);
+    if(comprasEfectivo>0) lineas.push(`❌ Compras en efectivo: -${fmt(comprasEfectivo)}`);
+    if(!lineas.length) lineas.push("Sin movimientos en efectivo hoy.");
+    det.innerHTML = lineas.map(l=>`<div style="margin-bottom:3px">${l}</div>`).join("");
+  }
+}
+
 async function abrirCierreCaja(){
   const hoy=today();
   document.getElementById("cierre-fecha-label").textContent="Cierre del día: "+fmtD(hoy);
