@@ -195,7 +195,7 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
     <nav class="sidebar-nav">
       <div class="nav-item active" onclick="showPage('nueva')" id="nav-nueva"><span class="icon">✦</span> Nueva reserva</div>
       <div class="nav-item" onclick="showPage('reservas')" id="nav-reservas"><span class="icon">☰</span> Reservas Hospedaje</div>
-      <div class="nav-item" onclick="showPage('calendario')" id="nav-calendario"><span class="icon">◫</span> Calendario</div>
+      <div class="nav-item" onclick="showPage('calendario')" id="nav-calendario"><span class="icon">◫</span> Calendario Reservas</div>
       <div class="nav-item" onclick="showPage('diasol')" id="nav-diasol"><span class="icon">☀</span> Reservas Día de Sol</div>
       <div class="nav-item" onclick="showPage('aplazadas')" id="nav-aplazadas"><span class="icon">⏸</span> Aplazadas</div>
       <div class="nav-item" onclick="showPage('resumen')" id="nav-resumen"><span class="icon">◈</span> Resumen</div>
@@ -222,8 +222,11 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
       <!-- DASHBOARD DE HOY -->
       <div id="dashboard-hoy" style="margin-bottom:20px;display:none">
         <div style="font-size:11px;color:var(--orange);font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">📅 Hoy — <span id="dash-fecha"></span></div>
-        <div class="grid4" style="margin-bottom:12px">
-          <div class="metric"><div class="metric-label">Huéspedes hoy</div><div class="metric-val" id="dash-hoy-total">0</div></div>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin-bottom:12px">
+          <div class="metric"><div class="metric-label">Reservas activas</div><div class="metric-val" id="dash-hoy-total">0</div></div>
+          <div class="metric"><div class="metric-label">Adultos</div><div class="metric-val" style="color:var(--text)" id="dash-adultos">0</div></div>
+          <div class="metric"><div class="metric-label">Niños 5-9</div><div class="metric-val" style="color:#8AABDD" id="dash-ninos2">0</div></div>
+          <div class="metric"><div class="metric-label">Bebés 0-4</div><div class="metric-val" style="color:#CC88CC" id="dash-ninos1">0</div></div>
           <div class="metric"><div class="metric-label">Check-in hoy</div><div class="metric-val" style="color:#8ABB8A" id="dash-checkin">0</div></div>
           <div class="metric"><div class="metric-label">Check-out hoy</div><div class="metric-val" style="color:#E07070" id="dash-checkout">0</div></div>
           <div class="metric"><div class="metric-label">Día de Sol hoy</div><div class="metric-val" style="color:var(--orange)" id="dash-diasol">0</div></div>
@@ -1368,13 +1371,23 @@ async function renderDashboard(){
   if(!_reservasCache.length) _reservasCache = await sbGet("reservas");
   const reservas = _reservasCache;
 
-  const checkinHoy = reservas.filter(r=>!esDiaSol(r.plan)&&r.entrada===hoy);
-  const checkoutHoy = reservas.filter(r=>!esDiaSol(r.plan)&&r.salida===hoy);
-  const diasolHoy = reservas.filter(r=>esDiaSol(r.plan)&&r.entrada===hoy);
-  const enCasa = reservas.filter(r=>!esDiaSol(r.plan)&&r.entrada<=hoy&&(r.salida||r.entrada)>=hoy&&r.estado!=="salio");
+  const checkinHoy = reservas.filter(r=>!esDiaSol(r.plan)&&r.entrada===hoy&&!r.aplazada);
+  const checkoutHoy = reservas.filter(r=>!esDiaSol(r.plan)&&r.salida===hoy&&!r.aplazada);
+  const diasolHoy = reservas.filter(r=>esDiaSol(r.plan)&&r.entrada===hoy&&!r.aplazada);
+  const enCasa = reservas.filter(r=>{
+    if(esDiaSol(r.plan)||r.aplazada||r.estado==="salio") return false;
+    const fin = r.salida||r.entrada;
+    return r.entrada<=hoy && fin>=hoy;
+  });
+  const totalPersonas = enCasa.reduce((s,r)=>s+(r.personas||0),0);
+  const totalNinos2 = enCasa.reduce((s,r)=>s+(r.ninos2||0),0);
+  const totalNinos1 = enCasa.reduce((s,r)=>s+(r.ninos1||0),0);
 
-  document.getElementById("dash-fecha").textContent = new Date().toLocaleDateString("es-CO",{weekday:"long",day:"numeric",month:"long"});
+  document.getElementById("dash-fecha").textContent = new Date().toLocaleDateString("es-CO",{weekday:"long",day:"numeric",month:"long",timeZone:"America/Bogota"});
   document.getElementById("dash-hoy-total").textContent = enCasa.length;
+  document.getElementById("dash-adultos").textContent = totalPersonas;
+  document.getElementById("dash-ninos2").textContent = totalNinos2;
+  document.getElementById("dash-ninos1").textContent = totalNinos1;
   document.getElementById("dash-checkin").textContent = checkinHoy.length;
   document.getElementById("dash-checkout").textContent = checkoutHoy.length;
   document.getElementById("dash-diasol").textContent = diasolHoy.length;
