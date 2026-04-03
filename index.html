@@ -2118,8 +2118,8 @@ function generarVoucher(){
           <td>${r.ninos2||0}</td>
           <td>${r.ninos1||0}</td>
           ${!esSol?`<td>${r.dias||1}</td>`:""}
-          <td>8:30 am</td>
-          <td>${esSol?"6:00 pm":"12:00 pm"}</td>
+          <td>${esSol?"8:30 am":"3:00 pm"}</td>
+          <td>${esSol?"5:30 pm":"1:00 pm"}</td>
           <td>PARTICULAR</td>
         </tr>
       </tbody>
@@ -2691,18 +2691,24 @@ async function renderDisp(){
   const hoyStr=today();
   const reservas=_reservasCache;
   const dias=["Do","Lu","Ma","Mi","Ju","Vi","Sá"];
-  let html=`<table style="width:100%;border-collapse:collapse;min-width:800px;font-size:9px">`;
-  html+=`<thead><tr><th class="disp-head" style="width:50px">Fecha</th><th class="disp-head" style="width:28px">Día</th>`;
-  HABS.forEach(h=>html+=`<th class="disp-head">${h}<br><span style="font-size:8px;color:var(--text3)">${HAB_TIPO[h]}</span></th>`);
+
+  let html=`<table style="width:100%;border-collapse:collapse;min-width:900px;font-size:10px">`;
+  html+=`<thead><tr>
+    <th class="disp-head" style="width:46px;font-size:9px">Fecha</th>
+    <th class="disp-head" style="width:24px;font-size:9px">Día</th>`;
+  HABS.forEach(h=>html+=`<th class="disp-head" style="font-size:9px;padding:4px 2px">${h}<br><span style="font-size:7px;color:var(--text3)">${HAB_TIPO[h]}</span></th>`);
   html+=`</tr></thead><tbody>`;
+
   for(let d=1;d<=diasMes;d++){
     const ds=`${yr}-${String(mn).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
     const dow=new Date(yr,mn-1,d).getDay();
     const esHoy=ds===hoyStr;
-    const rowBg=esHoy?"background:rgba(201,168,76,0.08)":"";
-    html+=`<tr style="${rowBg}">`;
-    html+=`<td class="disp-cell" style="color:var(--text3);font-weight:500">${d}/${mn}</td>`;
-    html+=`<td class="disp-cell" style="color:var(--text3)">${dias[dow]}</td>`;
+    const esFinSemana=dow===0||dow===6;
+    let rowStyle=esHoy?"background:rgba(201,168,76,0.1)":esFinSemana?"background:rgba(255,255,255,0.02)":"";
+    html+=`<tr style="${rowStyle}">`;
+    html+=`<td class="disp-cell" style="color:${esHoy?"var(--gold)":"var(--text3)"};font-weight:${esHoy?"700":"500"};font-size:9px">${d}/${mn}</td>`;
+    html+=`<td class="disp-cell" style="color:${esHoy?"var(--gold)":"var(--text3)"};font-size:9px">${dias[dow]}</td>`;
+
     HABS.forEach(h=>{
       const ocup=reservas.find(r=>{
         if(String(r.hab)!==String(h))return false;
@@ -2712,11 +2718,18 @@ async function renderDisp(){
         return ds>=r.entrada&&ds<fin;
       });
       if(ocup){
-        html+=`<td class="disp-cell disp-ocup" onclick="verDetalleDisp(${ocup.id})" title="Clic para ver detalles" style="cursor:pointer">${ocup.nombre.split(" ")[0]}</td>`;
+        // Nombre limpio: solo primera palabra, sin números ni guiones
+        const nombreLimpio=ocup.nombre.split(" ")[0].replace(/[-\d]/g,"").substring(0,8);
+        const esEntrada=ds===ocup.entrada;
+        const esSalida=ds===ocup.salida;
+        const badge=esEntrada?'▶':esSalida?'◀':'';
+        html+=`<td class="disp-cell disp-ocup" onclick="verDetalleDisp(${ocup.id})" 
+          title="${ocup.nombre} · ${fmtD(ocup.entrada)} → ${fmtD(ocup.salida)}" 
+          style="cursor:pointer;font-size:9px;font-weight:600;letter-spacing:0">${badge}${nombreLimpio}</td>`;
       } else if(esHoy){
-        html+=`<td class="disp-cell disp-hoy">hoy</td>`;
+        html+=`<td class="disp-cell" style="background:rgba(201,168,76,0.06);color:rgba(201,168,76,0.4);font-size:9px">·</td>`;
       } else {
-        html+=`<td class="disp-cell disp-libre">libre</td>`;
+        html+=`<td class="disp-cell disp-libre" style="font-size:8px;opacity:0.5">·</td>`;
       }
     });
     html+=`</tr>`;
