@@ -3423,7 +3423,7 @@ async function guardarFechaTar(){
     closeModal("modal-fecha-tar");
     const val = document.getElementById("tar-mes").value;
     const [yr,mn] = val.split("-");
-    await cargarFechasTar(yr, mn);
+    await cargarFechasTar(yr, mn.padStart(2,"0"));
     renderCalTarifas();
     showAlert("alert-bar","Fecha guardada correctamente.","ok");
   } else {
