@@ -505,28 +505,9 @@ function irPaso3(){
   // Generar referencia única
   _referencia = 'MDS-' + Date.now();
 
-  // Crear widget Wompi oficial
+  // Guardar sesion y preparar datos para Wompi
   const abonoEnCentavos = Math.round(abono * 100);
-  const redirectUrl = window.location.origin + window.location.pathname + '?ref=' + _referencia;
   guardarSesion();
-  document.getElementById("wompi-container").innerHTML = `
-    <div style="display:flex;justify-content:center;margin-top:8px">
-      <script
-        src="https://checkout.wompi.co/widget.js"
-        data-render="button"
-        data-public-key="${WOMPI_PUB}"
-        data-currency="COP"
-        data-amount-in-cents="${abonoEnCentavos}"
-        data-reference="${_referencia}"
-        data-customer-data:email="${correo}"
-        data-customer-data:full-name="${nombre}"
-        data-customer-data:phone-number="${cel}"
-        data-customer-data:phone-number-prefix="+57"
-        data-redirect-url="${redirectUrl}">
-      <\/script>
-    </div>
-    <p style="text-align:center;font-size:12px;color:#8ABB8A;margin-top:10px">✓ Haz clic en el botón naranja de Wompi para continuar con el pago</p>`;
-
   irPaso(3);
 }
 
