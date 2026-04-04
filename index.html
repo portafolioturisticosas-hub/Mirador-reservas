@@ -3306,9 +3306,11 @@ function tipoTarifa(dateStr){
 async function cargarFechasTar(yr, mn){
   const desde = `${yr}-${mn}-01`;
   const hasta = `${yr}-${mn}-31`;
-  const {data} = await supa.from("fechas_disponibles").select("*").gte("fecha",desde).lte("fecha",hasta);
+  const {data, error} = await supa.from("fechas_disponibles").select("*").gte("fecha",desde).lte("fecha",hasta);
+  console.log("Fechas cargadas:", data, "Error:", error, "Desde:", desde, "Hasta:", hasta);
   _fechasTar = {};
   (data||[]).forEach(r=>{ _fechasTar[r.fecha] = r; });
+  console.log("_fechasTar:", _fechasTar);
 }
 
 async function renderCalTarifas(){
@@ -3340,7 +3342,7 @@ async function renderCalTarifas(){
     const tipo = tipoTarifa(ds);
     const base = TARIFAS_BASE[tipo];
     const tar = _fechasTar[ds];
-    const disp = tar ? tar.disponible : false;
+    const disp = tar ? tar.disponible : true;
     const esHoy = ds===hoyStr;
     const rowBg = esHoy?"background:rgba(201,168,76,0.05)":"";
     const tipoBadge = tipo==='festivo'?
@@ -3382,7 +3384,7 @@ function abrirEditarFecha(fecha){
   document.getElementById("mft-titulo").textContent = `Editar fecha: ${d}/${mn}/${yr}`;
   document.getElementById("mft-fecha").value = fecha;
   const tar = _fechasTar[fecha];
-  const disp = tar ? tar.disponible : false;
+  const disp = tar ? tar.disponible : true;
   document.getElementById("mft-disp").value = disp ? "true" : "false";
   document.getElementById("mft-estandar").value = tar?.precio_estandar||0;
   document.getElementById("mft-jacuzzi").value = tar?.precio_jacuzzi||0;
