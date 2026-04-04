@@ -666,12 +666,12 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
       <div class="modal" style="width:500px">
         <div class="modal-title" id="mft-titulo">Editar fecha</div>
         <input type="hidden" id="mft-fecha">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding:10px;background:var(--dark3);border-radius:8px">
-          <span style="font-size:13px;color:var(--text)">Disponible para reservas web</span>
-          <label style="position:relative;display:inline-block;width:44px;height:24px">
-            <input type="checkbox" id="mft-disp" style="opacity:0;width:0;height:0" onchange="toggleDispStyle()">
-            <span id="mft-toggle" style="position:absolute;cursor:pointer;inset:0;background:var(--red);border-radius:12px;transition:.3s"></span>
-          </label>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding:12px;background:var(--dark3);border-radius:8px">
+          <span style="font-size:13px;color:var(--text)">Estado para reservas web</span>
+          <select class="f" id="mft-disp" style="width:160px">
+            <option value="true">✅ Disponible</option>
+            <option value="false">🔴 Cerrada</option>
+          </select>
         </div>
         <div id="mft-precios-wrap">
           <div style="font-size:11px;color:var(--orange);font-weight:600;margin-bottom:10px;text-transform:uppercase">Precios para esta fecha (dejar en 0 usa tarifa base)</div>
@@ -3383,8 +3383,7 @@ function abrirEditarFecha(fecha){
   document.getElementById("mft-fecha").value = fecha;
   const tar = _fechasTar[fecha];
   const disp = tar ? tar.disponible : false;
-  document.getElementById("mft-disp").checked = disp;
-  document.getElementById("mft-toggle").style.background = disp?"var(--green)":"var(--red)";
+  document.getElementById("mft-disp").value = disp ? "true" : "false";
   document.getElementById("mft-estandar").value = tar?.precio_estandar||0;
   document.getElementById("mft-jacuzzi").value = tar?.precio_jacuzzi||0;
   document.getElementById("mft-multiple").value = tar?.precio_multiple||0;
@@ -3397,7 +3396,7 @@ function abrirEditarFecha(fecha){
 
 async function guardarFechaTar(){
   const fecha = document.getElementById("mft-fecha").value;
-  const disponible = document.getElementById("mft-disp").checked;
+  const disponible = document.getElementById("mft-disp").value === "true";
   const row = {
     fecha,
     disponible,
@@ -3409,16 +3408,27 @@ async function guardarFechaTar(){
     min_noches:      parseInt(document.getElementById("mft-minnoches").value)||1,
     notas:           document.getElementById("mft-notas").value.trim()||null
   };
-  // Upsert (insert o update si ya existe)
-  const {error} = await supa.from("fechas_disponibles").upsert(row, {onConflict:"fecha"});
+  console.log("Guardando fecha:", row);
+  // Intentar update primero, si no existe hacer insert
+  const existing = await supa.from("fechas_disponibles").select("id").eq("fecha", fecha).single();
+  let error;
+  if(existing.data){
+    const res = await supa.from("fechas_disponibles").update(row).eq("fecha", fecha);
+    error = res.error;
+  } else {
+    const res = await supa.from("fechas_disponibles").insert(row);
+    error = res.error;
+  }
   if(!error){
     closeModal("modal-fecha-tar");
     const val = document.getElementById("tar-mes").value;
     const [yr,mn] = val.split("-");
     await cargarFechasTar(yr, mn);
     renderCalTarifas();
+    showAlert("alert-bar","Fecha guardada correctamente.","ok");
   } else {
-    alert("Error al guardar: "+error.message);
+    alert("Error al guardar: " + error.message + " | Code: " + error.code);
+    console.error("Error Supabase:", error);
   }
 }
 
