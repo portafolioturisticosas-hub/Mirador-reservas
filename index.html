@@ -2097,15 +2097,14 @@ function generarVoucher(){
   if(!r) return;
   const esSol = esDiaSol(r.plan);
   const numReg = String(r.id).padStart(4,'0');
-  const fechaHoy = new Date().toLocaleDateString("es-CO",{day:"2-digit",month:"2-digit",year:"numeric"});
+  const fechaHoy = new Date().toLocaleDateString("es-CO",{day:"2-digit",month:"2-digit",year:"numeric",timeZone:"America/Bogota"});
 
   const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
   <title>Voucher Mirador del Sol</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:Arial,sans-serif;font-size:11px;color:#222;background:#fff;padding:20px}
+    body{font-family:Arial,sans-serif;font-size:11px;color:#222;background:#fff;padding:20px;max-width:800px;margin:0 auto}
     .header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;border-bottom:3px solid #e07820;padding-bottom:12px}
-    .logo-area{display:flex;flex-direction:column;gap:4px}
     .logo-title{font-size:22px;font-weight:900;color:#e07820;letter-spacing:1px}
     .logo-sub{font-size:10px;color:#888;letter-spacing:0.5px;text-transform:uppercase}
     .reg-box{text-align:right}
@@ -2114,47 +2113,42 @@ function generarVoucher(){
     .dates-row{display:flex;gap:8px;margin-bottom:14px}
     .date-box{flex:1;border:1px solid #ddd;border-radius:6px;padding:8px 10px;text-align:center}
     .date-box .label{font-size:9px;color:#888;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px}
-    .date-box .value{font-size:14px;font-weight:700;color:#222}
+    .date-box .value{font-size:13px;font-weight:700;color:#222}
+    .plan-badge{display:inline-block;background:#e07820;color:#fff;padding:4px 14px;border-radius:20px;font-size:11px;font-weight:700}
     .section{margin-bottom:12px}
     .section-title{font-size:9px;font-weight:700;color:#e07820;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;border-bottom:1px solid #f0d0b0;padding-bottom:3px}
     .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
     .info-item{background:#fafafa;border:1px solid #eee;border-radius:5px;padding:6px 10px}
     .info-item .label{font-size:9px;color:#888;text-transform:uppercase;letter-spacing:0.3px}
     .info-item .value{font-size:12px;font-weight:600;color:#222;margin-top:2px}
-    .ocupantes-table{width:100%;border-collapse:collapse;margin-top:6px}
-    .ocupantes-table th{background:#e07820;color:#fff;padding:6px 10px;font-size:10px;text-align:center;font-weight:600}
-    .ocupantes-table td{padding:8px 10px;border:1px solid #eee;text-align:center;font-size:13px;font-weight:700}
+    .ocu-table{width:100%;border-collapse:collapse;margin-top:6px}
+    .ocu-table th{background:#e07820;color:#fff;padding:6px 8px;font-size:9px;text-align:center;font-weight:600}
+    .ocu-table td{padding:8px;border:1px solid #eee;text-align:center;font-size:13px;font-weight:700}
     .pagos-row{display:flex;gap:8px;margin-top:6px}
     .pago-box{flex:1;border-radius:6px;padding:10px;text-align:center}
-    .pago-consig{background:#fff7f0;border:1px solid #f0d0b0}
-    .pago-rest{background:#fff0f0;border:1px solid #f0b0b0}
-    .pago-box .label{font-size:9px;color:#888;text-transform:uppercase;letter-spacing:0.5px}
-    .pago-box .value{font-size:16px;font-weight:900;margin-top:4px}
-    .pago-consig .value{color:#e07820}
-    .pago-rest .value{color:#c0392b}
-    .tipo-badge{display:inline-block;background:#e07820;color:#fff;padding:4px 14px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:0.5px}
-    .terminos{font-size:8.5px;color:#555;line-height:1.5;margin-top:14px;border-top:1px solid #ddd;padding-top:10px}
-    .terminos p{margin-bottom:5px}
-    .footer{margin-top:12px;text-align:center;font-size:9px;color:#aaa;letter-spacing:0.5px}
-    .highlight{color:#e07820;font-weight:700}
-    @media print{body{padding:10px}.no-print{display:none}}
+    .pago-box .plabel{font-size:9px;color:#888;text-transform:uppercase;letter-spacing:0.5px}
+    .pago-box .pval{font-size:15px;font-weight:900;margin-top:4px}
+    .normas-table{width:100%;border-collapse:collapse;margin-top:6px;font-size:8px}
+    .normas-table td{padding:5px 6px;border-bottom:1px solid #eee;vertical-align:top;line-height:1.4}
+    .normas-table .ntit{font-weight:700;color:#e07820;width:110px}
+    .aviso{background:#fffbea;border:1px solid #f0d870;border-radius:6px;padding:8px 10px;font-size:8px;margin-top:10px;line-height:1.5}
+    .footer{margin-top:10px;text-align:center;font-size:9px;color:#aaa}
+    @media print{.no-print{display:none}}
   </style>
 </head><body>
 
-  <!-- HEADER -->
   <div class="header">
-    <div class="logo-area">
+    <div>
       <div class="logo-title">MIRADOR DEL SOL</div>
-      <div class="logo-sub">Hostería · RNT 60444</div>
+      <div class="logo-sub">Hostería · Santa Fe de Antioquia · RNT 60444</div>
     </div>
     <div class="reg-box">
-      <div class="reg-label">Número de Registro</div>
+      <div class="reg-label">N° de Registro</div>
       <div class="reg-num">${numReg}</div>
-      <div style="font-size:10px;color:#888;margin-top:4px">Fecha registro: <strong>${fechaHoy}</strong></div>
+      <div style="font-size:10px;color:#888;margin-top:2px">Fecha: <strong>${fechaHoy}</strong></div>
     </div>
   </div>
 
-  <!-- FECHAS -->
   <div class="dates-row">
     <div class="date-box">
       <div class="label">Fecha de Ingreso</div>
@@ -2166,90 +2160,85 @@ function generarVoucher(){
     </div>
     <div class="date-box">
       <div class="label">Tipo de Plan</div>
-      <div class="value"><span class="tipo-badge">${esSol?"DÍA DE SOL":r.plan}</span></div>
+      <div class="value"><span class="plan-badge">${esSol?"DÍA DE SOL":r.plan}</span></div>
     </div>
     ${!esSol?`<div class="date-box">
-      <div class="label">Habitación</div>
-      <div class="value">${r.hab&&r.hab!=="NO"?r.hab:"—"}</div>
+      <div class="label">Noches</div>
+      <div class="value" style="font-size:18px">${r.dias||1}</div>
     </div>`:""}
   </div>
 
-  <!-- DATOS DEL TITULAR -->
   <div class="section">
     <div class="section-title">Datos del Titular</div>
     <div class="info-grid">
-      <div class="info-item"><div class="label">Nombre del Titular</div><div class="value">${r.nombre}</div></div>
-      <div class="info-item"><div class="label">Tipo y N° Documento</div><div class="value">CC ${r.identificacion||"—"}</div></div>
+      <div class="info-item"><div class="label">Nombre completo</div><div class="value">${r.nombre}</div></div>
+      <div class="info-item"><div class="label">Documento</div><div class="value">${r.identificacion||"—"}</div></div>
       <div class="info-item"><div class="label">Celular</div><div class="value">${r.celular||"—"}</div></div>
-      <div class="info-item"><div class="label">Email</div><div class="value">${r.correo||"—"}</div></div>
+      <div class="info-item"><div class="label">Correo</div><div class="value">${r.correo||"—"}</div></div>
     </div>
   </div>
 
-  <!-- OCUPANTES -->
   <div class="section">
     <div class="section-title">Ocupantes</div>
-    <table class="ocupantes-table">
-      <thead>
-        <tr>
-          <th>Adultos</th>
-          <th>Niños (5-9)</th>
-          <th>Bebés (0-4)</th>
-          ${!esSol?`<th>Noches</th>`:""}
-          <th>Check In</th>
-          <th>Check Out</th>
-          <th>Cliente</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>${r.personas||0}</td>
-          <td>${r.ninos2||0}</td>
-          <td>${r.ninos1||0}</td>
-          ${!esSol?`<td>${r.dias||1}</td>`:""}
-          <td>${esSol?"8:30 am":"3:00 pm"}</td>
-          <td>${esSol?"5:30 pm":"1:00 pm"}</td>
-          <td>PARTICULAR</td>
-        </tr>
-      </tbody>
+    <table class="ocu-table">
+      <thead><tr>
+        <th>Adultos</th><th>Niños 5-9</th><th>Bebés 0-4</th>
+        <th>Check In</th><th>Check Out</th>
+        ${!esSol?`<th>Tipo cliente</th>`:""}
+      </tr></thead>
+      <tbody><tr>
+        <td>${r.personas||0}</td>
+        <td>${r.ninos2||0}</td>
+        <td>${r.ninos1||0}</td>
+        <td>${esSol?"8:30 am":"3:00 pm"}</td>
+        <td>${esSol?"5:30 pm":"1:00 pm"}</td>
+        ${!esSol?`<td style="font-size:10px">PARTICULAR</td>`:""}
+      </tr></tbody>
     </table>
-    ${r.mascotas>0?`<div style="margin-top:6px;font-size:10px;color:#e07820">🐾 Mascotas: ${r.mascotas}</div>`:""}
+    ${r.mascotas>0?`<div style="margin-top:5px;font-size:10px;color:#e07820">🐾 Mascotas: ${r.mascotas}</div>`:""}
     ${r.decoracion&&r.decoracion!=="Sin decoración"?`<div style="margin-top:4px;font-size:10px;color:#e07820">🎉 Decoración: ${r.decoracion}</div>`:""}
+    ${r.obs?`<div style="margin-top:6px;padding:6px 8px;background:#fafafa;border-radius:4px;font-size:10px;color:#555"><strong>Nota:</strong> ${r.obs}</div>`:""}
   </div>
 
-  <!-- PAGOS -->
   <div class="section">
     <div class="section-title">Información de Pago</div>
     <div class="pagos-row">
-      <div class="pago-box pago-consig">
-        <div class="label">Valor Consignado</div>
-        <div class="value">$${(r.abono||0).toLocaleString("es-CO")}</div>
-        ${r.medio_abono?`<div style="font-size:9px;color:#888;margin-top:2px">${r.medio_abono}</div>`:""}
+      <div class="pago-box" style="background:#fff7f0;border:1px solid #f0d0b0">
+        <div class="plabel">Valor Consignado</div>
+        <div class="pval" style="color:#e07820">$${(r.abono||0).toLocaleString("es-CO")}</div>
+        ${r.medio_abono_inicial||r.medio_abono?`<div style="font-size:9px;color:#888;margin-top:2px">${r.medio_abono_inicial||r.medio_abono}</div>`:""}
       </div>
       <div class="pago-box" style="background:#f0fff0;border:1px solid #b0d0b0">
-        <div class="label">Total Reserva</div>
-        <div class="value" style="color:#27ae60">$${(r.total||0).toLocaleString("es-CO")}</div>
+        <div class="plabel">Total Reserva</div>
+        <div class="pval" style="color:#27ae60">$${(r.total||0).toLocaleString("es-CO")}</div>
       </div>
-      <div class="pago-box pago-rest">
-        <div class="label">Valor Restante</div>
-        <div class="value">$${(r.deber||0).toLocaleString("es-CO")}</div>
+      <div class="pago-box" style="background:#fff0f0;border:1px solid #f0b0b0">
+        <div class="plabel">Valor Restante</div>
+        <div class="pval" style="color:#c0392b">$${(r.deber||0).toLocaleString("es-CO")}</div>
         ${r.medio_restante?`<div style="font-size:9px;color:#888;margin-top:2px">${r.medio_restante}</div>`:""}
       </div>
     </div>
   </div>
 
-  <!-- TERMINOS -->
-  <div class="terminos">
-    <p><strong>LA HOSTERIA MIRADOR DEL SOL SE RESERVA EL DERECHO DE ADMISIÓN</strong></p>
-    <p>Se exonera la Hostería de toda responsabilidad en caso de pérdida de objetos de valor como joyas, cámara, equipos, dinero, etc. Todos estos objetos estarán bajo el único riesgo del huésped. Igualmente, no nos hacemos responsables por daños en los vehículos dejados en el parqueadero; ni por la pérdida de objetos dejados en los mismos.</p>
-    <p>Le recordamos que la resolución 1956 del 30 de mayo de 2008 prohíbe fumar en los espacios cerrados. Si usted fuma en una habitación, áreas sociales o pasillos, se le realizará un cargo adicional por valor de $150.000.</p>
-    <p>En la Hostería está permitido el ingreso de mascotas, estas no deben estar en la zona del restaurante ni de la piscina, tampoco podrán dormir sobre las camas ni usar la lencería de la habitación. En caso de incumplimiento se realizará un cobro adicional por valor de $150.000.</p>
-    <p>Cumplimos con las disposiciones de la Ley 679 del 3 de agosto de 2001 expedida por El Congreso de la República. RNT 60444</p>
-    <p><strong>Podrá aplazar su reserva con mínimo 72 horas de anticipación</strong>, tendrá 2 meses para retomarla y no se hace devolución del dinero por ningún motivo. En caso de no presentarse ni aplazar la reserva, pierde la totalidad del dinero consignado.</p>
-    <p>ESTÁ PROHIBIDO EL INGRESO A LAS HABITACIONES DE PERSONAS QUE NO ESTÉN REGISTRADAS. FAVOR TENER LA MÚSICA CON VOLUMEN BAJO Y MÁXIMO HASTA LAS 12 DE LA NOCHE.</p>
-    ${r.obs?`<p><strong>Nota:</strong> ${r.obs}</p>`:""}
+  <div class="section">
+    <div class="section-title">Normas Generales y Recomendaciones</div>
+    <table class="normas-table">
+      <tr><td class="ntit">🍻 Bebidas y Licor</td><td>Se prohíbe el ingreso de bebidas, alimentos y licores al establecimiento y su consumo dentro de las piscinas. El consumo de licor debe ser moderado y responsable. <strong>NO SE PERMITE EL CONSUMO DE LICOR A MENORES DE EDAD.</strong></td></tr>
+      <tr><td class="ntit">🛏 Habitaciones</td><td>El mal uso de la habitación genera cargos adicionales. Si al Check-Out se reporta lencería (sábanas, toallas, colchas) o mobiliario dañado con sangre, tinte, tinta, pintura o vino, se cobrará lavandería o reposición según el daño. Daños en equipos eléctricos, baños, vidrieras o jacuzzi son responsabilidad del cliente.</td></tr>
+      <tr><td class="ntit">🔊 Sonido y Bar</td><td>Lun-Vie: 9:00 am - 10:00 pm. Fines de semana: hasta las 2:00 am. Sin sobrepasar los decibeles del Código de Policía. <strong>No se permite ingreso de parlantes externos.</strong></td></tr>
+      <tr><td class="ntit">📝 Registro</td><td>Obligatorio el registro con documento de identidad. Menores de edad deben estar acompañados de uno de los padres o acudiente.</td></tr>
+      <tr><td class="ntit">🍽 Alimentación</td><td>Servicio tipo buffet. Desayuno: 8:30-9:30 am | Almuerzo: 12:30-2:00 pm | Cena: 7:00-8:00 pm.</td></tr>
+      <tr><td class="ntit">🏊 Piscinas</td><td>2 piscinas de 8:00 am a 7:00 pm. 1 piscina hasta 1:00 am. Obligatorio ropa de lycra y ducha previa. Prohibido consumir alimentos y bebidas dentro. Niños siempre acompañados de adulto responsable.</td></tr>
+      <tr><td class="ntit">🐾 Mascotas</td><td>Valor adicional al plan. El dueño debe recoger sus necesidades. Prohibido en zonas húmedas. Deben usar collar y no subir a las camas. Daños en lencería tienen costo a cargo del dueño.</td></tr>
+      <tr><td class="ntit">💼 Objetos de valor</td><td>Son responsabilidad del huésped. Verificar al entregar la habitación y en zonas externas. La hostería no se hace responsable por pérdidas.</td></tr>
+    </table>
   </div>
 
-  <div class="footer">
+  <div class="aviso">
+    <strong>POLÍTICA DE APLAZAMIENTO:</strong> Podrá aplazar su reserva con mínimo 72 horas de anticipación y tendrá 2 meses para retomarla. No se hace devolución del dinero por ningún motivo. Sin presentarse ni aplazar, pierde la totalidad del dinero consignado. Cumplimos la Ley 679/2001. RNT 60444
+  </div>
+
+  <div class="footer" style="margin-top:12px">
     Hostería Mirador del Sol · Generado el ${fechaHoy} · Vendedor: ${r.vendedor||"—"}
   </div>
 
