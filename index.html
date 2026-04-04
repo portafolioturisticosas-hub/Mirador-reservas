@@ -202,6 +202,7 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
       <div class="nav-item" onclick="showPage('resumen')" id="nav-resumen"><span class="icon">◈</span> Resumen</div>
       <div class="nav-item" onclick="showPage('bar')" id="nav-bar"><span class="icon">◐</span> Bar & Rest.</div>
       <div class="nav-item" onclick="showPage('compras')" id="nav-compras"><span class="icon">◉</span> Compras</div>
+      <div class="nav-item" onclick="showPage('clientes')" id="nav-clientes"><span class="icon">👥</span> Clientes</div>
       <div class="nav-item" onclick="showPage('usuarios')" id="nav-usuarios" style="display:none"><span class="icon">◉</span> Usuarios</div>
     </nav>
     <div class="sidebar-footer">
@@ -869,6 +870,39 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
       </div>
     </div>
 
+    <!-- CLIENTES -->
+    <div class="page" id="page-clientes">
+      <div class="page-title">Base de Datos de Clientes</div>
+      <div class="page-sub">Titulares y acompañantes registrados en el sistema</div>
+      <div class="card">
+        <div class="flex-between mb">
+          <span style="font-size:12px;color:var(--text3)" id="count-clientes">0 clientes</span>
+          <div style="display:flex;gap:8px">
+            <input class="f" id="busq-clientes" type="text" placeholder="Buscar por nombre, doc o celular..." oninput="renderClientes()" style="width:260px">
+            <button class="btn btn-excel btn-sm" onclick="exportarClientesExcel()">↓ Excel</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Nombre</th>
+                <th>Tipo doc</th>
+                <th>Documento</th>
+                <th>Celular</th>
+                <th>Correo</th>
+                <th>Rol</th>
+                <th>Reserva</th>
+                <th>Fecha</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-clientes"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <!-- USUARIOS -->
     <div class="page" id="page-usuarios">
       <div class="page-title">Usuarios</div>
@@ -1142,7 +1176,7 @@ const HABS=["2","3","4","5","6","12","7","8","9","10","11","13","14","15","16","
 const HAB_TIPO={"2":"Múl","3":"Múl","4":"Múl","5":"Múl","6":"Múl","12":"Múl","7":"Est","8":"Est","9":"Est","10":"Est","11":"Est","13":"Jac","14":"Jac","15":"Jac","16":"Jac","17":"Jac"};
 const MESES=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 const ROLES={admin:"Administrador",recepcionista:"Recepcionista",vendedor:"Vendedor",consulta:"Solo consulta"};
-const PERMS={admin:["nueva","reservas","calendario","diasol","aplazadas","tarifas","resumen","bar","compras","usuarios"],recepcionista:["nueva","reservas","calendario","diasol","aplazadas","resumen","bar","compras"],vendedor:["nueva","reservas","diasol","bar"],consulta:["reservas","calendario","diasol","resumen","bar"]};
+const PERMS={admin:["nueva","reservas","calendario","diasol","aplazadas","tarifas","resumen","bar","compras","clientes","usuarios"],recepcionista:["nueva","reservas","calendario","diasol","aplazadas","resumen","bar","compras","clientes"],vendedor:["nueva","reservas","diasol","bar"],consulta:["reservas","calendario","diasol","resumen","bar"]};
 const esDiaSol=p=>p&&p.startsWith("DIA DE SOL");
 
 let currentUser=null,editIdx=null;
@@ -1226,6 +1260,7 @@ function showPage(p){
   if(p==="resumen")renderResumen();
   if(p==="usuarios")renderUsuarios();
   if(p==="bar"){const m=document.getElementById("bar-mes");if(!m.value)m.value=today().slice(0,7);const bf=document.getElementById('bar-fecha');if(!bf.value)bf.value=today();renderBar();renderResumenHoy();}
+  if(p==="clientes"){renderClientes();}
   if(p==="compras"){const m=document.getElementById("comp-mes-fil");if(!m.value)m.value=today().slice(0,7);const cf=document.getElementById('comp-fecha');if(!cf.value)cf.value=today();renderCompras();renderComprasMetrics();cargarCatsCompra();renderCajaDelDia();}
 }
 
@@ -1988,7 +2023,29 @@ function abrirEditar(id){
       <div class="metric-label">Resumen financiero</div>
       <div class="metric-val" style="color:var(--orange)">${fmt(r.total||0)}</div>
       <div class="metric-sub">Descuento: ${r.descPct||0}% (${fmt(r.descValor||0)}) · Abono: ${fmt(r.abono||0)} ${r.medio_abono?'('+r.medio_abono+')':''} · Restante: ${fmt(r.deber||0)} ${r.medio_restante?'· Pagado con '+r.medio_restante:''} · Por: ${r.creadoPor||"—"}</div>
-    </div>`;
+    </div>
+    ${(()=>{
+      try{
+        const acomp = r.acompanantes ? (typeof r.acompanantes==='string'?JSON.parse(r.acompanantes):r.acompanantes) : [];
+        if(!acomp||!acomp.length) return '';
+        return `<div style="margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.07)">
+          <div style="font-size:11px;color:var(--orange);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">👥 Acompañantes (${acomp.length})</div>
+          <div class="table-wrap"><table style="font-size:11px">
+            <thead><tr>
+              <th>#</th><th>Nombre</th><th>Tipo doc</th><th>Documento</th><th>Celular</th><th>Correo</th>
+            </tr></thead>
+            <tbody>${acomp.map((a,i)=>`<tr>
+              <td style="color:var(--text3)">${i+1}</td>
+              <td style="color:var(--text);font-weight:500">${a.nombre||'—'}</td>
+              <td>${a.tipo_doc||'—'}</td>
+              <td>${a.documento||'—'}</td>
+              <td>${a.celular||'—'}</td>
+              <td style="color:var(--text3)">${a.correo||'—'}</td>
+            </tr>`).join('')}</tbody>
+          </table></div>
+        </div>`;
+      }catch(e){return '';}
+    })()}`;
   document.getElementById("modal-edit").classList.add("show");
   }catch(e){alert("Error al abrir reserva: "+e.message);console.error(e);}
 }
@@ -2219,6 +2276,34 @@ function generarVoucher(){
       </div>
     </div>
   </div>
+
+  ${(()=>{
+    try{
+      const acomp = r.acompanantes ? (typeof r.acompanantes==='string'?JSON.parse(r.acompanantes):r.acompanantes) : [];
+      if(!acomp||!acomp.length) return '';
+      return `<div class="section">
+        <div class="section-title">Acompañantes (${acomp.length})</div>
+        <table style="width:100%;border-collapse:collapse;font-size:9px;margin-top:4px">
+          <thead><tr style="background:#e07820;color:#fff">
+            <th style="padding:5px 8px">#</th>
+            <th style="padding:5px 8px">Nombre</th>
+            <th style="padding:5px 8px">Tipo Doc</th>
+            <th style="padding:5px 8px">Documento</th>
+            <th style="padding:5px 8px">Celular</th>
+            <th style="padding:5px 8px">Correo</th>
+          </tr></thead>
+          <tbody>${acomp.map((a,i)=>`<tr style="background:${i%2===0?'#fafafa':'#fff'}">
+            <td style="padding:4px 8px;border:1px solid #eee;text-align:center">${i+1}</td>
+            <td style="padding:4px 8px;border:1px solid #eee;font-weight:600">${a.nombre||'—'}</td>
+            <td style="padding:4px 8px;border:1px solid #eee;text-align:center">${a.tipo_doc||'—'}</td>
+            <td style="padding:4px 8px;border:1px solid #eee">${a.documento||'—'}</td>
+            <td style="padding:4px 8px;border:1px solid #eee">${a.celular||'—'}</td>
+            <td style="padding:4px 8px;border:1px solid #eee;color:#888">${a.correo||'—'}</td>
+          </tr>`).join('')}</tbody>
+        </table>
+      </div>`;
+    }catch(e){return '';}
+  })()}
 
   <div class="section">
     <div class="section-title">Normas Generales y Recomendaciones</div>
@@ -3257,6 +3342,89 @@ async function exportarComprasExcel(){
   const csv=headers.join(",")+SEP+rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(",")).join(SEP);
   const blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8"});
   const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="compras_"+mes+".csv";a.click();
+}
+
+// ---- CLIENTES ----
+async function renderClientes(){
+  if(!_reservasCache.length) _reservasCache = await sbGet("reservas");
+  const q = (document.getElementById("busq-clientes").value||"").toLowerCase();
+  const clientes = [];
+
+  _reservasCache.forEach(r=>{
+    // Titular
+    clientes.push({
+      nombre: r.nombre||"—",
+      tipo_doc: r.tipodoc||"CC",
+      documento: r.identificacion||"—",
+      celular: r.celular||"—",
+      correo: r.correo||"—",
+      rol: "Titular",
+      reserva_id: r.id,
+      fecha: r.fecha||r.entrada||"—"
+    });
+    // Acompañantes
+    try{
+      const acomp = r.acompanantes ? (typeof r.acompanantes==='string'?JSON.parse(r.acompanantes):r.acompanantes) : [];
+      (acomp||[]).forEach(a=>{
+        clientes.push({
+          nombre: a.nombre||"—",
+          tipo_doc: a.tipo_doc||"—",
+          documento: a.documento||"—",
+          celular: a.celular||"—",
+          correo: a.correo||"—",
+          rol: "Acompañante",
+          reserva_id: r.id,
+          fecha: r.fecha||r.entrada||"—"
+        });
+      });
+    }catch(e){}
+  });
+
+  const filtered = clientes.filter(c=>{
+    if(!q) return true;
+    return (c.nombre||"").toLowerCase().includes(q)||
+           (c.documento||"").includes(q)||
+           (c.celular||"").includes(q)||
+           (c.correo||"").toLowerCase().includes(q);
+  });
+
+  document.getElementById("count-clientes").textContent = filtered.length+" clientes";
+  const tb = document.getElementById("tbody-clientes");
+  if(!filtered.length){
+    tb.innerHTML="<tr><td colspan='9' style='text-align:center;color:var(--text3);padding:2rem'>Sin resultados</td></tr>";
+    return;
+  }
+  tb.innerHTML = filtered.map((c,i)=>`<tr>
+    <td style="color:var(--text3)">${i+1}</td>
+    <td style="font-weight:500;color:var(--text)">${c.nombre}</td>
+    <td style="color:var(--text3)">${c.tipo_doc}</td>
+    <td>${c.documento}</td>
+    <td>${c.celular}</td>
+    <td style="color:var(--text3)">${c.correo}</td>
+    <td><span class="badge ${c.rol==='Titular'?'badge-ok':'badge-view'}">${c.rol}</span></td>
+    <td style="color:var(--text3)">#${String(c.reserva_id).padStart(4,'0')}</td>
+    <td style="color:var(--text3)">${fmtD(c.fecha)}</td>
+  </tr>`).join("");
+}
+
+async function exportarClientesExcel(){
+  if(!_reservasCache.length) _reservasCache = await sbGet("reservas");
+  const clientes = [];
+  _reservasCache.forEach(r=>{
+    clientes.push({nombre:r.nombre||"",tipo_doc:r.tipodoc||"CC",documento:r.identificacion||"",celular:r.celular||"",correo:r.correo||"",rol:"Titular",reserva:"#"+String(r.id).padStart(4,'0'),fecha:fmtD(r.fecha||r.entrada||"")});
+    try{
+      const acomp = r.acompanantes?(typeof r.acompanantes==='string'?JSON.parse(r.acompanantes):r.acompanantes):[];
+      (acomp||[]).forEach(a=>{
+        clientes.push({nombre:a.nombre||"",tipo_doc:a.tipo_doc||"",documento:a.documento||"",celular:a.celular||"",correo:a.correo||"",rol:"Acompañante",reserva:"#"+String(r.id).padStart(4,'0'),fecha:fmtD(r.fecha||r.entrada||"")});
+      });
+    }catch(e){}
+  });
+  const headers=["Nombre","Tipo Doc","Documento","Celular","Correo","Rol","Reserva","Fecha"];
+  const rows=clientes.map(c=>[c.nombre,c.tipo_doc,c.documento,c.celular,c.correo,c.rol,c.reserva,c.fecha]);
+  const SEP="\n";
+  const csv=headers.join(",")+SEP+rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(",")).join(SEP);
+  const blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="clientes_mirador.csv";a.click();
 }
 
 // ---- TARIFAS & DISPONIBILIDAD ----
