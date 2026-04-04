@@ -706,7 +706,7 @@ function getPrecioFecha(ds, plan){
 }
 
 function getFechaDisponible(ds){
-  return _fechasDisp[ds] ? _fechasDisp[ds].disponible : false;
+  return _fechasDisp[ds] ? _fechasDisp[ds].disponible : true;
 }
 
 function calcPrecioRango(entrada, salida, plan){
