@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reservar — Hostería Mirador del Sol</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --naranja:#E07820;--naranja-cl:#FFF3E8;--dorado:#C9A84C;
+  --oscuro:#1A1A18;--superficie:#2A2A24;--borde:rgba(201,168,76,0.2);
+  --texto:#F5F0E8;--texto2:#B8B0A0;--texto3:#7A7468;
+  --verde:#5A8A5A;--rojo:#8A3A3A;--radio:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'DM Sans',sans-serif;background:var(--oscuro);color:var(--texto);
+  min-height:100vh;
+  background-image:
+    radial-gradient(ellipse at 0% 0%,rgba(224,120,32,0.12) 0%,transparent 50%),
+    radial-gradient(ellipse at 100% 100%,rgba(201,168,76,0.08) 0%,transparent 50%);
+}
+
+/* HEADER */
+.header{
+  text-align:center;padding:48px 20px 32px;
+  border-bottom:1px solid var(--borde);
+  position:relative;overflow:hidden;
+}
+.header::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% 0%,rgba(201,168,76,0.08) 0%,transparent 70%);
+  pointer-events:none;
+}
+.logo-wrap{display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:12px}
+.logo-img{width:70px;height:70px;object-fit:contain}
+.logo-text{text-align:left}
+.logo-title{font-family:'Playfair Display',serif;font-size:28px;color:var(--dorado);line-height:1.1}
+.logo-sub{font-size:11px;color:var(--texto3);letter-spacing:2px;text-transform:uppercase;margin-top:3px}
+.header-tag{
+  display:inline-block;background:rgba(224,120,32,0.15);border:1px solid rgba(224,120,32,0.3);
+  color:var(--naranja);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;
+  padding:5px 14px;border-radius:20px;margin-top:10px
+}
+
+/* MAIN */
+.main{max-width:780px;margin:0 auto;padding:40px 20px 80px}
+
+/* STEPS */
+.steps{display:flex;gap:0;margin-bottom:36px;border-radius:var(--radio);overflow:hidden;border:1px solid var(--borde)}
+.step{flex:1;padding:14px 10px;text-align:center;font-size:11px;letter-spacing:0.5px;text-transform:uppercase;color:var(--texto3);background:var(--superficie);transition:all .3s;position:relative}
+.step.active{background:var(--naranja);color:#fff;font-weight:600}
+.step.done{background:rgba(90,138,90,0.2);color:#8ABB8A}
+.step-num{display:block;font-size:18px;font-weight:700;margin-bottom:2px}
+
+/* CARDS */
+.card{background:var(--superficie);border:1px solid var(--borde);border-radius:var(--radio);padding:28px;margin-bottom:20px}
+.card-title{font-family:'Playfair Display',serif;font-size:18px;color:var(--dorado);margin-bottom:20px;display:flex;align-items:center;gap:10px}
+.card-title span{font-size:20px}
+
+/* TIPO PLAN TABS */
+.tipo-tabs{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px}
+.tipo-tab{
+  border:2px solid var(--borde);border-radius:var(--radio);padding:20px 16px;
+  cursor:pointer;transition:all .2s;text-align:center;background:transparent
+}
+.tipo-tab:hover{border-color:rgba(224,120,32,0.5);background:rgba(224,120,32,0.05)}
+.tipo-tab.active{border-color:var(--naranja);background:rgba(224,120,32,0.12)}
+.tipo-tab .icon{font-size:28px;margin-bottom:8px}
+.tipo-tab .label{font-size:14px;font-weight:600;color:var(--texto);margin-bottom:4px}
+.tipo-tab .desc{font-size:11px;color:var(--texto3)}
+
+/* PLANES SOL */
+.planes-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
+.plan-card{
+  border:2px solid var(--borde);border-radius:var(--radio);padding:16px;
+  cursor:pointer;transition:all .2s;text-align:center
+}
+.plan-card:hover{border-color:rgba(224,120,32,0.5)}
+.plan-card.active{border-color:var(--naranja);background:rgba(224,120,32,0.12)}
+.plan-card .plan-nombre{font-weight:700;color:var(--naranja);font-size:15px;margin-bottom:4px}
+.plan-card .plan-desc{font-size:11px;color:var(--texto3)}
+
+/* HABITACIONES */
+.habs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:8px;margin-top:10px}
+.hab-btn{
+  border:1px solid var(--borde);border-radius:8px;padding:10px 6px;
+  text-align:center;cursor:pointer;transition:all .2s;font-size:12px
+}
+.hab-btn:hover:not(.ocupada){border-color:rgba(224,120,32,0.5);background:rgba(224,120,32,0.08)}
+.hab-btn.active{border-color:var(--naranja);background:rgba(224,120,32,0.2);color:var(--naranja);font-weight:600}
+.hab-btn.ocupada{opacity:0.35;cursor:not-allowed;text-decoration:line-through}
+.hab-num{font-size:16px;font-weight:700;color:var(--texto)}
+.hab-tipo{font-size:9px;color:var(--texto3);margin-top:2px;text-transform:uppercase;letter-spacing:0.5px}
+
+/* FORM */
+label.fl{display:block;font-size:10px;color:var(--texto3);margin-bottom:5px;margin-top:16px;letter-spacing:0.8px;text-transform:uppercase}
+label.fl:first-child{margin-top:0}
+input.f,select.f,textarea.f{
+  width:100%;padding:11px 14px;background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.1);border-radius:8px;
+  color:var(--texto);font-family:'DM Sans',sans-serif;font-size:14px;transition:border-color .2s
+}
+input.f:focus,select.f:focus,textarea.f:focus{outline:none;border-color:rgba(224,120,32,0.5)}
+select.f option{background:#2A2A24}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+
+/* RESUMEN */
+.resumen-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.06);font-size:13px}
+.resumen-row:last-child{border-bottom:none}
+.resumen-total{display:flex;justify-content:space-between;padding:12px 0;font-size:16px;font-weight:600;color:var(--naranja);border-top:1px solid rgba(224,120,32,0.3);margin-top:6px}
+
+/* BOTONES */
+.btn-primary{
+  width:100%;padding:16px;border:none;border-radius:var(--radio);
+  background:var(--naranja);color:#fff;font-family:'DM Sans',sans-serif;
+  font-size:15px;font-weight:600;cursor:pointer;transition:all .2s;
+  display:flex;align-items:center;justify-content:center;gap:10px;margin-top:20px
+}
+.btn-primary:hover{opacity:0.9;transform:translateY(-1px)}
+.btn-primary:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+.btn-sec{
+  width:100%;padding:12px;border:1px solid var(--borde);border-radius:var(--radio);
+  background:transparent;color:var(--texto2);font-family:'DM Sans',sans-serif;
+  font-size:14px;cursor:pointer;transition:all .2s;margin-top:10px
+}
+.btn-sec:hover{background:rgba(255,255,255,0.05)}
+
+/* ALERT */
+.alert{padding:12px 16px;border-radius:8px;font-size:13px;margin-bottom:16px;display:none}
+.alert.show{display:block}
+.alert-err{background:rgba(138,58,58,0.2);color:#E07070;border:1px solid rgba(138,58,58,0.3)}
+.alert-ok{background:rgba(90,138,90,0.2);color:#8ABB8A;border:1px solid rgba(90,138,90,0.3)}
+
+/* SUCCESS */
+.success-wrap{text-align:center;padding:48px 20px}
+.success-icon{font-size:64px;margin-bottom:16px}
+.success-title{font-family:'Playfair Display',serif;font-size:28px;color:var(--dorado);margin-bottom:10px}
+.success-sub{color:var(--texto2);font-size:15px;line-height:1.6}
+
+/* WOMPI */
+#wompi-container{margin-top:16px}
+
+/* INFO CHIPS */
+.info-chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.chip{background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.2);border-radius:20px;padding:4px 12px;font-size:11px;color:var(--dorado)}
+
+@media(max-width:600px){
+  .grid2,.grid3{grid-template-columns:1fr}
+  .planes-grid{grid-template-columns:1fr}
+  .tipo-tabs{grid-template-columns:1fr}
+  .habs-grid{grid-template-columns:repeat(auto-fill,minmax(65px,1fr))}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo-wrap">
+    <div class="logo-text">
+      <div class="logo-title">Mirador del Sol</div>
+      <div class="logo-sub">Hostería · Santa Fe de Antioquia</div>
+    </div>
+  </div>
+  <div class="header-tag">Reservas en línea</div>
+</div>
+
+<div class="main">
+
+  <!-- STEPS -->
+  <div class="steps">
+    <div class="step active" id="step1"><span class="step-num">1</span>Tu reserva</div>
+    <div class="step" id="step2"><span class="step-num">2</span>Tus datos</div>
+    <div class="step" id="step3"><span class="step-num">3</span>Pago</div>
+  </div>
+
+  <div id="alert-main" class="alert"></div>
+
+  <!-- PASO 1: TIPO Y PLAN -->
+  <div id="pane-1">
+    <div class="card">
+      <div class="card-title"><span>🏷</span> ¿Qué tipo de reserva?</div>
+      <div class="tipo-tabs">
+        <div class="tipo-tab active" id="tab-hosp" onclick="selTipo('hospedaje')">
+          <div class="icon">🏠</div>
+          <div class="label">Hospedaje</div>
+          <div class="desc">Estándar · Múltiple · Jacuzzi</div>
+        </div>
+        <div class="tipo-tab" id="tab-sol" onclick="selTipo('diasol')">
+          <div class="icon">☀️</div>
+          <div class="label">Día de Sol</div>
+          <div class="desc">Plan A · Plan B · Plan C</div>
+        </div>
+      </div>
+
+      <!-- HOSPEDAJE -->
+      <div id="sec-hospedaje">
+        <div class="grid2">
+          <div>
+            <label class="fl">Fecha de entrada *</label>
+            <input class="f" type="date" id="h-entrada" onchange="verificarDisp()">
+          </div>
+          <div>
+            <label class="fl">Fecha de salida *</label>
+            <input class="f" type="date" id="h-salida" onchange="verificarDisp()">
+          </div>
+        </div>
+        <label class="fl">Plan de habitación *</label>
+        <select class="f" id="h-plan" onchange="verificarDisp()">
+          <option value="">— Seleccionar —</option>
+          <option value="ESTANDAR">Estándar</option>
+          <option value="MULTIPLE">Múltiple</option>
+          <option value="JACUZZI">Jacuzzi</option>
+        </select>
+        <label class="fl">Habitación disponible *</label>
+        <div class="habs-grid" id="habs-grid">
+          <div style="color:var(--texto3);font-size:12px;padding:10px">Selecciona fechas y plan primero</div>
+        </div>
+        <div id="h-hab-sel" style="display:none;margin-top:10px;font-size:12px;color:#8ABB8A"></div>
+        <div class="grid3" style="margin-top:0">
+          <div><label class="fl">Adultos *</label><input class="f" type="number" id="h-personas" min="1" value="1" placeholder="1" onchange="calcResumen()"></div>
+          <div><label class="fl">Niños 5-9</label><input class="f" type="number" id="h-ninos2" min="0" value="0" placeholder="0"></div>
+          <div><label class="fl">Bebés 0-4</label><input class="f" type="number" id="h-ninos1" min="0" value="0" placeholder="0"></div>
+        </div>
+      </div>
+
+      <!-- DIA DE SOL -->
+      <div id="sec-diasol" style="display:none">
+        <label class="fl" style="margin-top:0">Selecciona el plan *</label>
+        <div class="planes-grid">
+          <div class="plan-card" id="pc-A" onclick="selPlan('DIA DE SOL A')">
+            <div class="plan-nombre">Plan A</div>
+            <div class="plan-desc">Día de Sol Plan A</div>
+          </div>
+          <div class="plan-card" id="pc-B" onclick="selPlan('DIA DE SOL B')">
+            <div class="plan-nombre">Plan B</div>
+            <div class="plan-desc">Día de Sol Plan B</div>
+          </div>
+          <div class="plan-card" id="pc-C" onclick="selPlan('DIA DE SOL C')">
+            <div class="plan-nombre">Plan C</div>
+            <div class="plan-desc">Día de Sol Plan C</div>
+          </div>
+        </div>
+        <input type="hidden" id="sol-plan">
+        <label class="fl">Fecha *</label>
+        <input class="f" type="date" id="sol-fecha">
+        <div class="grid3" style="margin-top:0">
+          <div><label class="fl">Adultos *</label><input class="f" type="number" id="sol-personas" min="1" value="1" placeholder="1" onchange="calcResumen()"></div>
+          <div><label class="fl">Niños 5-9</label><input class="f" type="number" id="sol-ninos2" min="0" value="0" placeholder="0"></div>
+          <div><label class="fl">Bebés 0-4</label><input class="f" type="number" id="sol-ninos1" min="0" value="0" placeholder="0"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VALOR -->
+    <div class="card">
+      <div class="card-title"><span>💰</span> Valor de la reserva</div>
+      <div class="grid2">
+        <div>
+          <label class="fl">Valor total ($) *</label>
+          <input class="f" type="number" id="r-total" min="0" placeholder="0" onchange="calcResumen()">
+        </div>
+        <div>
+          <label class="fl">Abono a pagar ahora ($) *</label>
+          <input class="f" type="number" id="r-abono" min="0" placeholder="0" onchange="calcResumen()">
+        </div>
+      </div>
+      <div id="resumen-val" style="margin-top:14px;display:none">
+        <div class="resumen-row"><span style="color:var(--texto3)">Total reserva</span><span id="rv-total">$0</span></div>
+        <div class="resumen-row"><span style="color:var(--texto3)">Abono a pagar</span><span id="rv-abono" style="color:var(--naranja)">$0</span></div>
+        <div class="resumen-row"><span style="color:var(--texto3)">Restante al llegar</span><span id="rv-resta">$0</span></div>
+      </div>
+      <div class="info-chips" style="margin-top:14px">
+        <span class="chip">✓ Pago seguro con Wompi</span>
+        <span class="chip">✓ Confirmación inmediata</span>
+        <span class="chip">✓ Voucher por correo</span>
+      </div>
+    </div>
+
+    <button class="btn-primary" onclick="irPaso2()">Continuar con mis datos →</button>
+  </div>
+
+  <!-- PASO 2: DATOS CLIENTE -->
+  <div id="pane-2" style="display:none">
+    <div class="card">
+      <div class="card-title"><span>👤</span> Datos del titular</div>
+      <label class="fl" style="margin-top:0">Nombre completo *</label>
+      <input class="f" type="text" id="c-nombre" placeholder="JUAN PABLO GARCIA">
+      <div class="grid2">
+        <div>
+          <label class="fl">Tipo de documento</label>
+          <select class="f" id="c-tipodoc">
+            <option value="CC">Cédula de Ciudadanía</option>
+            <option value="TI">Tarjeta de Identidad</option>
+            <option value="PA">Pasaporte</option>
+          </select>
+        </div>
+        <div>
+          <label class="fl">N° Documento *</label>
+          <input class="f" type="text" id="c-doc" placeholder="123456789">
+        </div>
+      </div>
+      <div class="grid2">
+        <div>
+          <label class="fl">Celular *</label>
+          <input class="f" type="tel" id="c-cel" placeholder="3101234567">
+        </div>
+        <div>
+          <label class="fl">Correo electrónico *</label>
+          <input class="f" type="email" id="c-correo" placeholder="correo@ejemplo.com">
+        </div>
+      </div>
+      <label class="fl">Observaciones</label>
+      <textarea class="f" id="c-obs" rows="2" placeholder="Alergias, preferencias, ocasión especial..."></textarea>
+    </div>
+
+    <button class="btn-primary" onclick="irPaso3()">Ir al pago →</button>
+    <button class="btn-sec" onclick="irPaso(1)">← Volver</button>
+  </div>
+
+  <!-- PASO 3: PAGO -->
+  <div id="pane-3" style="display:none">
+    <div class="card">
+      <div class="card-title"><span>📋</span> Resumen de tu reserva</div>
+      <div id="resumen-final"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span>💳</span> Pagar con Wompi</div>
+      <p style="font-size:13px;color:var(--texto2);margin-bottom:16px">Haz clic en el botón para completar el pago de forma segura. Aceptamos PSE, tarjetas débito/crédito y Nequi.</p>
+      <div id="wompi-container"></div>
+      <p style="font-size:11px;color:var(--texto3);margin-top:12px;text-align:center">🔒 Pago procesado de forma segura por Wompi · Bancolombia</p>
+    </div>
+
+    <button class="btn-sec" onclick="irPaso(2)">← Volver</button>
+  </div>
+
+  <!-- ÉXITO -->
+  <div id="pane-exito" style="display:none">
+    <div class="success-wrap">
+      <div class="success-icon">🎉</div>
+      <div class="success-title">¡Reserva confirmada!</div>
+      <p class="success-sub">Tu reserva en la Hostería Mirador del Sol ha sido registrada exitosamente.<br>Recibirás un correo de confirmación con todos los detalles.</p>
+      <div style="margin-top:24px;padding:20px;background:var(--superficie);border-radius:var(--radio);border:1px solid var(--borde);text-align:left" id="exito-detalle"></div>
+      <div class="info-chips" style="justify-content:center;margin-top:20px">
+        <span class="chip">Check-in: 3:00 pm (Hospedaje) / 8:30 am (Día de Sol)</span>
+        <span class="chip">Check-out: 1:00 pm / 5:30 pm</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<div style="text-align:center;padding:24px;border-top:1px solid var(--borde);font-size:11px;color:var(--texto3)">
+  Hostería Mirador del Sol · Santa Fe de Antioquia · RNT 60444 · miradordelsol3@gmail.com
+</div>
+
+<script>
+const SUPA_URL = 'https://qylmhrvmaddxqhafrzzo.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5bG1ocnZtYWRkeHFoYWZyenpvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5MjU1NzksImV4cCI6MjA5MDUwMTU3OX0.jobYDAL_jVoo2Ruq3RiMyT9RLoV8bEVp9YS_TzQFWP4';
+const WOMPI_PUB = 'pub_test_ve4vAVawuqAFFhDXzvt0Ft93UNFe7pDw';
+const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+const HAB_TIPO = {"2":"Múl","3":"Múl","4":"Múl","5":"Múl","6":"Múl","12":"Múl","7":"Est","8":"Est","9":"Est","10":"Est","11":"Est","13":"Jac","14":"Jac","15":"Jac","16":"Jac","17":"Jac"};
+const HABS_PLAN = {ESTANDAR:["7","8","9","10","11"],MULTIPLE:["2","3","4","5","6","12"],JACUZZI:["13","14","15","16","17"]};
+const HABS_TODAS = ["2","3","4","5","6","12","7","8","9","10","11","13","14","15","16","17"];
+
+let _tipo = 'hospedaje';
+let _planSol = '';
+let _habSel = '';
+let _reservasCache = [];
+let _referencia = '';
+let _reservaId = null;
+
+function fmt(n){return new Intl.NumberFormat("es-CO",{style:"currency",currency:"COP",maximumFractionDigits:0}).format(n)}
+function today(){return new Date().toLocaleDateString("en-CA",{timeZone:"America/Bogota"})}
+
+function showAlert(msg, tipo='err'){
+  const el=document.getElementById("alert-main");
+  el.className="alert show alert-"+tipo;
+  el.textContent=msg;
+  el.scrollIntoView({behavior:'smooth',block:'center'});
+  if(tipo==='ok') setTimeout(()=>el.classList.remove('show'),5000);
+}
+
+function selTipo(tipo){
+  _tipo = tipo;
+  document.getElementById("tab-hosp").classList.toggle("active", tipo==='hospedaje');
+  document.getElementById("tab-sol").classList.toggle("active", tipo==='diasol');
+  document.getElementById("sec-hospedaje").style.display = tipo==='hospedaje'?'':'none';
+  document.getElementById("sec-diasol").style.display = tipo==='diasol'?'':'none';
+}
+
+function selPlan(plan){
+  _planSol = plan;
+  document.getElementById("sol-plan").value = plan;
+  ["A","B","C"].forEach(x=>{
+    document.getElementById("pc-"+x).classList.toggle("active", plan==="DIA DE SOL "+x);
+  });
+}
+
+async function verificarDisp(){
+  const entrada = document.getElementById("h-entrada").value;
+  const salida = document.getElementById("h-salida").value;
+  const plan = document.getElementById("h-plan").value;
+  const grid = document.getElementById("habs-grid");
+  if(!entrada||!salida||!plan){
+    grid.innerHTML='<div style="color:var(--texto3);font-size:12px;padding:10px">Selecciona fechas y plan primero</div>';
+    return;
+  }
+  if(!_reservasCache.length){
+    const {data}=await supa.from("reservas").select("*");
+    _reservasCache = data||[];
+  }
+  const habsPlan = HABS_PLAN[plan]||[];
+  const ocupadas = habsPlan.filter(h=>_reservasCache.some(r=>{
+    if(String(r.hab)!==String(h)||!r.entrada) return false;
+    const fin=r.salida||r.entrada;
+    return entrada<fin&&salida>r.entrada;
+  }));
+  _habSel = '';
+  document.getElementById("h-hab-sel").style.display='none';
+  grid.innerHTML = habsPlan.map(h=>`
+    <div class="hab-btn ${ocupadas.includes(h)?'ocupada':''}" onclick="${ocupadas.includes(h)?'':'selHab('+h+')'}">
+      <div class="hab-num">${h}</div>
+      <div class="hab-tipo">${HAB_TIPO[h]}</div>
+      <div style="font-size:9px;color:${ocupadas.includes(h)?'#E07070':'#8ABB8A'};margin-top:2px">${ocupadas.includes(h)?'Ocupada':'Libre'}</div>
+    </div>`).join('');
+}
+
+function selHab(h){
+  _habSel = String(h);
+  document.querySelectorAll(".hab-btn").forEach(el=>el.classList.remove("active"));
+  event.currentTarget.classList.add("active");
+  const sel = document.getElementById("h-hab-sel");
+  sel.style.display='block';
+  sel.textContent = `✓ Habitación ${h} (${HAB_TIPO[h]}) seleccionada`;
+}
+
+function calcResumen(){
+  const total = parseFloat(document.getElementById("r-total").value)||0;
+  const abono = parseFloat(document.getElementById("r-abono").value)||0;
+  const wrap = document.getElementById("resumen-val");
+  if(total>0){
+    wrap.style.display='block';
+    document.getElementById("rv-total").textContent=fmt(total);
+    document.getElementById("rv-abono").textContent=fmt(abono);
+    document.getElementById("rv-resta").textContent=fmt(Math.max(0,total-abono));
+  } else {
+    wrap.style.display='none';
+  }
+}
+
+function irPaso(n){
+  [1,2,3].forEach(i=>{
+    document.getElementById("pane-"+i).style.display=i===n?'':'none';
+    const s=document.getElementById("step"+i);
+    s.classList.remove("active","done");
+    if(i===n) s.classList.add("active");
+    else if(i<n) s.classList.add("done");
+  });
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function irPaso2(){
+  // Validar paso 1
+  const total = parseFloat(document.getElementById("r-total").value)||0;
+  const abono = parseFloat(document.getElementById("r-abono").value)||0;
+  if(_tipo==='hospedaje'){
+    if(!document.getElementById("h-entrada").value){showAlert("Selecciona la fecha de entrada.");return}
+    if(!document.getElementById("h-salida").value){showAlert("Selecciona la fecha de salida.");return}
+    if(!document.getElementById("h-plan").value){showAlert("Selecciona el tipo de plan.");return}
+    if(!_habSel){showAlert("Selecciona una habitación disponible.");return}
+    const pers=parseInt(document.getElementById("h-personas").value)||0;
+    if(pers<=0){showAlert("Ingresa el número de personas.");return}
+  } else {
+    if(!_planSol){showAlert("Selecciona el plan de día de sol.");return}
+    if(!document.getElementById("sol-fecha").value){showAlert("Selecciona la fecha.");return}
+    const pers=parseInt(document.getElementById("sol-personas").value)||0;
+    if(pers<=0){showAlert("Ingresa el número de personas.");return}
+  }
+  if(total<=0){showAlert("Ingresa el valor total de la reserva.");return}
+  if(abono<=0){showAlert("Ingresa el valor del abono a pagar.");return}
+  if(abono>total){showAlert("El abono no puede ser mayor al total.");return}
+  document.getElementById("alert-main").classList.remove("show");
+  irPaso(2);
+}
+
+function irPaso3(){
+  const nombre = document.getElementById("c-nombre").value.trim();
+  const doc = document.getElementById("c-doc").value.trim();
+  const cel = document.getElementById("c-cel").value.trim();
+  const correo = document.getElementById("c-correo").value.trim();
+  if(!nombre){showAlert("Ingresa tu nombre completo.");return}
+  if(!doc){showAlert("Ingresa tu número de documento.");return}
+  if(!cel){showAlert("Ingresa tu celular.");return}
+  if(!correo||!correo.includes("@")){showAlert("Ingresa un correo válido.");return}
+  document.getElementById("alert-main").classList.remove("show");
+
+  // Construir resumen
+  const total = parseFloat(document.getElementById("r-total").value)||0;
+  const abono = parseFloat(document.getElementById("r-abono").value)||0;
+  let lineas = [];
+  if(_tipo==='hospedaje'){
+    lineas.push(['Plan',document.getElementById("h-plan").value]);
+    lineas.push(['Entrada',document.getElementById("h-entrada").value]);
+    lineas.push(['Salida',document.getElementById("h-salida").value]);
+    lineas.push(['Habitación',_habSel]);
+    lineas.push(['Personas',document.getElementById("h-personas").value]);
+  } else {
+    lineas.push(['Plan',_planSol]);
+    lineas.push(['Fecha',document.getElementById("sol-fecha").value]);
+    lineas.push(['Personas',document.getElementById("sol-personas").value]);
+  }
+  lineas.push(['Cliente',nombre]);
+  lineas.push(['Correo',correo]);
+  lineas.push(['Celular',cel]);
+
+  document.getElementById("resumen-final").innerHTML =
+    lineas.map(([k,v])=>`<div class="resumen-row"><span style="color:var(--texto3)">${k}</span><span>${v}</span></div>`).join('') +
+    `<div class="resumen-total"><span>Abono a pagar hoy</span><span>${fmt(abono)}</span></div>`;
+
+  // Generar referencia única
+  _referencia = 'MDS-' + Date.now();
+
+  // Crear botón Wompi
+  const abonoEnCentavos = Math.round(abono * 100);
+  document.getElementById("wompi-container").innerHTML = '';
+  const script = document.createElement("script");
+  script.src = "https://checkout.wompi.co/widget.js";
+  script.setAttribute("data-render","button");
+  script.setAttribute("data-public-key", WOMPI_PUB);
+  script.setAttribute("data-currency","COP");
+  script.setAttribute("data-amount-in-cents", abonoEnCentavos);
+  script.setAttribute("data-reference", _referencia);
+  script.setAttribute("data-customer-data:email", correo);
+  script.setAttribute("data-customer-data:full-name", nombre);
+  script.setAttribute("data-customer-data:phone-number", cel);
+  script.setAttribute("data-customer-data:phone-number-prefix","+57");
+  script.setAttribute("data-redirect-url", window.location.href + "?ref=" + _referencia);
+  document.getElementById("wompi-container").appendChild(script);
+
+  irPaso(3);
+}
+
+// Verificar si viene de redirección de Wompi
+async function verificarPagoWompi(){
+  const params = new URLSearchParams(window.location.search);
+  const ref = params.get("ref") || params.get("id");
+  if(!ref) return;
+
+  // Consultar estado del pago en Wompi
+  try{
+    const res = await fetch(`https://sandbox.wompi.co/v1/transactions?reference=${ref}`);
+    const data = await res.json();
+    const tx = data.data?.[0];
+    if(tx && tx.status === "APPROVED"){
+      await guardarReservaEnBD(ref, tx.amount_in_cents/100);
+    } else {
+      showAlert("El pago no pudo procesarse. Intenta de nuevo.", "err");
+    }
+  } catch(e){
+    console.error(e);
+  }
+}
+
+async function guardarReservaEnBD(referencia, montoAbono){
+  const nombre = document.getElementById("c-nombre")?.value?.trim() || sessionStorage.getItem("mds_nombre") || "Cliente Web";
+  const correo = document.getElementById("c-correo")?.value?.trim() || sessionStorage.getItem("mds_correo") || "";
+  const cel = document.getElementById("c-cel")?.value?.trim() || sessionStorage.getItem("mds_cel") || "";
+  const doc = document.getElementById("c-doc")?.value?.trim() || sessionStorage.getItem("mds_doc") || "";
+  const tipodoc = document.getElementById("c-tipodoc")?.value || sessionStorage.getItem("mds_tipodoc") || "CC";
+  const obs = document.getElementById("c-obs")?.value?.trim() || sessionStorage.getItem("mds_obs") || "";
+  const total = parseFloat(sessionStorage.getItem("mds_total"))||montoAbono;
+  const abono = montoAbono;
+
+  let row = {
+    nombre: nombre.toUpperCase(),
+    celular: cel, identificacion: doc, correo,
+    obs: obs + (obs?" | ":"") + "Reserva web - Ref: "+referencia,
+    abono, total, deber: Math.max(0,total-abono),
+    total_bruto: total, desc_pct:0, desc_valor:0,
+    ventas_bar:0, ventas_restaurante:0,
+    medio_abono_inicial:"Transferencia",
+    creado_por:"WEB", fecha:today(),
+    estado:"pendiente"
+  };
+
+  const tipo = sessionStorage.getItem("mds_tipo")||_tipo;
+  if(tipo==='hospedaje'){
+    row.plan = sessionStorage.getItem("mds_plan")||"ESTANDAR";
+    row.entrada = sessionStorage.getItem("mds_entrada")||"";
+    row.salida = sessionStorage.getItem("mds_salida")||"";
+    row.hab = sessionStorage.getItem("mds_hab")||"";
+    row.personas = parseInt(sessionStorage.getItem("mds_personas"))||1;
+    row.ninos1 = parseInt(sessionStorage.getItem("mds_ninos1"))||0;
+    row.ninos2 = parseInt(sessionStorage.getItem("mds_ninos2"))||0;
+    row.dias = Math.round((new Date(row.salida)-new Date(row.entrada))/86400000)||1;
+  } else {
+    row.plan = sessionStorage.getItem("mds_planSol")||"DIA DE SOL A";
+    row.entrada = sessionStorage.getItem("mds_solFecha")||"";
+    row.salida = null; row.dias = 1; row.hab = null;
+    row.personas = parseInt(sessionStorage.getItem("mds_solPersonas"))||1;
+    row.ninos1 = parseInt(sessionStorage.getItem("mds_solNinos1"))||0;
+    row.ninos2 = parseInt(sessionStorage.getItem("mds_solNinos2"))||0;
+  }
+
+  const {data, error} = await supa.from("reservas").insert(row).select();
+  if(!error && data){
+    mostrarExito(row, referencia);
+  }
+}
+
+function mostrarExito(row, ref){
+  [1,2,3].forEach(i=>document.getElementById("pane-"+i).style.display='none');
+  document.getElementById("pane-exito").style.display='block';
+  document.getElementById("exito-detalle").innerHTML = `
+    <div class="resumen-row"><span style="color:var(--texto3)">Cliente</span><span>${row.nombre}</span></div>
+    <div class="resumen-row"><span style="color:var(--texto3)">Plan</span><span>${row.plan}</span></div>
+    <div class="resumen-row"><span style="color:var(--texto3)">Fecha</span><span>${row.entrada}</span></div>
+    <div class="resumen-row"><span style="color:var(--texto3)">Abono pagado</span><span style="color:#8ABB8A">${fmt(row.abono)}</span></div>
+    <div class="resumen-row"><span style="color:var(--texto3)">Restante al llegar</span><span style="color:var(--naranja)">${fmt(row.deber)}</span></div>
+    <div class="resumen-row"><span style="color:var(--texto3)">Referencia</span><span style="font-size:11px;color:var(--texto3)">${ref}</span></div>`;
+  window.scrollTo({top:0,behavior:'smooth'});
+  // Limpiar sessionStorage
+  Object.keys(sessionStorage).filter(k=>k.startsWith("mds_")).forEach(k=>sessionStorage.removeItem(k));
+}
+
+// Guardar datos en sessionStorage antes del redirect de Wompi
+function guardarSesion(){
+  sessionStorage.setItem("mds_tipo", _tipo);
+  sessionStorage.setItem("mds_nombre", document.getElementById("c-nombre").value.trim());
+  sessionStorage.setItem("mds_correo", document.getElementById("c-correo").value.trim());
+  sessionStorage.setItem("mds_cel", document.getElementById("c-cel").value.trim());
+  sessionStorage.setItem("mds_doc", document.getElementById("c-doc").value.trim());
+  sessionStorage.setItem("mds_tipodoc", document.getElementById("c-tipodoc").value);
+  sessionStorage.setItem("mds_obs", document.getElementById("c-obs").value.trim());
+  sessionStorage.setItem("mds_total", document.getElementById("r-total").value);
+  if(_tipo==='hospedaje'){
+    sessionStorage.setItem("mds_plan", document.getElementById("h-plan").value);
+    sessionStorage.setItem("mds_entrada", document.getElementById("h-entrada").value);
+    sessionStorage.setItem("mds_salida", document.getElementById("h-salida").value);
+    sessionStorage.setItem("mds_hab", _habSel);
+    sessionStorage.setItem("mds_personas", document.getElementById("h-personas").value);
+    sessionStorage.setItem("mds_ninos1", document.getElementById("h-ninos1").value);
+    sessionStorage.setItem("mds_ninos2", document.getElementById("h-ninos2").value);
+  } else {
+    sessionStorage.setItem("mds_planSol", _planSol);
+    sessionStorage.setItem("mds_solFecha", document.getElementById("sol-fecha").value);
+    sessionStorage.setItem("mds_solPersonas", document.getElementById("sol-personas").value);
+    sessionStorage.setItem("mds_solNinos1", document.getElementById("sol-ninos1").value);
+    sessionStorage.setItem("mds_solNinos2", document.getElementById("sol-ninos2").value);
+  }
+}
+
+// ---- TARIFAS Y FECHAS DISPONIBLES ----
+const TARIFAS_BASE = {
+  semana:  {estandar:299000, jacuzzi:389000, multiple:139000},
+  finde:   {estandar:380000, jacuzzi:480000, multiple:179000},
+  festivo: {estandar:420000, jacuzzi:520000, multiple:199000}
+};
+
+const FESTIVOS_CO = [
+  "2025-01-01","2025-01-06","2025-03-24","2025-04-17","2025-04-18",
+  "2025-05-01","2025-06-02","2025-06-23","2025-06-30","2025-07-20",
+  "2025-08-07","2025-08-18","2025-10-13","2025-11-03","2025-11-17",
+  "2025-12-08","2025-12-25",
+  "2026-01-01","2026-01-12","2026-03-23","2026-04-02","2026-04-03",
+  "2026-05-01","2026-05-18","2026-06-08","2026-06-15","2026-06-29",
+  "2026-07-20","2026-08-07","2026-08-17","2026-10-12","2026-11-02",
+  "2026-11-16","2026-12-08","2026-12-25"
+];
+
+let _fechasDisp = {};
+
+async function cargarFechasDisponibles(){
+  const hoy = today();
+  const hasta = new Date();
+  hasta.setMonth(hasta.getMonth()+3);
+  const hastaStr = hasta.toLocaleDateString("en-CA",{timeZone:"America/Bogota"});
+  const {data} = await supa.from("fechas_disponibles").select("*").gte("fecha",hoy).lte("fecha",hastaStr);
+  _fechasDisp = {};
+  (data||[]).forEach(r=>{ _fechasDisp[r.fecha] = r; });
+}
+
+function esFestivo(ds){ return FESTIVOS_CO.includes(ds); }
+function tipoTarifa(ds){
+  if(esFestivo(ds)) return 'festivo';
+  const dow = new Date(ds).getDay();
+  if(dow===6) return 'finde';
+  return 'semana';
+}
+
+function getPrecioFecha(ds, plan){
+  const tar = _fechasDisp[ds];
+  const tipo = tipoTarifa(ds);
+  const base = TARIFAS_BASE[tipo];
+  if(plan==='ESTANDAR') return tar?.precio_estandar>0 ? tar.precio_estandar : base.estandar;
+  if(plan==='JACUZZI')  return tar?.precio_jacuzzi>0  ? tar.precio_jacuzzi  : base.jacuzzi;
+  if(plan==='MULTIPLE') return tar?.precio_multiple>0 ? tar.precio_multiple : base.multiple;
+  return 0;
+}
+
+function getFechaDisponible(ds){
+  return _fechasDisp[ds] ? _fechasDisp[ds].disponible : false;
+}
+
+function calcPrecioRango(entrada, salida, plan){
+  // Suma precio por cada noche del rango
+  let total = 0;
+  let cur = new Date(entrada);
+  const fin = new Date(salida);
+  while(cur < fin){
+    const ds = cur.toLocaleDateString("en-CA",{timeZone:"America/Bogota"});
+    total += getPrecioFecha(ds, plan);
+    cur.setDate(cur.getDate()+1);
+  }
+  return total;
+}
+
+// ---- VERIFICAR DISPONIBILIDAD CON FECHAS Y PRECIOS ----
+async function verificarDisp(){
+  const entrada = document.getElementById("h-entrada").value;
+  const salida  = document.getElementById("h-salida").value;
+  const plan    = document.getElementById("h-plan").value;
+  const grid    = document.getElementById("habs-grid");
+
+  if(!entrada||!salida||!plan){
+    grid.innerHTML='<div style="color:var(--texto3);font-size:12px;padding:10px">Selecciona fechas y plan primero</div>';
+    return;
+  }
+
+  // Validar max 30 noches
+  const noches = Math.round((new Date(salida)-new Date(entrada))/86400000);
+  if(noches<=0){showAlert("La salida debe ser posterior a la entrada.");return}
+  if(noches>30){showAlert("El máximo de noches por reserva es 30.");return}
+
+  // Verificar que todas las fechas del rango estén disponibles
+  let fechaCerrada = null;
+  let cur = new Date(entrada);
+  const fin = new Date(salida);
+  while(cur < fin){
+    const ds = cur.toLocaleDateString("en-CA",{timeZone:"America/Bogota"});
+    if(!getFechaDisponible(ds)){ fechaCerrada = ds; break; }
+    cur.setDate(cur.getDate()+1);
+  }
+  if(fechaCerrada){
+    const [y,m,d] = fechaCerrada.split("-");
+    grid.innerHTML=`<div style="color:#E07070;font-size:12px;padding:10px">⚠ La fecha ${d}/${m}/${y} no está disponible para reservas en línea. Por favor contáctanos directamente.</div>`;
+    return;
+  }
+
+  // Cargar reservas para verificar ocupación
+  if(!_reservasCache.length){
+    const {data}=await supa.from("reservas").select("*");
+    _reservasCache = data||[];
+  }
+
+  const habsPlan = HABS_PLAN[plan]||[];
+  const ocupadas = habsPlan.filter(h=>_reservasCache.some(r=>{
+    if(String(r.hab)!==String(h)||!r.entrada) return false;
+    const rfin=r.salida||r.entrada;
+    return entrada<rfin&&salida>r.entrada;
+  }));
+
+  _habSel = '';
+  document.getElementById("h-hab-sel").style.display='none';
+
+  // Calcular precio automático
+  const precioTotal = calcPrecioRango(entrada, salida, plan);
+  if(precioTotal>0){
+    document.getElementById("r-total").value = precioTotal;
+    calcResumen();
+  }
+
+  grid.innerHTML = habsPlan.map(h=>`
+    <div class="hab-btn ${ocupadas.includes(h)?'ocupada':''}" onclick="${ocupadas.includes(h)?'':'selHab('+h+')'}">
+      <div class="hab-num">${h}</div>
+      <div class="hab-tipo">${HAB_TIPO[h]}</div>
+      <div style="font-size:9px;color:${ocupadas.includes(h)?'#E07070':'#8ABB8A'};margin-top:2px">${ocupadas.includes(h)?'Ocupada':'Libre'}</div>
+    </div>`).join('');
+
+  // Mostrar precio calculado
+  if(precioTotal>0){
+    const info = document.createElement("div");
+    info.style.cssText="margin-top:10px;font-size:12px;color:#8ABB8A;padding:8px 12px;background:rgba(90,138,90,0.1);border-radius:6px;border:1px solid rgba(90,138,90,0.2)";
+    info.textContent = `✓ ${noches} noche(s) · Precio calculado automáticamente: ${new Intl.NumberFormat("es-CO",{style:"currency",currency:"COP",maximumFractionDigits:0}).format(precioTotal)}`;
+    grid.after(info);
+  }
+}
+
+// Escuchar clic en botón Wompi para guardar sesión
+document.addEventListener("click", e=>{
+  if(e.target.closest("#wompi-container")) guardarSesion();
+});
+
+// Al cargar, verificar si viene de pago
+window.addEventListener("load", async ()=>{
+  const hoy = today();
+  const max = new Date();
+  max.setDate(max.getDate()+30);
+  const maxStr = max.toLocaleDateString("en-CA",{timeZone:"America/Bogota"});
+  document.getElementById("h-entrada").min = hoy;
+  document.getElementById("h-entrada").max = maxStr;
+  document.getElementById("h-salida").min = hoy;
+  document.getElementById("h-salida").max = maxStr;
+  document.getElementById("sol-fecha").min = hoy;
+  document.getElementById("sol-fecha").max = maxStr;
+  await cargarFechasDisponibles();
+  verificarPagoWompi();
+});
+</script>
+</body>
+</html>
