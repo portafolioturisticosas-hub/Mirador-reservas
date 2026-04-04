@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Reservar — Hostería Mirador del Sol</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://checkout.wompi.co/widget.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -331,7 +332,10 @@ select.f option{background:#2A2A24}
     <div class="card">
       <div class="card-title"><span>💳</span> Pagar con Wompi</div>
       <p style="font-size:13px;color:var(--texto2);margin-bottom:16px">Haz clic en el botón para completar el pago de forma segura. Aceptamos PSE, tarjetas débito/crédito y Nequi.</p>
-      <div id="wompi-container"></div>
+      <button id="btn-pagar-wompi" onclick="abrirWompi()" style="width:100%;padding:18px;border:none;border-radius:10px;background:#E07820;color:#fff;font-size:17px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;letter-spacing:0.3px">
+        💳 Pagar con Wompi
+      </button>
+      <p style="font-size:11px;color:var(--texto3);margin-top:12px;text-align:center">🔒 Pago procesado de forma segura por Wompi · Bancolombia</p>
       <p style="font-size:11px;color:var(--texto3);margin-top:12px;text-align:center">🔒 Pago procesado de forma segura por Wompi · Bancolombia</p>
     </div>
 
@@ -403,34 +407,8 @@ function selPlan(plan){
   });
 }
 
-async function verificarDisp(){
-  const entrada = document.getElementById("h-entrada").value;
-  const salida = document.getElementById("h-salida").value;
-  const plan = document.getElementById("h-plan").value;
-  const grid = document.getElementById("habs-grid");
-  if(!entrada||!salida||!plan){
-    grid.innerHTML='<div style="color:var(--texto3);font-size:12px;padding:10px">Selecciona fechas y plan primero</div>';
-    return;
-  }
-  if(!_reservasCache.length){
-    const {data}=await supa.from("reservas").select("*");
-    _reservasCache = data||[];
-  }
-  const habsPlan = HABS_PLAN[plan]||[];
-  const ocupadas = habsPlan.filter(h=>_reservasCache.some(r=>{
-    if(String(r.hab)!==String(h)||!r.entrada) return false;
-    const fin=r.salida||r.entrada;
-    return entrada<fin&&salida>r.entrada;
-  }));
-  _habSel = '';
-  document.getElementById("h-hab-sel").style.display='none';
-  grid.innerHTML = habsPlan.map(h=>`
-    <div class="hab-btn ${ocupadas.includes(h)?'ocupada':''}" onclick="${ocupadas.includes(h)?'':'selHab('+h+')'}">
-      <div class="hab-num">${h}</div>
-      <div class="hab-tipo">${HAB_TIPO[h]}</div>
-      <div style="font-size:9px;color:${ocupadas.includes(h)?'#E07070':'#8ABB8A'};margin-top:2px">${ocupadas.includes(h)?'Ocupada':'Libre'}</div>
-    </div>`).join('');
-}
+
+
 
 function selHab(h){
   _habSel = String(h);
@@ -527,22 +505,27 @@ function irPaso3(){
   // Generar referencia única
   _referencia = 'MDS-' + Date.now();
 
-  // Crear botón Wompi
+  // Crear widget Wompi oficial
   const abonoEnCentavos = Math.round(abono * 100);
-  document.getElementById("wompi-container").innerHTML = '';
-  const script = document.createElement("script");
-  script.src = "https://checkout.wompi.co/widget.js";
-  script.setAttribute("data-render","button");
-  script.setAttribute("data-public-key", WOMPI_PUB);
-  script.setAttribute("data-currency","COP");
-  script.setAttribute("data-amount-in-cents", abonoEnCentavos);
-  script.setAttribute("data-reference", _referencia);
-  script.setAttribute("data-customer-data:email", correo);
-  script.setAttribute("data-customer-data:full-name", nombre);
-  script.setAttribute("data-customer-data:phone-number", cel);
-  script.setAttribute("data-customer-data:phone-number-prefix","+57");
-  script.setAttribute("data-redirect-url", window.location.href + "?ref=" + _referencia);
-  document.getElementById("wompi-container").appendChild(script);
+  const redirectUrl = window.location.origin + window.location.pathname + '?ref=' + _referencia;
+  guardarSesion();
+  document.getElementById("wompi-container").innerHTML = `
+    <div style="display:flex;justify-content:center;margin-top:8px">
+      <script
+        src="https://checkout.wompi.co/widget.js"
+        data-render="button"
+        data-public-key="${WOMPI_PUB}"
+        data-currency="COP"
+        data-amount-in-cents="${abonoEnCentavos}"
+        data-reference="${_referencia}"
+        data-customer-data:email="${correo}"
+        data-customer-data:full-name="${nombre}"
+        data-customer-data:phone-number="${cel}"
+        data-customer-data:phone-number-prefix="+57"
+        data-redirect-url="${redirectUrl}">
+      <\/script>
+    </div>
+    <p style="text-align:center;font-size:12px;color:#8ABB8A;margin-top:10px">✓ Haz clic en el botón naranja de Wompi para continuar con el pago</p>`;
 
   irPaso(3);
 }
@@ -633,6 +616,8 @@ function mostrarExito(row, ref){
 // Guardar datos en sessionStorage antes del redirect de Wompi
 function guardarSesion(){
   sessionStorage.setItem("mds_tipo", _tipo);
+  sessionStorage.setItem("mds_referencia", _referencia);
+  sessionStorage.setItem("mds_total_abono", document.getElementById("r-abono").value||"0");
   sessionStorage.setItem("mds_nombre", document.getElementById("c-nombre").value.trim());
   sessionStorage.setItem("mds_correo", document.getElementById("c-correo").value.trim());
   sessionStorage.setItem("mds_cel", document.getElementById("c-cel").value.trim());
@@ -793,10 +778,17 @@ async function verificarDisp(){
   }
 }
 
-// Escuchar clic en botón Wompi para guardar sesión
-document.addEventListener("click", e=>{
-  if(e.target.closest("#wompi-container")) guardarSesion();
-});
+function abrirWompi(){
+  guardarSesion();
+  const abono = parseFloat(sessionStorage.getItem("mds_total_abono"))||0;
+  const correo = sessionStorage.getItem("mds_correo")||"";
+  const nombre = sessionStorage.getItem("mds_nombre")||"";
+  const cel = sessionStorage.getItem("mds_cel")||"";
+  const abonoEnCentavos = Math.round(abono * 100);
+  const redirectUrl = window.location.origin + window.location.pathname + '?ref=' + _referencia;
+  const url = `https://checkout.wompi.co/p/?public-key=${WOMPI_PUB}&currency=COP&amount-in-cents=${abonoEnCentavos}&reference=${_referencia}&redirect-url=${encodeURIComponent(redirectUrl)}&customer-data:email=${encodeURIComponent(correo)}&customer-data:full-name=${encodeURIComponent(nombre)}&customer-data:phone-number=${encodeURIComponent(cel)}&customer-data:phone-number-prefix=%2B57`;
+  window.open(url, '_blank');
+}
 
 // Al cargar, verificar si viene de pago
 window.addEventListener("load", async ()=>{
