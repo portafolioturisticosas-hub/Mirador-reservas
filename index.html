@@ -1402,6 +1402,8 @@ async function guardarReservaSol(){
     limpiarFormSol();
     showAlert("alert-nueva","Reserva día de sol guardada para "+nombre,"ok");
     _reservasCache = await sbGet("reservas");
+    _diaSolCache = _reservasCache.filter(r=>esDiaSol(r.plan));
+    renderDashboard();
   } else {
     const {error} = await supa.from("reservas").insert(row).select();
     showAlert("alert-nueva","Error: "+(error?error.message:"Sin resultado"),"err");
@@ -1641,6 +1643,8 @@ async function guardarReserva(){
   if(result){
     limpiarForm();
     showAlert("alert-nueva","Reserva guardada correctamente para "+nombre,"ok");
+    _reservasCache = await sbGet("reservas");
+    renderDashboard();
   } else {
     // Show detailed error from Supabase
     const {data,error}=await supa.from("reservas").insert(row).select();
