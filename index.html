@@ -1177,7 +1177,7 @@ const HAB_TIPO={"2":"Múl","3":"Múl","4":"Múl","5":"Múl","6":"Múl","12":"Mú
 const MESES=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 const ROLES={admin:"Administrador",recepcionista:"Recepcionista",vendedor:"Vendedor",consulta:"Solo consulta"};
 const PERMS={admin:["nueva","reservas","calendario","diasol","aplazadas","tarifas","resumen","bar","compras","clientes","usuarios"],recepcionista:["nueva","reservas","calendario","diasol","aplazadas","resumen","bar","compras","clientes"],vendedor:["nueva","reservas","diasol","bar"],consulta:["reservas","calendario","diasol","resumen","bar"]};
-const esDiaSol=p=>p&&p.startsWith("DIA DE SOL");
+const esDiaSol=p=>p&&(p.startsWith("DIA DE SOL")||p.startsWith("DÍA DE SOL"));
 
 let currentUser=null,editIdx=null;
 
@@ -1363,7 +1363,7 @@ function calcTotalSol(){
 async function guardarReservaSol(){
   if(!canCreate()){showAlert("alert-nueva","No tienes permiso para crear reservas.","err");return}
   const nombre = document.getElementById("ds-nombre").value.trim().toUpperCase();
-  const plan = document.getElementById("ds-plan").value;
+  const plan = (document.getElementById("ds-plan").value||'').replace('DÍA','DIA').trim();
   const entrada = document.getElementById("ds-entrada").value;
   const personas = parseInt(document.getElementById("ds-personas").value)||0;
   const totalBruto = parseFloat(document.getElementById("ds-total").value)||0;
