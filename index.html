@@ -1879,7 +1879,7 @@ async function filtrarDiaSol(){
   const tb=document.getElementById("tbody-diasol");
   if(!tb)return;
   tb.innerHTML="<tr><td colspan='12' style='text-align:center;color:var(--text3);padding:2rem'>Cargando...</td></tr>";
-  if(!_reservasCache.length) _reservasCache = await sbGet("reservas");
+  _reservasCache = await sbGet("reservas");
   _diaSolCache = _reservasCache.filter(r=>esDiaSol(r.plan));
   renderTablaDiaSol();
 }
@@ -1891,7 +1891,8 @@ function renderTablaDiaSol(){
   const fp=document.getElementById("fil-diasol-plan").value;
   const filtered=_diaSolCache.filter(r=>{
     const match=!q||(r.nombre||"").toLowerCase().includes(q)||(r.celular||"").includes(q);
-    return match&&(!fp||r.plan===fp);
+    const planNorm=(r.plan||'').replace('DÍA','DIA');
+    return match&&(!fp||planNorm===fp);
   });
   document.getElementById("count-diasol").textContent=filtered.length+" reservas";
   if(!filtered.length){tb.innerHTML="<tr><td colspan='12' style='text-align:center;color:var(--text3);padding:2rem'>Sin reservas de día de sol</td></tr>";return}
