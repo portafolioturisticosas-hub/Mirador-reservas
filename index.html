@@ -2990,10 +2990,12 @@ async function renderResumen(){
   filtradas.forEach(r=>{
     if(!r.entrada)return;
     const parts=r.entrada.split("-");
+    if(parts.length<2)return;
     const anio=parts[0];
-    const mesNum=parseInt(parts[1])-1;
-    const k=`${anio}-${MESES[mesNum]}`;
-    if(!porMes[k])porMes[k]={ventas:0,res:0,est:0,mul:0,jac:0,solA:0,solB:0,solC:0,pers:0};
+    const mesNum=parts[1];
+    const mesNom=MESES[parseInt(mesNum)-1]||mesNum;
+    const k=`${anio}-${mesNum}`;
+    if(!porMes[k])porMes[k]={ventas:0,res:0,est:0,mul:0,jac:0,solA:0,solB:0,solC:0,pers:0,label:`${anio} · ${mesNom}`};
     const pm=porMes[k];
     pm.ventas+=r.total||0;
     pm.res++;
@@ -3010,7 +3012,7 @@ async function renderResumen(){
   document.getElementById("r-meses-detalle").innerHTML=ordenado.map(([key,d])=>`
     <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,0.05)">
       <div style="display:flex;justify-content:space-between;margin-bottom:8px">
-        <span style="font-weight:600;color:var(--text);font-size:13px">${key}</span>
+        <span style="font-weight:600;color:var(--text);font-size:13px">${d.label}</span>
         <div style="text-align:right">
           <span style="color:var(--orange);font-weight:600">${fmt(d.ventas)}</span>
           <span style="font-size:10px;color:var(--text3);margin-left:8px">${d.res} reservas · ${d.pers} personas</span>
