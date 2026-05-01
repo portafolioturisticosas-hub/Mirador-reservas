@@ -1239,23 +1239,29 @@ async function doLogin(){
   const found=users.find(x=>x.contrasena===p);
   if(!found){document.getElementById("login-error").style.display="block";return}
   currentUser={nombre:found.nombre,user:found.usuario,pass:found.contrasena,rol:found.rol,dbId:found.id};
+  localStorage.setItem("mds_session",JSON.stringify(currentUser));
+  iniciarApp();
+}
+
+function iniciarApp(){
   document.getElementById("login-screen").style.display="none";
   document.getElementById("app").style.display="block";
-  document.getElementById("user-avatar").textContent=found.nombre.slice(0,2).toUpperCase();
-  document.getElementById("user-name-display").textContent=found.nombre;
-  document.getElementById("user-role-display").textContent=ROLES[found.rol]||found.rol;
-  const perms=PERMS[found.rol]||["reservas"];
+  document.getElementById("user-avatar").textContent=currentUser.nombre.slice(0,2).toUpperCase();
+  document.getElementById("user-name-display").textContent=currentUser.nombre;
+  document.getElementById("user-role-display").textContent=ROLES[currentUser.rol]||currentUser.rol;
+  const perms=PERMS[currentUser.rol]||["reservas"];
   document.querySelectorAll(".nav-item").forEach(el=>{
     const pg=el.id.replace("nav-","");
     el.style.display=perms.includes(pg)?"":"none";
   });
-  if(found.rol==="admin")document.getElementById("nav-usuarios").style.display="";
+  if(currentUser.rol==="admin")document.getElementById("nav-usuarios").style.display="";
   showPage(perms[0]||"reservas");
   renderDashboard();
 }
 
 function doLogout(){
   currentUser=null;
+  localStorage.removeItem("mds_session");
   document.getElementById("app").style.display="none";
   document.getElementById("login-screen").style.display="flex";
   document.getElementById("login-user").value="";
@@ -1421,7 +1427,7 @@ async function guardarReservaSol(){
     medio_abono_inicial: document.getElementById("ds-medio-abono-ini").value||null,
     vendedor: document.getElementById("ds-vendedor").value,
     consig: document.getElementById("ds-consig").value,
-    creado_por: currentUser.user, fecha: today(),
+    creado_por: currentUser.user, fecha: today(), estado:'pendiente',
     acompanantes: acompanantes.length?JSON.stringify(acompanantes):null
   };
   const result = await sbInsert("reservas", row);
@@ -1571,7 +1577,7 @@ async function renderDashboard(){
   const hoy = today();
   const dash = document.getElementById("dashboard-hoy");
   if(!dash) return;
-  if(!_reservasCache.length) _reservasCache = await sbGet("reservas");
+  _reservasCache = await sbGet("reservas");
   const reservas = _reservasCache;
 
   const checkinHoy = reservas.filter(r=>!esDiaSol(r.plan)&&r.entrada===hoy&&!r.aplazada);
@@ -1663,7 +1669,7 @@ async function guardarReserva(){
     vendedor:document.getElementById("f-vendedor").value,
     medio_abono_inicial:document.getElementById("f-medio-abono-ini").value||null,
     consig:document.getElementById("f-consig").value,
-    creado_por:currentUser.user, fecha:today(),
+    creado_por:currentUser.user, fecha:today(), estado:'pendiente',
     acompanantes: recogerAcompanantes('hosp').length?JSON.stringify(recogerAcompanantes('hosp')):null
   };
   const result = await sbInsert("reservas", row);
@@ -1710,6 +1716,7 @@ async function filtrarReservas(){
   const tb=document.getElementById("tbody-reservas");
   tb.innerHTML="<tr><td colspan='11' style='text-align:center;color:var(--text3);padding:2rem'>Cargando...</td></tr>";
   _reservasCache = await sbGet("reservas");
+  _diaSolCache = _reservasCache.filter(r=>esDiaSol(r.plan));
   _reservasCache.sort((a,b)=>b.id-a.id);
   renderTablaReservas();
   renderTablaDiaSol();
@@ -1757,7 +1764,7 @@ const PLANES_SOL = ["DIA DE SOL A","DIA DE SOL B","DIA DE SOL C"];
 const PLANES_SOL_LABEL = {"DIA DE SOL A":"Plan A","DIA DE SOL B":"Plan B","DIA DE SOL C":"Plan C"};
 
 async function renderCalDiaSol(){
-  if(!_reservasCache.length) _reservasCache = await sbGet("reservas");
+  _reservasCache = await sbGet("reservas");
   const val=document.getElementById("mes-diasol").value;
   if(!val)return;
   const[yr,mn]=val.split("-").map(Number);
@@ -1801,7 +1808,7 @@ async function renderCalDiaSol(){
 let _diaSolCache = [];
 
 async function renderCalDiaSol2(){
-  if(!_reservasCache.length) _reservasCache = await sbGet("reservas");
+  _reservasCache = await sbGet("reservas");
   const val=document.getElementById("mes-caldisasol").value;
   if(!val)return;
   const[yr,mn]=val.split("-").map(Number);
@@ -1916,10 +1923,12 @@ function renderTablaDiaSol(){
   if(!tb)return;
   const q=(document.getElementById("busq-diasol").value||"").toLowerCase();
   const fp=document.getElementById("fil-diasol-plan").value;
+  const mes=document.getElementById("mes-diasol")?document.getElementById("mes-diasol").value:"";
   const filtered=_diaSolCache.filter(r=>{
     const match=!q||(r.nombre||"").toLowerCase().includes(q)||(r.celular||"").includes(q);
     const planNorm=(r.plan||'').replace('DÍA','DIA');
-    return match&&(!fp||planNorm===fp);
+    const mesMatch=!mes||(r.entrada&&r.entrada.startsWith(mes));
+    return match&&(!fp||planNorm===fp)&&mesMatch;
   });
   document.getElementById("count-diasol").textContent=filtered.length+" reservas";
   if(!filtered.length){tb.innerHTML="<tr><td colspan='12' style='text-align:center;color:var(--text3);padding:2rem'>Sin reservas de día de sol</td></tr>";return}
@@ -1956,7 +1965,8 @@ async function exportarExcelDiaSol(){
 }
 
 async function exportarExcel(){
-  const reservas=_reservasCache.length?_reservasCache:await sbGet("reservas");
+  _reservasCache = await sbGet("reservas");
+  const reservas=_reservasCache;
   if(!reservas.length){alert("No hay reservas para exportar.");return}
   const headers=["#","Nombre","Celular","Identificación","Plan","Habitación","Entrada","Salida","Días","Personas","Valor/Persona","Total","Abono","A Deber","Vendedor","Consignatario","Tipo Cliente","Observaciones","Creado Por","Fecha Registro"];
   const rows=reservas.map((r,i)=>[i+1,r.nombre,r.celular||"",r.identificacion||"",r.plan,r.hab==="NO"?"":r.hab,fmtD(r.entrada),fmtD(r.salida),r.dias||1,r.personas,r.vlr,r.total,r.abono||0,r.deber||0,r.vendedor||"",r.consig||"",r.tipoCliente||"",r.obs||"",r.creadoPor||"",fmtD(r.fecha)]);
@@ -2877,7 +2887,7 @@ async function eliminarProducto(id){
 function closeModal(id){document.getElementById(id).classList.remove("show")}
 
 async function renderDisp(){
-  if(!_reservasCache.length) _reservasCache = await sbGet("reservas");
+  _reservasCache = await sbGet("reservas");
   const val=document.getElementById("mes-disp").value;
   if(!val)return;
   const[yr,mn]=val.split("-").map(Number);
@@ -2972,7 +2982,8 @@ async function cambiarEstadoDesdeDisp(id){
 }
 
 async function renderResumen(){
-  const reservas=_reservasCache.length?_reservasCache:await sbGet("reservas");
+  _reservasCache = await sbGet("reservas");
+  const reservas=_reservasCache;
   const filMes=document.getElementById("fil-mes")?document.getElementById("fil-mes").value:"";
   const filAnio=document.getElementById("fil-anio")?document.getElementById("fil-anio").value:"";
 
@@ -3268,7 +3279,7 @@ async function reactivarReserva(id){
 }
 
 async function renderAplazadas(){
-  if(!_reservasCache.length) _reservasCache=await sbGet("reservas");
+  _reservasCache=await sbGet("reservas");
   const aplazadas=_reservasCache.filter(r=>r.aplazada);
   document.getElementById("count-aplazadas").textContent=aplazadas.length+" reservas";
   const tb=document.getElementById("tbody-aplazadas");
@@ -3427,7 +3438,7 @@ async function exportarComprasExcel(){
 
 // ---- CLIENTES ----
 async function renderClientes(){
-  if(!_reservasCache.length) _reservasCache = await sbGet("reservas");
+  _reservasCache = await sbGet("reservas");
   const q = (document.getElementById("busq-clientes").value||"").toLowerCase();
   const clientes = [];
 
@@ -3489,7 +3500,7 @@ async function renderClientes(){
 }
 
 async function exportarClientesExcel(){
-  if(!_reservasCache.length) _reservasCache = await sbGet("reservas");
+  _reservasCache = await sbGet("reservas");
   const clientes = [];
   _reservasCache.forEach(r=>{
     clientes.push({nombre:r.nombre||"",tipo_doc:r.tipodoc||"CC",documento:r.identificacion||"",celular:r.celular||"",correo:r.correo||"",rol:"Titular",reserva:"#"+String(r.id).padStart(4,'0'),fecha:fmtD(r.fecha||r.entrada||"")});
@@ -3678,7 +3689,7 @@ async function renderCajaDelDia(){
   if(cajaFecha) cajaFecha.textContent = fmtD(hoy);
 
   // 1. Abonos en efectivo de reservas creadas hoy
-  if(!_reservasCache.length) _reservasCache = await sbGet("reservas");
+  _reservasCache = await sbGet("reservas");
   const reservasHoy = _reservasCache.filter(r=>r.fecha===hoy);
   const abonosEfectivo = reservasHoy
     .filter(r=>r.medio_abono_inicial==="Efectivo")
@@ -3789,6 +3800,20 @@ async function guardarCierreCaja(){
     alert("Error al registrar el cierre.");
   }
 }
+</script>
+<script>
+// Verificar sesión guardada al cargar
+document.addEventListener("DOMContentLoaded", ()=>{
+  try {
+    const saved = localStorage.getItem("mds_session");
+    if(saved){
+      currentUser = JSON.parse(saved);
+      iniciarApp();
+    }
+  } catch(e){
+    localStorage.removeItem("mds_session");
+  }
+});
 </script>
 </body>
 </html>
