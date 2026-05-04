@@ -327,6 +327,7 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
                 <option>Efectivo</option>
                 <option>Transferencia</option>
                 <option>Datáfono</option>
+                <option>Sin abono</option>
               </select>
               <label class="fl">Restante a pagar ($)</label>
               <input class="f" id="f-deber" type="number" disabled style="opacity:0.7;color:var(--orange)">
@@ -340,7 +341,7 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
               <label class="fl">Consignatario</label>
               <select class="f" id="f-consig">
                 <option value="">— Seleccionar —</option>
-                <option>RUBEN</option><option>GILBERTO</option><option>KEVIN</option>
+                <option>RUBEN</option><option>GILBERTO</option><option>KEVIN</option><option>EFECTIVO</option><option>CARRETERA</option>
               </select>
             </div>
           </div>
@@ -441,6 +442,7 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
                 <option>Efectivo</option>
                 <option>Transferencia</option>
                 <option>Datáfono</option>
+                <option>Sin abono</option>
               </select>
               <label class="fl">Restante a pagar ($)</label>
               <input class="f" id="ds-deber" type="number" disabled style="opacity:0.7;color:var(--orange)">
@@ -454,7 +456,7 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
               <label class="fl">Consignatario</label>
               <select class="f" id="ds-consig">
                 <option value="">— Seleccionar —</option>
-                <option>RUBEN</option><option>GILBERTO</option><option>KEVIN</option>
+                <option>RUBEN</option><option>GILBERTO</option><option>KEVIN</option><option>EFECTIVO</option><option>CARRETERA</option>
               </select>
             </div>
           </div>
@@ -1063,7 +1065,8 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
       <!-- Columna derecha: lista productos -->
       <div>
         <div id="inv-tabs-container" style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap"></div>
-        <div style="max-height:380px;overflow-y:auto" id="lista-productos-admin"></div>
+        <input class="f" id="busq-prod-modal" type="text" placeholder="🔍 Buscar producto por nombre o código..." oninput="filtrarProductosModal()" style="margin-bottom:10px;width:100%">
+        <div style="max-height:340px;overflow-y:auto" id="lista-productos-admin"></div>
       </div>
     </div>
     <div style="text-align:right">
@@ -2364,8 +2367,8 @@ function generarVoucher(){
       <tr><td class="ntit">🔊 Sonido y Bar</td><td>Lun-Vie: 9:00 am - 10:00 pm. Fines de semana: hasta las 2:00 am. Sin sobrepasar los decibeles del Código de Policía. <strong>No se permite ingreso de parlantes externos.</strong></td></tr>
       <tr><td class="ntit">📝 Registro</td><td>Obligatorio el registro con documento de identidad. Menores de edad deben estar acompañados de uno de los padres o acudiente.</td></tr>
       <tr><td class="ntit">🍽 Alimentación</td><td>Servicio tipo buffet. Desayuno: 8:30-9:30 am | Almuerzo: 12:30-2:00 pm | Cena: 7:00-8:00 pm.</td></tr>
-      <tr><td class="ntit">🏊 Piscinas</td><td>2 piscinas de 8:00 am a 7:00 pm. 1 piscina hasta 1:00 am. Obligatorio ropa de lycra y ducha previa. Prohibido consumir alimentos y bebidas dentro. Niños siempre acompañados de adulto responsable.</td></tr>
-      <tr><td class="ntit">🐾 Mascotas</td><td>Valor adicional al plan. El dueño debe recoger sus necesidades. Prohibido en zonas húmedas. Deben usar collar y no subir a las camas. Daños en lencería tienen costo a cargo del dueño.</td></tr>
+      <tr><td class="ntit">🏊 Piscinas</td><td>Entre semana: Piscina 1 de 8:00 am a 7:00 pm / Piscina 2 de 8:00 am a 11:00 pm. Sábados y domingos: Piscina 1 de 8:00 am a 7:00 pm / Piscina 2 de 8:00 am a 1:00 am. Obligatorio ropa de lycra y ducha previa. Prohibido consumir alimentos y bebidas dentro. Niños siempre acompañados de adulto responsable.</td></tr>
+      <tr><td class="ntit">🐾 Mascotas</td><td>Valor adicional al plan. El dueño debe recoger sus necesidades. Prohibido en zonas húmedas. Deben usar collar y no subir a las camas. Daños en lencería tienen costo a cargo del dueño. <strong>Multa por daños y limpieza exhaustiva en la habitación desde $150.000, puede aumentar dependiendo de los daños y limpieza.</strong></td></tr>
       <tr><td class="ntit">💼 Objetos de valor</td><td>Son responsabilidad del huésped. Verificar al entregar la habitación y en zonas externas. La hostería no se hace responsable por pérdidas.</td></tr>
     </table>
   </div>
@@ -2447,6 +2450,15 @@ async function abrirConsumos(reservaId){
 
 function filtrarProductos(){
   renderProductosGrid();
+}
+
+function filtrarProductosModal(){
+  const busq = (document.getElementById("busq-prod-modal").value||"").toLowerCase();
+  const items = document.querySelectorAll("#lista-productos-admin .prod-item");
+  items.forEach(el=>{
+    const txt = el.textContent.toLowerCase();
+    el.style.display = busq===''||txt.includes(busq) ? '' : 'none';
+  });
 }
 
 function renderProductosGrid(){
