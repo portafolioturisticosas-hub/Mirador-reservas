@@ -3225,8 +3225,8 @@ async function renderResumenHoy(){
   const efect=v.filter(r=>r.medio_pago==="Efectivo").reduce((s,r)=>s+(r.ventas_bar||0)+(r.ventas_restaurante||0),0);
   const transf=v.filter(r=>r.medio_pago==="Transferencia").reduce((s,r)=>s+(r.ventas_bar||0)+(r.ventas_restaurante||0),0);
   const data=v.filter(r=>r.medio_pago==="Datáfono").reduce((s,r)=>s+(r.ventas_bar||0)+(r.ventas_restaurante||0),0);
-  const {data:consHoy}=await supa.from("consumos").select("total_parcial,fecha").gte("fecha",hoy+"T00:00:00").lte("fecha",hoy+"T23:59:59");
-  const totalConsumos=(consHoy||[]).reduce((s,r)=>s+(r.total_parcial||0),0);
+  const {data:consHoy}=await supa.from("consumos").select("subtotal,fecha").gte("fecha",hoy+"T00:00:00").lte("fecha",hoy+"T23:59:59");
+  const totalConsumos=(consHoy||[]).reduce((s,r)=>s+(r.subtotal||0),0);
   const total=totalMenudas+totalConsumos;
   document.getElementById("bar-hoy-total").textContent=fmt(total);
   document.getElementById("bar-hoy-efect").textContent=fmt(efect);
@@ -3245,8 +3245,8 @@ async function renderBar(){
   const totalBar=filas.reduce((s,r)=>s+(r.ventas_bar||0),0);
   const totalRest=filas.reduce((s,r)=>s+(r.ventas_restaurante||0),0);
   // Consumos de reservas del mes
-  const {data:consReservas}=await supa.from("consumos").select("total_parcial,fecha").gte("fecha",`${desde}T00:00:00`).lte("fecha",`${hasta}T23:59:59`);
-  const totalConsReservas=(consReservas||[]).reduce((s,r)=>s+(r.total_parcial||0),0);
+  const {data:consReservas}=await supa.from("consumos").select("subtotal,fecha").gte("fecha",`${desde}T00:00:00`).lte("fecha",`${hasta}T23:59:59`);
+  const totalConsReservas=(consReservas||[]).reduce((s,r)=>s+(r.subtotal||0),0);
   const reservas=await sbGet("reservas");
   const resMes=reservas.filter(r=>r.entrada&&r.entrada.startsWith(`${yr}-${mn}`));
   const resBar=resMes.reduce((s,r)=>s+(r.ventas_bar||0),0);
