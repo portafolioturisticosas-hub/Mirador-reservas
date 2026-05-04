@@ -3221,10 +3221,13 @@ async function renderResumenHoy(){
   const hoy=today();
   const {data:ventas}=await supa.from("ventas_menudas").select("*").eq("fecha",hoy);
   const v=ventas||[];
-  const total=v.reduce((s,r)=>s+(r.ventas_bar||0)+(r.ventas_restaurante||0),0);
+  const totalMenudas=v.reduce((s,r)=>s+(r.ventas_bar||0)+(r.ventas_restaurante||0),0);
   const efect=v.filter(r=>r.medio_pago==="Efectivo").reduce((s,r)=>s+(r.ventas_bar||0)+(r.ventas_restaurante||0),0);
   const transf=v.filter(r=>r.medio_pago==="Transferencia").reduce((s,r)=>s+(r.ventas_bar||0)+(r.ventas_restaurante||0),0);
   const data=v.filter(r=>r.medio_pago==="Datáfono").reduce((s,r)=>s+(r.ventas_bar||0)+(r.ventas_restaurante||0),0);
+  const {data:consHoy}=await supa.from("consumos").select("total_parcial,fecha").gte("fecha",hoy+"T00:00:00").lte("fecha",hoy+"T23:59:59");
+  const totalConsumos=(consHoy||[]).reduce((s,r)=>s+(r.total_parcial||0),0);
+  const total=totalMenudas+totalConsumos;
   document.getElementById("bar-hoy-total").textContent=fmt(total);
   document.getElementById("bar-hoy-efect").textContent=fmt(efect);
   document.getElementById("bar-hoy-transf").textContent=fmt(transf);
@@ -3241,13 +3244,16 @@ async function renderBar(){
   const filas=menudas||[];
   const totalBar=filas.reduce((s,r)=>s+(r.ventas_bar||0),0);
   const totalRest=filas.reduce((s,r)=>s+(r.ventas_restaurante||0),0);
+  // Consumos de reservas del mes
+  const {data:consReservas}=await supa.from("consumos").select("total_parcial,fecha").gte("fecha",`${desde}T00:00:00`).lte("fecha",`${hasta}T23:59:59`);
+  const totalConsReservas=(consReservas||[]).reduce((s,r)=>s+(r.total_parcial||0),0);
   const reservas=await sbGet("reservas");
   const resMes=reservas.filter(r=>r.entrada&&r.entrada.startsWith(`${yr}-${mn}`));
   const resBar=resMes.reduce((s,r)=>s+(r.ventas_bar||0),0);
   const resRest=resMes.reduce((s,r)=>s+(r.ventas_restaurante||0),0);
-  document.getElementById("bar-total-bar").textContent=fmt(totalBar);
+  document.getElementById("bar-total-bar").textContent=fmt(totalBar+totalConsReservas);
   document.getElementById("bar-total-rest").textContent=fmt(totalRest);
-  document.getElementById("bar-res-bar").textContent=fmt(resBar);
+  document.getElementById("bar-res-bar").textContent=fmt(resBar+totalConsReservas);
   document.getElementById("bar-res-rest").textContent=fmt(resRest);
   renderResumenHoy();
   const tb=document.getElementById("tbody-bar");
