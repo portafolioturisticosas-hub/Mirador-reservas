@@ -234,6 +234,10 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
           <div class="metric"><div class="metric-label">Día de Sol hoy</div><div class="metric-val" style="color:var(--orange)" id="dash-diasol">0</div></div>
         </div>
         <div id="dash-alertas"></div>
+        <!-- LISTA CHECK-IN / CHECK-OUT HOY -->
+        <div id="dash-checkinout-lista" style="margin-top:12px"></div>
+        <!-- RESERVAS PRÓXIMAS 48H -->
+        <div id="dash-proximas" style="margin-top:12px"></div>
       </div>
 
       <!-- TABS -->
@@ -1219,7 +1223,18 @@ const esDiaSol=p=>p&&(p.startsWith("DIA DE SOL")||p.startsWith("DÍA DE SOL"));
 let currentUser=null,editIdx=null;
 
 // ---- SUPABASE HELPERS ----
+const _sbCache = {};
+const _sbCacheTTL = {};
+const CACHE_TTL_MS = 30000; // 30 segundos
+
 async function sbGet(table, filters){
+  // Solo cachear consultas sin filtros (tabla completa)
+  const useCache = !filters;
+  const cacheKey = table;
+  const now = Date.now();
+  if(useCache && _sbCache[cacheKey] && now - (_sbCacheTTL[cacheKey]||0) < CACHE_TTL_MS){
+    return _sbCache[cacheKey];
+  }
   let allData=[];
   let from=0;
   const pageSize=1000;
@@ -1227,13 +1242,17 @@ async function sbGet(table, filters){
     let q=supa.from(table).select('*').range(from,from+pageSize-1);
     if(filters) Object.entries(filters).forEach(([k,v])=>q=q.eq(k,v));
     const {data,error}=await q;
-    if(error){console.error(error);break;}
+    if(error){console.error('sbGet error',table,error);break;}
     if(!data||data.length===0)break;
     allData=allData.concat(data);
     if(data.length<pageSize)break;
     from+=pageSize;
   }
+  if(useCache){ _sbCache[cacheKey]=allData; _sbCacheTTL[cacheKey]=now; }
   return allData;
+}
+function sbClearCache(table){
+  delete _sbCache[table]; delete _sbCacheTTL[table];
 }
 async function sbInsert(table, row){
   const {data,error}=await supa.from(table).insert(row).select();
@@ -1639,6 +1658,49 @@ async function renderDashboard(){
     ⚡ <strong>Stock bajo (≤5):</strong> ${stockBajo.map(p=>p.nombre+" ("+p.stock+")").join(", ")}</div>`);
 
   document.getElementById("dash-alertas").innerHTML = alertas.join("");
+
+  // LISTA CHECK-IN / CHECK-OUT HOY
+  let listaHoy = '';
+  if(checkinHoy.length){
+    listaHoy += `<div style="background:rgba(90,138,90,0.1);border:1px solid rgba(90,138,90,0.25);border-radius:8px;padding:12px 14px;margin-bottom:8px">
+      <div style="font-size:11px;color:#8ABB8A;font-weight:700;letter-spacing:1px;margin-bottom:8px">🟢 CHECK-IN HOY (${checkinHoy.length})</div>
+      ${checkinHoy.map(r=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:12px">
+        <span style="color:var(--text);font-weight:500">${r.nombre}</span>
+        <span style="color:var(--text3)">Hab ${r.hab||'—'} · ${r.personas||0} pax</span>
+        <span style="color:#8ABB8A">${fmt(r.total||0)}</span>
+      </div>`).join('')}
+    </div>`;
+  }
+  if(checkoutHoy.length){
+    listaHoy += `<div style="background:rgba(224,112,112,0.1);border:1px solid rgba(224,112,112,0.25);border-radius:8px;padding:12px 14px;margin-bottom:8px">
+      <div style="font-size:11px;color:#E07070;font-weight:700;letter-spacing:1px;margin-bottom:8px">🔴 CHECK-OUT HOY (${checkoutHoy.length})</div>
+      ${checkoutHoy.map(r=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:12px">
+        <span style="color:var(--text);font-weight:500">${r.nombre}</span>
+        <span style="color:var(--text3)">Hab ${r.hab||'—'} · ${r.personas||0} pax</span>
+        <span style="color:${(r.deber||0)>0?'#E09050':'#8ABB8A'}">${(r.deber||0)>0?'Debe '+fmt(r.deber):'Pagado'}</span>
+      </div>`).join('')}
+    </div>`;
+  }
+  document.getElementById("dash-checkinout-lista").innerHTML = listaHoy;
+
+  // RESERVAS PRÓXIMAS 48H
+  const manana = new Date(); manana.setDate(manana.getDate()+1);
+  const pasado = new Date(); pasado.setDate(pasado.getDate()+2);
+  const mananaStr = manana.toISOString().slice(0,10);
+  const pasadoStr = pasado.toISOString().slice(0,10);
+  const proximas = reservas.filter(r=>!esDiaSol(r.plan)&&r.entrada&&r.entrada>=mananaStr&&r.entrada<=pasadoStr&&!r.aplazada);
+  if(proximas.length){
+    document.getElementById("dash-proximas").innerHTML = `<div style="background:rgba(224,120,32,0.08);border:1px solid rgba(224,120,32,0.2);border-radius:8px;padding:12px 14px">
+      <div style="font-size:11px;color:var(--orange);font-weight:700;letter-spacing:1px;margin-bottom:8px">🔔 PRÓXIMAS 48H (${proximas.length})</div>
+      ${proximas.map(r=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:12px">
+        <span style="color:var(--text);font-weight:500">${r.nombre}</span>
+        <span style="color:var(--orange)">${fmtD(r.entrada)}</span>
+        <span style="color:var(--text3)">Hab ${r.hab||'—'} · ${r.personas||0} pax</span>
+      </div>`).join('')}
+    </div>`;
+  } else {
+    document.getElementById("dash-proximas").innerHTML = '';
+  }
   dash.style.display = "block";
 }
 
@@ -2153,6 +2215,7 @@ async function guardarEdicion(){
     total:r.total,deber:r.deber,dias:r.dias,
     medio_abono:r.medio_abono,pago_restante:r.pago_restante,medio_restante:r.medio_restante
   };
+  sbClearCache("reservas");
   const ok=await sbUpdate("reservas",editIdx,upd);
   if(!ok){
     // Intentar ver el error real
@@ -2169,6 +2232,7 @@ async function guardarEdicion(){
 async function eliminarReserva(){
   if(!isAdmin()){alert("Solo el administrador puede eliminar reservas.");return}
   if(!confirm("¿Eliminar esta reserva?"))return;
+  sbClearCache("reservas");
   await sbDelete("reservas", editIdx);
   closeModal("modal-edit");
   await renderReservas();
@@ -2507,6 +2571,8 @@ async function agregarOtroProducto(){
   const precio = parseFloat(document.getElementById("otro-precio").value)||0;
   if(!nombre){ alert("Escribe el nombre del producto"); return; }
   if(!precio){ alert("Escribe el precio"); return; }
+  const _resActualOtro = _reservasCache.find(x=>x.id===_consumoReservaId);
+  const _fechaOtro = _resActualOtro ? _resActualOtro.entrada : today();
   const row = {
     reserva_id: _consumoReservaId,
     producto_id: null,
@@ -2514,7 +2580,8 @@ async function agregarOtroProducto(){
     producto_precio: precio,
     cantidad: 1,
     subtotal: precio,
-    registrado_por: currentUser.user
+    registrado_por: currentUser.user,
+    fecha: _fechaOtro
   };
   const result = await sbInsert("consumos", row);
   if(result) _consumoActual.push(result);
@@ -2535,6 +2602,8 @@ async function agregarAlConsumo(prodId){
     const ok = await sbUpdate("consumos", existente.id, {cantidad: nuevaCant, subtotal: nuevoSub});
     if(ok){ existente.cantidad = nuevaCant; existente.subtotal = nuevoSub; }
   } else {
+    const _resActual = _reservasCache.find(x=>x.id===_consumoReservaId);
+    const _fechaConsumo = _resActual ? _resActual.entrada : today();
     const row = {
       reserva_id: _consumoReservaId,
       producto_id: prod.id,
@@ -2542,7 +2611,8 @@ async function agregarAlConsumo(prodId){
       producto_precio: prod.precio,
       cantidad: 1,
       subtotal: prod.precio,
-      registrado_por: currentUser.user
+      registrado_por: currentUser.user,
+      fecha: _fechaConsumo
     };
     const result = await sbInsert("consumos", row);
     if(result) _consumoActual.push(result);
@@ -3040,10 +3110,12 @@ async function renderResumen(){
   if(filAnio) filtradas=filtradas.filter(r=>r.entrada&&r.entrada.startsWith(filAnio));
   if(filMes) filtradas=filtradas.filter(r=>r.entrada&&r.entrada.split("-")[1]===filMes);
 
+  const hoyStr = today();
+  const porCobrarFiltradas = filtradas.filter(r=>r.salida && r.salida >= hoyStr);
   document.getElementById("r-total").textContent=filtradas.length;
   document.getElementById("r-ventas").textContent=fmt(filtradas.reduce((s,r)=>s+(r.total||0),0));
   document.getElementById("r-abonos").textContent=fmt(filtradas.reduce((s,r)=>s+(r.abono||0),0));
-  document.getElementById("r-resta").textContent=fmt(filtradas.reduce((s,r)=>s+(r.total||0)-(r.abono||0),0));
+  document.getElementById("r-resta").textContent=fmt(porCobrarFiltradas.reduce((s,r)=>s+(r.deber||0),0));
 
   // Agrupar por año-mes
   const porMes={};
