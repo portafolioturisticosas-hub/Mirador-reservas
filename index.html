@@ -234,10 +234,6 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
           <div class="metric"><div class="metric-label">Día de Sol hoy</div><div class="metric-val" style="color:var(--orange)" id="dash-diasol">0</div></div>
         </div>
         <div id="dash-alertas"></div>
-        <!-- LISTA CHECK-IN / CHECK-OUT HOY -->
-        <div id="dash-checkinout-lista" style="margin-top:12px"></div>
-        <!-- RESERVAS PRÓXIMAS 48H -->
-        <div id="dash-proximas" style="margin-top:12px"></div>
       </div>
 
       <!-- TABS -->
@@ -331,7 +327,6 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
                 <option>Efectivo</option>
                 <option>Transferencia</option>
                 <option>Datáfono</option>
-                <option>Sin abono</option>
               </select>
               <label class="fl">Restante a pagar ($)</label>
               <input class="f" id="f-deber" type="number" disabled style="opacity:0.7;color:var(--orange)">
@@ -345,7 +340,7 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
               <label class="fl">Consignatario</label>
               <select class="f" id="f-consig">
                 <option value="">— Seleccionar —</option>
-                <option>RUBEN</option><option>GILBERTO</option><option>KEVIN</option><option>EFECTIVO</option><option>CARRETERA</option>
+                <option>RUBEN</option><option>GILBERTO</option><option>KEVIN</option>
               </select>
             </div>
           </div>
@@ -446,7 +441,6 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
                 <option>Efectivo</option>
                 <option>Transferencia</option>
                 <option>Datáfono</option>
-                <option>Sin abono</option>
               </select>
               <label class="fl">Restante a pagar ($)</label>
               <input class="f" id="ds-deber" type="number" disabled style="opacity:0.7;color:var(--orange)">
@@ -460,7 +454,7 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
               <label class="fl">Consignatario</label>
               <select class="f" id="ds-consig">
                 <option value="">— Seleccionar —</option>
-                <option>RUBEN</option><option>GILBERTO</option><option>KEVIN</option><option>EFECTIVO</option><option>CARRETERA</option>
+                <option>RUBEN</option><option>GILBERTO</option><option>KEVIN</option>
               </select>
             </div>
           </div>
@@ -674,26 +668,12 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
       <div class="modal" style="width:500px">
         <div class="modal-title" id="mft-titulo">Editar fecha</div>
         <input type="hidden" id="mft-fecha">
-        <div style="padding:12px;background:var(--dark3);border-radius:8px;margin-bottom:16px">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-            <span style="font-size:13px;color:var(--text)">Estado para reservas web</span>
-            <select class="f" id="mft-disp" style="width:160px" onchange="toggleBloqueoMotivo()">
-              <option value="true">✅ Disponible</option>
-              <option value="false">🔴 Cerrada</option>
-              <option value="bloqueada">🚫 Bloqueada internamente</option>
-            </select>
-          </div>
-          <div id="mft-motivo-wrap" style="display:none">
-            <label class="fl" style="margin-top:0">Motivo del bloqueo</label>
-            <select class="f" id="mft-motivo-tipo">
-              <option value="mantenimiento">🔧 Mantenimiento</option>
-              <option value="evento_privado">🎉 Evento privado</option>
-              <option value="reservado_propietario">👤 Reservado por propietario</option>
-              <option value="limpieza">🧹 Limpieza profunda</option>
-              <option value="otro">📝 Otro</option>
-            </select>
-            <input class="f" id="mft-motivo-detalle" placeholder="Detalle adicional (opcional)" style="margin-top:6px">
-          </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding:12px;background:var(--dark3);border-radius:8px">
+          <span style="font-size:13px;color:var(--text)">Estado para reservas web</span>
+          <select class="f" id="mft-disp" style="width:160px">
+            <option value="true">✅ Disponible</option>
+            <option value="false">🔴 Cerrada</option>
+          </select>
         </div>
         <div id="mft-precios-wrap">
           <div style="font-size:11px;color:var(--orange);font-weight:600;margin-bottom:10px;text-transform:uppercase">Precios para esta fecha (dejar en 0 usa tarifa base)</div>
@@ -858,49 +838,6 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
       <div class="grid2">
         <div class="card"><div class="card-title">Por tipo de plan</div><div id="r-planes"></div></div>
         <div class="card"><div class="card-title">Habitaciones más solicitadas</div><div id="r-habs"></div></div>
-      </div>
-
-      <!-- GRÁFICAS TENDENCIAS -->
-      <div class="card mb" style="margin-top:16px">
-        <div class="flex-between" style="margin-bottom:16px">
-          <div class="card-title" style="margin:0">📈 Ingresos por semana del mes</div>
-          <select class="f" id="fil-mes-tend" onchange="renderTendencias()" style="width:200px">
-            <option value="2026-01">Enero 2026</option><option value="2026-02">Febrero 2026</option>
-            <option value="2026-03">Marzo 2026</option><option value="2026-04">Abril 2026</option>
-            <option value="2026-05">Mayo 2026</option><option value="2026-06">Junio 2026</option>
-            <option value="2026-07">Julio 2026</option><option value="2026-08">Agosto 2026</option>
-            <option value="2026-09">Septiembre 2026</option><option value="2026-10">Octubre 2026</option>
-            <option value="2026-11">Noviembre 2026</option><option value="2026-12">Diciembre 2026</option>
-          </select>
-        </div>
-        <div id="r-tendencias" style="min-height:120px"></div>
-      </div>
-
-      <!-- MAPA DE CALOR -->
-      <div class="card mb">
-        <div class="flex-between" style="margin-bottom:16px">
-          <div class="card-title" style="margin:0">🔥 Mapa de calor — ocupación por día</div>
-          <select class="f" id="fil-anio-calor" onchange="renderMapaCalor()" style="width:110px">
-            <option value="2024">2024</option><option value="2025">2025</option><option value="2026" selected>2026</option>
-          </select>
-        </div>
-        <div id="r-mapa-calor"></div>
-      </div>
-
-      <!-- FINANCIERO AVANZADO -->
-      <div class="grid2" style="margin-top:0">
-        <div class="card">
-          <div class="card-title">🎯 Meta mensual</div>
-          <div style="margin-bottom:12px">
-            <label class="fl">Meta de ingresos ($)</label>
-            <input class="f" id="meta-mensual-input" type="number" min="0" placeholder="Ej: 20000000" onchange="renderMeta()">
-          </div>
-          <div id="r-meta-gauge"></div>
-        </div>
-        <div class="card">
-          <div class="card-title">💰 Proyección cierre de mes</div>
-          <div id="r-proyeccion"></div>
-        </div>
       </div>
     </div>
 
@@ -1072,13 +1009,6 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
       <div style="flex:1;display:flex;flex-direction:column;min-width:260px">
         <div style="font-size:12px;color:var(--text3);margin-bottom:8px;font-weight:600">CONSUMO ACTUAL</div>
         <div id="consumo-lista" style="flex:1;overflow-y:auto;background:var(--dark3);border-radius:8px;padding:4px"></div>
-        <!-- Producto personalizado -->
-        <div style="margin-top:10px;padding:10px;background:var(--dark3);border-radius:8px">
-          <div style="font-size:11px;color:var(--orange);font-weight:600;margin-bottom:8px;text-transform:uppercase">+ Otro producto</div>
-          <input class="f" id="otro-nombre" placeholder="Nombre del producto" style="margin-bottom:6px">
-          <input class="f" id="otro-precio" type="number" min="0" placeholder="Precio ($)" style="margin-bottom:8px">
-          <button class="btn btn-primary btn-sm" style="width:100%" onclick="agregarOtroProducto()">Agregar</button>
-        </div>
         <div style="margin-top:10px;padding:10px;background:var(--dark3);border-radius:8px">
           <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
             <span style="color:var(--text3)">Total consumo</span>
@@ -1133,8 +1063,7 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
       <!-- Columna derecha: lista productos -->
       <div>
         <div id="inv-tabs-container" style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap"></div>
-        <input class="f" id="busq-prod-modal" type="text" placeholder="🔍 Buscar producto por nombre o código..." oninput="filtrarProductosModal()" style="margin-bottom:10px;width:100%">
-        <div style="max-height:340px;overflow-y:auto" id="lista-productos-admin"></div>
+        <div style="max-height:380px;overflow-y:auto" id="lista-productos-admin"></div>
       </div>
     </div>
     <div style="text-align:right">
@@ -1255,18 +1184,6 @@ const HABS=["2","3","4","5","6","12","7","8","9","10","11","13","14","15","16","
   </div>
 </div>
 
-<!-- MODAL HISTORIAL DE PAGOS -->
-<div class="modal-bg" id="modal-historial-pagos">
-  <div class="modal" style="width:600px">
-    <div class="modal-title">💳 Historial de Pagos</div>
-    <div id="historial-reserva-info" style="background:var(--dark3);border-radius:8px;padding:12px;margin-bottom:14px;font-size:12px"></div>
-    <div id="historial-pagos-lista" style="max-height:350px;overflow-y:auto"></div>
-    <div style="text-align:right;margin-top:14px">
-      <button class="btn btn-sm" onclick="closeModal('modal-historial-pagos')">Cerrar</button>
-    </div>
-  </div>
-</div>
-
 <!-- MODAL CATEGORIAS COMPRA -->
 <div class="modal-bg" id="modal-cats-compra">
   <div class="modal" style="width:400px">
@@ -1292,18 +1209,7 @@ const esDiaSol=p=>p&&(p.startsWith("DIA DE SOL")||p.startsWith("DÍA DE SOL"));
 let currentUser=null,editIdx=null;
 
 // ---- SUPABASE HELPERS ----
-const _sbCache = {};
-const _sbCacheTTL = {};
-const CACHE_TTL_MS = 30000; // 30 segundos
-
 async function sbGet(table, filters){
-  // Solo cachear consultas sin filtros (tabla completa)
-  const useCache = !filters;
-  const cacheKey = table;
-  const now = Date.now();
-  if(useCache && _sbCache[cacheKey] && now - (_sbCacheTTL[cacheKey]||0) < CACHE_TTL_MS){
-    return _sbCache[cacheKey];
-  }
   let allData=[];
   let from=0;
   const pageSize=1000;
@@ -1311,17 +1217,13 @@ async function sbGet(table, filters){
     let q=supa.from(table).select('*').range(from,from+pageSize-1);
     if(filters) Object.entries(filters).forEach(([k,v])=>q=q.eq(k,v));
     const {data,error}=await q;
-    if(error){console.error('sbGet error',table,error);break;}
+    if(error){console.error(error);break;}
     if(!data||data.length===0)break;
     allData=allData.concat(data);
     if(data.length<pageSize)break;
     from+=pageSize;
   }
-  if(useCache){ _sbCache[cacheKey]=allData; _sbCacheTTL[cacheKey]=now; }
   return allData;
-}
-function sbClearCache(table){
-  delete _sbCache[table]; delete _sbCacheTTL[table];
 }
 async function sbInsert(table, row){
   const {data,error}=await supa.from(table).insert(row).select();
@@ -1397,20 +1299,7 @@ function showPage(p){
   }
   if(p==="tarifas"){const m=document.getElementById("tar-mes");if(!m.value)m.value=today().slice(0,7);renderCalTarifas();}
   if(p==="aplazadas")renderAplazadas();
-  if(p==="resumen"){
-    const hoy=today();
-    const anioActual=hoy.slice(0,4);
-    const mesActual=hoy.slice(5,7);
-    const selAnio=document.getElementById("fil-anio");
-    const selMes=document.getElementById("fil-mes");
-    const selMesTend=document.getElementById("fil-mes-tend");
-    const selMesComp=document.getElementById("fil-mes-comp");
-    if(selAnio&&!selAnio.value) selAnio.value=anioActual;
-    if(selMes&&!selMes.value) selMes.value=mesActual;
-    if(selMesTend&&!selMesTend.value) selMesTend.value=`${anioActual}-${mesActual}`;
-    if(selMesComp&&!selMesComp.value) selMesComp.value=mesActual;
-    renderResumen();
-  }
+  if(p==="resumen")renderResumen();
   if(p==="usuarios")renderUsuarios();
   if(p==="bar"){const m=document.getElementById("bar-mes");if(!m.value)m.value=today().slice(0,7);const bf=document.getElementById('bar-fecha');if(!bf.value)bf.value=today();renderBar();renderResumenHoy();}
   if(p==="clientes"){renderClientes();}
@@ -1588,7 +1477,7 @@ function updatePlan(){
   actualizarHabs();
 }
 
-function actualizarHabs(){
+async function actualizarHabs(){
   const plan=document.getElementById("f-plan").value;
   const entrada=document.getElementById("f-entrada").value;
   const salida=document.getElementById("f-salida").value;
@@ -1596,6 +1485,7 @@ function actualizarHabs(){
   const statusEl=document.getElementById("hab-status");
   if(esDiaSol(plan)||!entrada){statusEl.style.display="none";return;}
   const fin=salida||entrada;
+  _reservasCache = await sbGet("reservas");
   const reservas=_reservasCache;
   const TODAS=["2","3","4","5","6","12","7","8","9","10","11","13","14","15","16","17"];
   const ocupadas=TODAS.filter(h=>reservas.some(r=>{
@@ -1740,49 +1630,6 @@ async function renderDashboard(){
     ⚡ <strong>Stock bajo (≤5):</strong> ${stockBajo.map(p=>p.nombre+" ("+p.stock+")").join(", ")}</div>`);
 
   document.getElementById("dash-alertas").innerHTML = alertas.join("");
-
-  // LISTA CHECK-IN / CHECK-OUT HOY
-  let listaHoy = '';
-  if(checkinHoy.length){
-    listaHoy += `<div style="background:rgba(90,138,90,0.1);border:1px solid rgba(90,138,90,0.25);border-radius:8px;padding:12px 14px;margin-bottom:8px">
-      <div style="font-size:11px;color:#8ABB8A;font-weight:700;letter-spacing:1px;margin-bottom:8px">🟢 CHECK-IN HOY (${checkinHoy.length})</div>
-      ${checkinHoy.map(r=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:12px">
-        <span style="color:var(--text);font-weight:500">${r.nombre}</span>
-        <span style="color:var(--text3)">Hab ${r.hab||'—'} · ${r.personas||0} pax</span>
-        <span style="color:#8ABB8A">${fmt(r.total||0)}</span>
-      </div>`).join('')}
-    </div>`;
-  }
-  if(checkoutHoy.length){
-    listaHoy += `<div style="background:rgba(224,112,112,0.1);border:1px solid rgba(224,112,112,0.25);border-radius:8px;padding:12px 14px;margin-bottom:8px">
-      <div style="font-size:11px;color:#E07070;font-weight:700;letter-spacing:1px;margin-bottom:8px">🔴 CHECK-OUT HOY (${checkoutHoy.length})</div>
-      ${checkoutHoy.map(r=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:12px">
-        <span style="color:var(--text);font-weight:500">${r.nombre}</span>
-        <span style="color:var(--text3)">Hab ${r.hab||'—'} · ${r.personas||0} pax</span>
-        <span style="color:${(r.deber||0)>0?'#E09050':'#8ABB8A'}">${(r.deber||0)>0?'Debe '+fmt(r.deber):'Pagado'}</span>
-      </div>`).join('')}
-    </div>`;
-  }
-  document.getElementById("dash-checkinout-lista").innerHTML = listaHoy;
-
-  // RESERVAS PRÓXIMAS 48H
-  const manana = new Date(); manana.setDate(manana.getDate()+1);
-  const pasado = new Date(); pasado.setDate(pasado.getDate()+2);
-  const mananaStr = manana.toISOString().slice(0,10);
-  const pasadoStr = pasado.toISOString().slice(0,10);
-  const proximas = reservas.filter(r=>!esDiaSol(r.plan)&&r.entrada&&r.entrada>=mananaStr&&r.entrada<=pasadoStr&&!r.aplazada);
-  if(proximas.length){
-    document.getElementById("dash-proximas").innerHTML = `<div style="background:rgba(224,120,32,0.08);border:1px solid rgba(224,120,32,0.2);border-radius:8px;padding:12px 14px">
-      <div style="font-size:11px;color:var(--orange);font-weight:700;letter-spacing:1px;margin-bottom:8px">🔔 PRÓXIMAS 48H (${proximas.length})</div>
-      ${proximas.map(r=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:12px">
-        <span style="color:var(--text);font-weight:500">${r.nombre}</span>
-        <span style="color:var(--orange)">${fmtD(r.entrada)}</span>
-        <span style="color:var(--text3)">Hab ${r.hab||'—'} · ${r.personas||0} pax</span>
-      </div>`).join('')}
-    </div>`;
-  } else {
-    document.getElementById("dash-proximas").innerHTML = '';
-  }
   dash.style.display = "block";
 }
 
@@ -2297,7 +2144,6 @@ async function guardarEdicion(){
     total:r.total,deber:r.deber,dias:r.dias,
     medio_abono:r.medio_abono,pago_restante:r.pago_restante,medio_restante:r.medio_restante
   };
-  sbClearCache("reservas");
   const ok=await sbUpdate("reservas",editIdx,upd);
   if(!ok){
     // Intentar ver el error real
@@ -2314,7 +2160,6 @@ async function guardarEdicion(){
 async function eliminarReserva(){
   if(!isAdmin()){alert("Solo el administrador puede eliminar reservas.");return}
   if(!confirm("¿Eliminar esta reserva?"))return;
-  sbClearCache("reservas");
   await sbDelete("reservas", editIdx);
   closeModal("modal-edit");
   await renderReservas();
@@ -2520,8 +2365,8 @@ function generarVoucher(){
       <tr><td class="ntit">🔊 Sonido y Bar</td><td>Lun-Vie: 9:00 am - 10:00 pm. Fines de semana: hasta las 2:00 am. Sin sobrepasar los decibeles del Código de Policía. <strong>No se permite ingreso de parlantes externos.</strong></td></tr>
       <tr><td class="ntit">📝 Registro</td><td>Obligatorio el registro con documento de identidad. Menores de edad deben estar acompañados de uno de los padres o acudiente.</td></tr>
       <tr><td class="ntit">🍽 Alimentación</td><td>Servicio tipo buffet. Desayuno: 8:30-9:30 am | Almuerzo: 12:30-2:00 pm | Cena: 7:00-8:00 pm.</td></tr>
-      <tr><td class="ntit">🏊 Piscinas</td><td>Entre semana: Piscina 1 de 8:00 am a 7:00 pm / Piscina 2 de 8:00 am a 11:00 pm. Sábados y domingos: Piscina 1 de 8:00 am a 7:00 pm / Piscina 2 de 8:00 am a 1:00 am. Obligatorio ropa de lycra y ducha previa. Prohibido consumir alimentos y bebidas dentro. Niños siempre acompañados de adulto responsable.</td></tr>
-      <tr><td class="ntit">🐾 Mascotas</td><td>Valor adicional al plan. El dueño debe recoger sus necesidades. Prohibido en zonas húmedas. Deben usar collar y no subir a las camas. Daños en lencería tienen costo a cargo del dueño. <strong>Multa por daños y limpieza exhaustiva en la habitación desde $150.000, puede aumentar dependiendo de los daños y limpieza.</strong></td></tr>
+      <tr><td class="ntit">🏊 Piscinas</td><td>2 piscinas de 8:00 am a 7:00 pm. 1 piscina hasta 1:00 am. Obligatorio ropa de lycra y ducha previa. Prohibido consumir alimentos y bebidas dentro. Niños siempre acompañados de adulto responsable.</td></tr>
+      <tr><td class="ntit">🐾 Mascotas</td><td>Valor adicional al plan. El dueño debe recoger sus necesidades. Prohibido en zonas húmedas. Deben usar collar y no subir a las camas. Daños en lencería tienen costo a cargo del dueño.</td></tr>
       <tr><td class="ntit">💼 Objetos de valor</td><td>Son responsabilidad del huésped. Verificar al entregar la habitación y en zonas externas. La hostería no se hace responsable por pérdidas.</td></tr>
     </table>
   </div>
@@ -2605,15 +2450,6 @@ function filtrarProductos(){
   renderProductosGrid();
 }
 
-function filtrarProductosModal(){
-  const busq = (document.getElementById("busq-prod-modal").value||"").toLowerCase();
-  const items = document.querySelectorAll("#lista-productos-admin .prod-item");
-  items.forEach(el=>{
-    const txt = el.textContent.toLowerCase();
-    el.style.display = busq===''||txt.includes(busq) ? '' : 'none';
-  });
-}
-
 function renderProductosGrid(){
   const busq = (document.getElementById("busq-prod").value||"").toLowerCase();
   const cats = getCategorias();
@@ -2648,30 +2484,6 @@ function setCat(cat){
   renderProductosGrid();
 }
 
-async function agregarOtroProducto(){
-  const nombre = (document.getElementById("otro-nombre").value||"").trim();
-  const precio = parseFloat(document.getElementById("otro-precio").value)||0;
-  if(!nombre){ alert("Escribe el nombre del producto"); return; }
-  if(!precio){ alert("Escribe el precio"); return; }
-  const _resActualOtro = _reservasCache.find(x=>x.id===_consumoReservaId);
-  const _fechaOtro = _resActualOtro ? _resActualOtro.entrada : today();
-  const row = {
-    reserva_id: _consumoReservaId,
-    producto_id: null,
-    producto_nombre: nombre,
-    producto_precio: precio,
-    cantidad: 1,
-    subtotal: precio,
-    registrado_por: currentUser.user,
-    fecha: _fechaOtro
-  };
-  const result = await sbInsert("consumos", row);
-  if(result) _consumoActual.push(result);
-  document.getElementById("otro-nombre").value = "";
-  document.getElementById("otro-precio").value = "";
-  renderConsumoLista();
-}
-
 async function agregarAlConsumo(prodId){
   const prod = _productos.find(p=>p.id===prodId);
   if(!prod) return;
@@ -2684,8 +2496,6 @@ async function agregarAlConsumo(prodId){
     const ok = await sbUpdate("consumos", existente.id, {cantidad: nuevaCant, subtotal: nuevoSub});
     if(ok){ existente.cantidad = nuevaCant; existente.subtotal = nuevoSub; }
   } else {
-    const _resActual = _reservasCache.find(x=>x.id===_consumoReservaId);
-    const _fechaConsumo = _resActual ? _resActual.entrada : today();
     const row = {
       reserva_id: _consumoReservaId,
       producto_id: prod.id,
@@ -2693,8 +2503,7 @@ async function agregarAlConsumo(prodId){
       producto_precio: prod.precio,
       cantidad: 1,
       subtotal: prod.precio,
-      registrado_por: currentUser.user,
-      fecha: _fechaConsumo
+      registrado_por: currentUser.user
     };
     const result = await sbInsert("consumos", row);
     if(result) _consumoActual.push(result);
@@ -3192,12 +3001,10 @@ async function renderResumen(){
   if(filAnio) filtradas=filtradas.filter(r=>r.entrada&&r.entrada.startsWith(filAnio));
   if(filMes) filtradas=filtradas.filter(r=>r.entrada&&r.entrada.split("-")[1]===filMes);
 
-  const hoyStr = today();
-  const porCobrarFiltradas = filtradas.filter(r=>r.salida && r.salida >= hoyStr);
   document.getElementById("r-total").textContent=filtradas.length;
   document.getElementById("r-ventas").textContent=fmt(filtradas.reduce((s,r)=>s+(r.total||0),0));
   document.getElementById("r-abonos").textContent=fmt(filtradas.reduce((s,r)=>s+(r.abono||0),0));
-  document.getElementById("r-resta").textContent=fmt(porCobrarFiltradas.reduce((s,r)=>s+(r.deber||0),0));
+  document.getElementById("r-resta").textContent=fmt(filtradas.reduce((s,r)=>s+(r.total||0)-(r.abono||0),0));
 
   // Agrupar por año-mes
   const porMes={};
@@ -3259,171 +3066,6 @@ async function renderResumen(){
     </div>`).join("")||'<div style="color:var(--text3);font-size:12px">Sin reservas con habitación</div>';
 
   renderComparativo();
-  renderTendencias();
-  renderMapaCalor();
-  renderMeta();
-  renderProyeccion();
-}
-
-// ============ TENDENCIAS - INGRESOS POR SEMANA ============
-function renderTendencias(){
-  const reservas=_reservasCache;
-  if(!reservas.length){document.getElementById("r-tendencias").innerHTML='<div style="color:var(--text3);font-size:12px">Sin datos</div>';return;}
-  const mes=document.getElementById("fil-mes-tend")?document.getElementById("fil-mes-tend").value:("2026-"+(new Date().getMonth()+1).toString().padStart(2,"0"));
-  const [yr,mn]=mes.split("-");
-  const semanas=[[1,7],[8,14],[15,21],[22,28],[29,31]];
-  const labels=["Sem 1","Sem 2","Sem 3","Sem 4","Sem 5"];
-  const datos=semanas.map(([ini,fin])=>{
-    return reservas.filter(r=>r.entrada&&r.entrada.startsWith(`${yr}-${mn}`)&&parseInt(r.entrada.split("-")[2])>=ini&&parseInt(r.entrada.split("-")[2])<=fin).reduce((s,r)=>s+(r.total||0),0);
-  });
-  const max=Math.max(...datos,1);
-  const el=document.getElementById("r-tendencias");
-  el.innerHTML=`
-    <div style="display:flex;align-items:flex-end;gap:12px;height:120px;padding:0 8px">
-      ${datos.map((v,i)=>`
-        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px">
-          <span style="font-size:10px;color:var(--orange);font-weight:600">${v>0?fmt(v):''}</span>
-          <div style="width:100%;background:rgba(255,255,255,0.05);border-radius:6px 6px 0 0;height:${Math.max(Math.round(v/max*90),v>0?8:2)}px;background:${v>0?'var(--orange)':'rgba(255,255,255,0.07)'};transition:height .3s"></div>
-          <span style="font-size:10px;color:var(--text3)">${labels[i]}</span>
-        </div>`).join("")}
-    </div>
-    <div style="font-size:10px;color:var(--text3);margin-top:8px;text-align:center">Total del mes: <strong style="color:var(--text)">${fmt(datos.reduce((a,b)=>a+b,0))}</strong></div>`;
-}
-
-// ============ MAPA DE CALOR ============
-function renderMapaCalor(){
-  const reservas=_reservasCache;
-  if(!reservas.length){document.getElementById("r-mapa-calor").innerHTML='<div style="color:var(--text3);font-size:12px">Sin datos</div>';return;}
-  const anio=document.getElementById("fil-anio-calor")?document.getElementById("fil-anio-calor").value:"2026";
-  const dias=["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
-  const counts={};
-  reservas.filter(r=>r.entrada&&r.entrada.startsWith(anio)).forEach(r=>{
-    const d=new Date(r.entrada+"T12:00:00");
-    const k=d.getDay();
-    counts[k]=(counts[k]||0)+1;
-  });
-  const maxC=Math.max(...Object.values(counts),1);
-  const el=document.getElementById("r-mapa-calor");
-  el.innerHTML=`
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      ${dias.map((d,i)=>{
-        const c=counts[i]||0;
-        const pct=c/maxC;
-        const bg=pct>0.7?'rgba(224,120,32,0.85)':pct>0.4?'rgba(224,120,32,0.5)':pct>0.1?'rgba(224,120,32,0.2)':'rgba(255,255,255,0.05)';
-        return `<div style="flex:1;min-width:60px;background:${bg};border-radius:8px;padding:14px 8px;text-align:center">
-          <div style="font-size:11px;color:var(--text3);margin-bottom:6px">${d}</div>
-          <div style="font-size:18px;font-weight:700;color:var(--text)">${c}</div>
-          <div style="font-size:10px;color:var(--text3)">reservas</div>
-        </div>`;
-      }).join("")}
-    </div>
-    <div style="display:flex;gap:12px;margin-top:10px;font-size:10px;color:var(--text3);align-items:center">
-      <span>Menos</span>
-      <div style="display:flex;gap:4px">${[0.05,0.2,0.5,0.8,1].map(p=>`<div style="width:20px;height:10px;border-radius:2px;background:rgba(224,120,32,${p})"></div>`).join("")}</div>
-      <span>Más ocupado</span>
-    </div>`;
-}
-
-// ============ META MENSUAL ============
-function renderMeta(){
-  const reservas=_reservasCache;
-  const meta=parseFloat(document.getElementById("meta-mensual-input")?document.getElementById("meta-mensual-input").value:0)||0;
-  const hoy=today();
-  const mesActual=hoy.slice(0,7);
-  const ingMes=reservas.filter(r=>r.entrada&&r.entrada.startsWith(mesActual)).reduce((s,r)=>s+(r.total||0),0);
-  const pct=meta>0?Math.min(Math.round(ingMes/meta*100),100):0;
-  const color=pct>=100?'#8ABB8A':pct>=70?'var(--orange)':'#E07070';
-  const el=document.getElementById("r-meta-gauge");
-  if(!meta){el.innerHTML='<div style="color:var(--text3);font-size:12px;text-align:center;padding:20px">Ingresa una meta mensual para ver el velocímetro</div>';return;}
-  el.innerHTML=`
-    <div style="text-align:center">
-      <svg viewBox="0 0 200 110" style="width:100%;max-width:220px">
-        <path d="M20,100 A80,80 0 0,1 180,100" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="18" stroke-linecap="round"/>
-        <path d="M20,100 A80,80 0 0,1 180,100" fill="none" stroke="${color}" stroke-width="18" stroke-linecap="round"
-          stroke-dasharray="${pct*2.51} 251" stroke-dashoffset="0"/>
-        <text x="100" y="88" text-anchor="middle" fill="${color}" font-size="22" font-weight="700">${pct}%</text>
-        <text x="100" y="104" text-anchor="middle" fill="rgba(255,255,255,0.4)" font-size="8">META MENSUAL</text>
-      </svg>
-      <div style="font-size:12px;color:var(--text3);margin-top:4px">
-        <span style="color:var(--text);font-weight:600">${fmt(ingMes)}</span> de <span style="color:var(--text)">${fmt(meta)}</span>
-      </div>
-      ${pct<100?`<div style="font-size:11px;color:var(--text3);margin-top:4px">Falta <strong style="color:var(--orange)">${fmt(meta-ingMes)}</strong> para la meta</div>`:'<div style="font-size:11px;color:#8ABB8A;margin-top:4px">✅ ¡Meta alcanzada!</div>'}
-    </div>`;
-}
-
-// ============ PROYECCIÓN CIERRE DE MES ============
-function renderProyeccion(){
-  const reservas=_reservasCache;
-  const hoy=today();
-  const [yr,mn]=hoy.split("-");
-  const diaActual=parseInt(hoy.split("-")[2]);
-  const diasEnMes=new Date(parseInt(yr),parseInt(mn),0).getDate();
-  const ingMes=reservas.filter(r=>r.entrada&&r.entrada.startsWith(`${yr}-${mn}`)).reduce((s,r)=>s+(r.total||0),0);
-  const ritmo=diaActual>0?ingMes/diaActual:0;
-  const proyeccion=Math.round(ritmo*diasEnMes);
-  const pct=Math.round(diaActual/diasEnMes*100);
-  const el=document.getElementById("r-proyeccion");
-  el.innerHTML=`
-    <div style="padding:8px 0">
-      <div style="display:flex;justify-content:space-between;margin-bottom:10px;font-size:12px">
-        <span style="color:var(--text3)">Día actual</span><span style="color:var(--text);font-weight:600">${diaActual} de ${diasEnMes}</span>
-      </div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:10px;font-size:12px">
-        <span style="color:var(--text3)">Ingresos hasta hoy</span><span style="color:var(--orange);font-weight:600">${fmt(ingMes)}</span>
-      </div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:10px;font-size:12px">
-        <span style="color:var(--text3)">Ritmo diario</span><span style="color:var(--text)">${fmt(Math.round(ritmo))}/día</span>
-      </div>
-      <div style="background:var(--dark3);border-radius:8px;padding:12px;text-align:center;margin-top:8px">
-        <div style="font-size:10px;color:var(--text3);margin-bottom:4px;text-transform:uppercase;letter-spacing:1px">Proyección al cierre</div>
-        <div style="font-size:24px;font-weight:700;color:#8ABB8A">${fmt(proyeccion)}</div>
-      </div>
-      <div style="margin-top:10px;background:rgba(255,255,255,0.05);border-radius:4px;height:6px;overflow:hidden">
-        <div style="width:${pct}%;height:100%;background:var(--orange);border-radius:4px"></div>
-      </div>
-      <div style="font-size:10px;color:var(--text3);margin-top:4px;text-align:center">Avance del mes: ${pct}%</div>
-    </div>`;
-}
-
-// ============ HISTORIAL DE PAGOS ============
-function abrirHistorialPagos(reservaId){
-  const r=_reservasCache.find(x=>x.id===reservaId);
-  if(!r)return;
-  document.getElementById("historial-reserva-info").innerHTML=`
-    <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px">
-      <div><strong style="color:var(--text)">${r.nombre}</strong><br><span style="color:var(--text3)">Entrada: ${fmtD(r.entrada)} · Salida: ${fmtD(r.salida)}</span></div>
-      <div style="text-align:right">
-        <div>Total: <strong style="color:var(--orange)">${fmt(r.total||0)}</strong></div>
-        <div>Abono: <strong style="color:#8ABB8A">${fmt(r.abono||0)}</strong></div>
-        <div>Saldo: <strong style="color:${(r.deber||0)>0?'#E09050':'#8ABB8A'}">${fmt(r.deber||0)}</strong></div>
-      </div>
-    </div>`;
-  const pagos=[];
-  if(r.abono>0) pagos.push({desc:'Abono inicial',valor:r.abono,medio:r.medio_abono_inicial||r.medio_abono||'—',fecha:r.fabono||r.fecha});
-  if(r.pago_restante>0) pagos.push({desc:'Pago restante',valor:r.pago_restante,medio:r.medio_restante||'—',fecha:r.salida});
-  if(!pagos.length){
-    document.getElementById("historial-pagos-lista").innerHTML='<div style="color:var(--text3);font-size:12px;text-align:center;padding:20px">Sin pagos registrados</div>';
-  } else {
-    document.getElementById("historial-pagos-lista").innerHTML=pagos.map((p,i)=>`
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
-        <div>
-          <div style="font-size:13px;color:var(--text);font-weight:500">${p.desc}</div>
-          <div style="font-size:11px;color:var(--text3)">${fmtD(p.fecha)||'—'} · ${p.medio}</div>
-        </div>
-        <div style="font-size:15px;font-weight:600;color:#8ABB8A">${fmt(p.valor)}</div>
-      </div>`).join("")+`
-      <div style="display:flex;justify-content:space-between;padding:10px 0;font-size:13px;font-weight:600">
-        <span style="color:var(--text3)">Total pagado</span>
-        <span style="color:#8ABB8A">${fmt(pagos.reduce((s,p)=>s+p.valor,0))}</span>
-      </div>`;
-  }
-  document.getElementById("modal-historial-pagos").classList.add("show");
-}
-
-// ============ TOGGLE MOTIVO BLOQUEO ============
-function toggleBloqueoMotivo(){
-  const val=document.getElementById("mft-disp").value;
-  document.getElementById("mft-motivo-wrap").style.display=val==="bloqueada"?"block":"none";
 }
 
 function renderComparativo(){
@@ -3540,13 +3182,10 @@ async function renderResumenHoy(){
   const hoy=today();
   const {data:ventas}=await supa.from("ventas_menudas").select("*").eq("fecha",hoy);
   const v=ventas||[];
-  const totalMenudas=v.reduce((s,r)=>s+(r.ventas_bar||0)+(r.ventas_restaurante||0),0);
+  const total=v.reduce((s,r)=>s+(r.ventas_bar||0)+(r.ventas_restaurante||0),0);
   const efect=v.filter(r=>r.medio_pago==="Efectivo").reduce((s,r)=>s+(r.ventas_bar||0)+(r.ventas_restaurante||0),0);
   const transf=v.filter(r=>r.medio_pago==="Transferencia").reduce((s,r)=>s+(r.ventas_bar||0)+(r.ventas_restaurante||0),0);
   const data=v.filter(r=>r.medio_pago==="Datáfono").reduce((s,r)=>s+(r.ventas_bar||0)+(r.ventas_restaurante||0),0);
-  const {data:consHoy}=await supa.from("consumos").select("subtotal,fecha").gte("fecha",hoy+"T00:00:00").lte("fecha",hoy+"T23:59:59");
-  const totalConsumos=(consHoy||[]).reduce((s,r)=>s+(r.subtotal||0),0);
-  const total=totalMenudas+totalConsumos;
   document.getElementById("bar-hoy-total").textContent=fmt(total);
   document.getElementById("bar-hoy-efect").textContent=fmt(efect);
   document.getElementById("bar-hoy-transf").textContent=fmt(transf);
@@ -3563,16 +3202,13 @@ async function renderBar(){
   const filas=menudas||[];
   const totalBar=filas.reduce((s,r)=>s+(r.ventas_bar||0),0);
   const totalRest=filas.reduce((s,r)=>s+(r.ventas_restaurante||0),0);
-  // Consumos de reservas del mes
-  const {data:consReservas}=await supa.from("consumos").select("subtotal,fecha").gte("fecha",`${desde}T00:00:00`).lte("fecha",`${hasta}T23:59:59`);
-  const totalConsReservas=(consReservas||[]).reduce((s,r)=>s+(r.subtotal||0),0);
   const reservas=await sbGet("reservas");
   const resMes=reservas.filter(r=>r.entrada&&r.entrada.startsWith(`${yr}-${mn}`));
   const resBar=resMes.reduce((s,r)=>s+(r.ventas_bar||0),0);
   const resRest=resMes.reduce((s,r)=>s+(r.ventas_restaurante||0),0);
-  document.getElementById("bar-total-bar").textContent=fmt(totalBar+totalConsReservas);
+  document.getElementById("bar-total-bar").textContent=fmt(totalBar);
   document.getElementById("bar-total-rest").textContent=fmt(totalRest);
-  document.getElementById("bar-res-bar").textContent=fmt(resBar+totalConsReservas);
+  document.getElementById("bar-res-bar").textContent=fmt(resBar);
   document.getElementById("bar-res-rest").textContent=fmt(resRest);
   renderResumenHoy();
   const tb=document.getElementById("tbody-bar");
